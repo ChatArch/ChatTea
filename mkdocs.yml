@@ -1,0 +1,9 @@
+site_name: ChatTea 文档
+site_url: https://ChatArch.github.io/ChatTea
+repo_url: https://github.com/ChatArch/ChatTea
+theme:
+  name: material
+  language: zh
+nav:
+  - 首页: index.md
+  - English: index.en.md
