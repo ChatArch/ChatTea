@@ -6,4 +6,5 @@ theme:
   language: zh
 nav:
   - 首页: index.md
+  - 接口树: interface-tree.md
   - English: index.en.md

@@ -17,33 +17,50 @@
 
 # ChatTea
 
-ChatTea: ChatArch Python package
+ChatTea is ChatArch's Gitea management CLI/API package. The first version focuses on local Gitea installation, initialization, service management, token configuration, and basic repository operations.
 
 ## Quick Start
 
 ```bash
 pip install -e ".[dev]"
-chattea hello ChatArch
+chattea --help
 python -m pytest -q
-python -m build
 ```
 
-## CLI Contract
+## Common Flow
 
-This template depends on `chatstyle>=0.1.0,<0.2.0` and `chatenv>=0.2.0,<0.3.0`. New commands should prefer:
+```bash
+chattea server install --version 1.26.4
+chattea server init --work-path ~/gitea --http-port 3000
+chattea server start --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+chattea repo list
+```
 
-- `CommandSchema` / `CommandField` for inputs.
-- `add_interactive_option()` for the shared `-i/-I` switch.
-- `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
+## CLI Tree
 
-## Layout
-
-- `src/`: package source code
-- `tests/code-tests/`: code tests and migrated historical tests
-- `tests/cli-tests/`: real CLI tests, doc-first
-- `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
-- `docs/`: long-lived project docs built by mkdocs
+```text
+chattea
+├── set-token
+├── server
+│   ├── install
+│   ├── init
+│   ├── serve
+│   ├── start
+│   ├── stop
+│   ├── restart
+│   ├── status
+│   ├── logs
+│   ├── version
+│   └── health
+└── repo
+    ├── list
+    ├── view
+    ├── create
+    ├── clone
+    └── migrate
+```
 
 ## Development Notes
 
-See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
+The CLI is a thin wrapper over importable Python modules: `chattea.config`, `chattea.api`, `chattea.git`, and `chattea.server`. See `DEVELOP.md`, `AGENTS.md`, and `docs/interface-tree.md` before expanding the surface.
