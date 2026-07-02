@@ -17,51 +17,157 @@
 
 # ChatTea
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，第一版聚焦本地 Gitea 的安装、初始化、启动、token 配置和基础仓库操作。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦本地 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
 
 ## 快速开始
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev,docs]"
 chattea --help
 python -m pytest -q
 ```
 
-## 常用流程
+## 从零启动一个 Gitea 服务
 
-### 安装并初始化 Gitea
+### 0. 新机器安装
+
+稳定版：
 
 ```bash
-chattea server install --version 1.26.4 --prefix ~/.local/share/chattea/gitea
-chattea server init --work-path ~/gitea --http-port 3000
-chattea server serve --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+python -m pip install -U ChatTea
+chattea --version
 ```
 
-### 使用 user systemd 管理服务
+源码开发：
 
 ```bash
-chattea server start --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
-chattea server status
-chattea server logs --lines 100
-chattea server stop
+git clone https://github.com/ChatArch/ChatTea.git
+cd ChatTea
+python -m pip install -e ".[dev,docs]"
+python -m pytest -q
 ```
 
-### 配置 API token
+### 1. 初始化 ChatEnv
 
 ```bash
-chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+python -m chatenv.cli init -t chattea -I
+python -m chatenv.cli cat -t chattea
+python -m chatenv.cli test -t chattea
+```
+
+### 2. 配置长期 Env
+
+```bash
+python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
+chattea set-token --base-url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+```
+
+高级路径配置：
+
+```bash
+python -m chatenv.cli set CHATTEA_HOME=/srv/chattea
+python -m chatenv.cli set CHATTEA_BINARY=/usr/local/bin/gitea
+python -m chatenv.cli set CHATTEA_WORK_PATH=/srv/gitea
+python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
+```
+
+### 3. 安装并初始化 Gitea
+
+```bash
+chattea server install --version 1.26.4
+chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
+chattea server start
 chattea server health
 ```
 
-### 仓库操作
+`--listen-addr` 和 `--http-port` 会写进 Gitea `app.ini`，不是 ChatEnv 字段。局域网访问可以这样初始化：
 
 ```bash
+chattea server init --base-url http://172.25.52.106:3000 --listen-addr 0.0.0.0 --http-port 3000
+```
+
+### 4. 查看和修改 Gitea app.ini
+
+```bash
+chattea server config path
+chattea server config show
+chattea server config get --section server --key HTTP_PORT
+chattea server config set --section server --key HTTP_PORT --value 3001
+chattea server restart
+```
+
+`server config show` 默认会 mask `SECRET_KEY`、`INTERNAL_TOKEN`、`JWT_SECRET` 等敏感值。
+
+### 5. 更新和自启动
+
+更新 ChatTea 包：
+
+```bash
+python -m pip install -U ChatTea
+python -m chatenv.cli test -t chattea -I
+chattea --version
+```
+
+更新 Gitea binary：
+
+```bash
+chattea server stop
+chattea server install --version 1.26.5 --force
+chattea server start
+chattea server health
+```
+
+启用 user systemd 自启动：
+
+```bash
+chattea server start
+chattea server status
+loginctl enable-linger "$USER"
+```
+
+`loginctl enable-linger` 可能需要管理员策略允许；如果失败，服务仍可在当前登录会话里运行，但退出登录后不一定保持。
+
+### 6. 仓库操作
+
+```bash
+chattea repo create --owner gitea_admin --name demo
 chattea repo list
 chattea repo view gitea_admin/demo
-chattea repo create --owner gitea_admin --name demo
 chattea repo clone gitea_admin/demo
-chattea repo migrate --clone-url https://github.com/ChatArch/ChatTea.git --owner gitea_admin --name ChatTea
 ```
+
+迁移已有 Git 仓库：
+
+```bash
+chattea repo migrate \
+  --clone-url https://github.com/ChatArch/ChatTea.git \
+  --owner gitea_admin \
+  --name ChatTea
+```
+
+## ChatEnv 字段
+
+正式字段只有这些：
+
+```text
+CHATTEA_BASE_URL
+CHATTEA_TOKEN
+CHATTEA_HOME
+CHATTEA_BINARY
+CHATTEA_WORK_PATH
+CHATTEA_CONFIG
+```
+
+- `CHATTEA_BASE_URL`：用户和 API 访问 Gitea 的完整地址，也用于 Gitea `ROOT_URL`。
+- `CHATTEA_TOKEN`：Gitea API token，敏感字段，展示时默认 mask。
+- `CHATTEA_HOME`：ChatTea 管理本地 Gitea 的根目录，默认 `$CHATARCH_HOME/chattea`。
+- `CHATTEA_BINARY`：Gitea binary 路径，默认 `$CHATTEA_HOME/bin/gitea`。
+- `CHATTEA_WORK_PATH`：Gitea 工作目录，保存仓库、数据库、session 和日志。
+- `CHATTEA_CONFIG`：Gitea `app.ini` 文件路径，默认 `$CHATTEA_WORK_PATH/custom/conf/app.ini`。
+
+旧字段 `CHATTEA_URL` 和 `CHATTEA_GITEA_*` 只做兼容读取，不再作为正式 Env 展示或写入。`listen addr / port / domain / service name / version` 不作为 Env 暴露。
+
+完整逐项解释和保留/删除理由见 `docs/index.md`。
 
 ## CLI 结构
 
@@ -78,7 +184,12 @@ chattea
 │   ├── status
 │   ├── logs
 │   ├── version
-│   └── health
+│   ├── health
+│   └── config
+│       ├── path
+│       ├── show
+│       ├── get
+│       └── set
 └── repo
     ├── list
     ├── view
@@ -87,13 +198,25 @@ chattea
     └── migrate
 ```
 
-## 目录结构
+## Python API
 
-- `src/`：包源码
-- `tests/code-tests/`：代码测试和历史测试迁移
-- `tests/cli-tests/`：真实 CLI 测试，doc-first
-- `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first
-- `docs/`：长期维护文档，由 mkdocs 构建
+CLI 是薄封装。需要集成调用时，可以直接 import 函数或 client：
+
+```python
+from chattea.commands.server import install_gitea, init_gitea_server, start_gitea_service
+from chattea.commands.server import get_gitea_config_value, set_gitea_config_value
+from chattea.commands.repo import create_repository, clone_repository
+from chattea.api import GiteaClient
+
+install_gitea("1.26.4")
+init_gitea_server(base_url="http://127.0.0.1:3000", listen_addr="127.0.0.1", http_port=3000)
+start_gitea_service()
+set_gitea_config_value("server", "HTTP_PORT", "3001")
+
+client = GiteaClient(url="http://127.0.0.1:3000", token="...")
+repo = create_repository(name="demo", owner="gitea_admin")
+clone = clone_repository("gitea_admin/demo")
+```
 
 ## 开发说明
 

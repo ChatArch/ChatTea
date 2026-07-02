@@ -16,14 +16,14 @@ def test_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.1.1" in result.output
+    assert "0.2.1" in result.output
 
 
 def test_server_help_lists_lifecycle_commands():
     result = CliRunner().invoke(main, ["server", "--help"])
 
     assert result.exit_code == 0
-    for command in ["install", "init", "serve", "start", "stop", "restart", "status", "logs", "version", "health"]:
+    for command in ["install", "init", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config"]:
         assert command in result.output
 
 
@@ -36,19 +36,83 @@ def test_repo_help_lists_basic_commands():
 
 
 def test_set_token_writes_config(monkeypatch, tmp_path):
-    config_path = tmp_path / "config.json"
-    monkeypatch.setenv("CHATTEA_CONFIG", str(config_path))
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    env_path = tmp_path / "arch" / "envs" / "ChatTea" / ".env"
 
     result = CliRunner().invoke(
         main,
-        ["set-token", "--url", "http://gitea.local:3000", "--token", "secret-token"],
+        ["set-token", "--base-url", "http://gitea.local:3000", "--token", "secret-token"],
     )
 
     assert result.exit_code == 0
     assert "configured: http://gitea.local:3000" in result.output
     assert "secret-token" not in result.output
-    assert config_path.exists()
-    assert "secret-token" in config_path.read_text()
+    assert str(env_path) in result.output
+    assert env_path.exists()
+    env_text = env_path.read_text()
+    assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
+    assert "CHATTEA_TOKEN='secret-token'" in env_text
+    assert "CHATTEA_URL" not in env_text
+
+
+def test_set_token_accepts_legacy_url_option(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+
+    result = CliRunner().invoke(
+        main,
+        ["set-token", "--url", "http://legacy.local:3000", "--token", "secret-token"],
+    )
+
+    assert result.exit_code == 0
+    env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text()
+    assert "CHATTEA_BASE_URL='http://legacy.local:3000'" in env_text
+
+
+def test_set_token_no_interactive_fails_fast_when_token_missing():
+    result = CliRunner().invoke(main, ["set-token", "--base-url", "http://gitea.local:3000", "-I"])
+
+    assert result.exit_code != 0
+    assert "token" in result.output.lower()
+
+
+def test_server_install_no_interactive_fails_fast_when_version_missing():
+    result = CliRunner().invoke(main, ["server", "install", "-I"])
+
+    assert result.exit_code != 0
+    assert "version" in result.output.lower()
+
+
+def test_repo_create_no_interactive_fails_fast_when_name_missing():
+    result = CliRunner().invoke(main, ["repo", "create", "-I"])
+
+    assert result.exit_code != 0
+    assert "name" in result.output.lower()
+
+
+def test_server_config_commands_read_and_update_app_ini(tmp_path):
+    config_path = tmp_path / "app.ini"
+    config_path.write_text(
+        "[server]\nHTTP_ADDR = 127.0.0.1\nHTTP_PORT = 3000\n\n[security]\nSECRET_KEY = secret\n",
+        encoding="utf-8",
+    )
+
+    show = CliRunner().invoke(main, ["server", "config", "show", "--config", str(config_path)])
+    assert show.exit_code == 0
+    assert "HTTP_PORT = 3000" in show.output
+    assert "SECRET_KEY = <masked>" in show.output
+    assert "secret" not in show.output
+
+    get = CliRunner().invoke(main, ["server", "config", "get", "--config", str(config_path), "--key", "HTTP_PORT", "-I"])
+    assert get.exit_code == 0
+    assert get.output.strip() == "3000"
+
+    set_result = CliRunner().invoke(
+        main,
+        ["server", "config", "set", "--config", str(config_path), "--key", "HTTP_PORT", "--value", "3001", "-I"],
+    )
+    assert set_result.exit_code == 0
+    assert "updated:" in set_result.output
+    assert "HTTP_PORT = 3001" in config_path.read_text(encoding="utf-8")
 
 
 def test_repo_list_renders_table(monkeypatch):
@@ -91,9 +155,8 @@ def test_repo_create_calls_api(monkeypatch):
 
 
 def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp_path):
-    config_path = tmp_path / "config.json"
-    monkeypatch.setenv("CHATTEA_CONFIG", str(config_path))
-    CliRunner().invoke(main, ["set-token", "--url", "http://gitea.local", "--token", "secret-token"])
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    CliRunner().invoke(main, ["set-token", "--base-url", "http://gitea.local", "--token", "secret-token"])
     captured = {}
 
     def fake_clone(clone_url, directory=None):
