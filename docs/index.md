@@ -1,12 +1,13 @@
 # ChatTea 文档
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责从下载安装到启动本地 Gitea，也提供 token 配置、仓库创建、仓库查看、clone 和迁移等基础操作。`0.2.0` 起，ChatTea 配置接入 ChatEnv，所有正式配置都在 `ChatTea` 类型下管理。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责下载安装到启动本地 Gitea，也提供 token 配置、仓库创建、仓库查看、clone、迁移，以及 Gitea `app.ini` 的查看和小范围编辑。`0.2.0` 起，ChatTea 配置接入 ChatEnv，正式 Env 只保留长期、常用、跨命令共享的配置。
 
 ## CLI
 
 ```bash
 chattea --help
 chattea server --help
+chattea server config --help
 chattea repo --help
 ```
 
@@ -25,7 +26,12 @@ chattea
 │   ├── status
 │   ├── logs
 │   ├── version
-│   └── health
+│   ├── health
+│   └── config
+│       ├── path
+│       ├── show
+│       ├── get
+│       └── set
 └── repo
     ├── list
     ├── view
@@ -45,7 +51,7 @@ pip install -e ".[dev,docs]"
 python -m pytest -q
 ```
 
-安装后确认 CLI 可用：
+安装后确认 CLI 和 ChatEnv provider 可用：
 
 ```bash
 chattea --help
@@ -54,33 +60,23 @@ python -m chatenv.cli cat -t chattea
 python -m chatenv.cli test -t chattea
 ```
 
-### 2. 配置本地服务地址
+### 2. 配置长期 Env
 
-本机访问场景：
-
-```bash
-python -m chatenv.cli set CHATTEA_GITEA_BASE_URL=http://127.0.0.1:3000
-python -m chatenv.cli set CHATTEA_GITEA_LISTEN_ADDR=127.0.0.1
-python -m chatenv.cli set CHATTEA_GITEA_HTTP_PORT=3000
-```
-
-局域网访问场景：
+ChatTea 的 Env 只放长期共享配置。最常用的是 Gitea 网站/API 入口和 API token：
 
 ```bash
-python -m chatenv.cli set CHATTEA_GITEA_BASE_URL=http://172.25.52.106:3000
-python -m chatenv.cli set CHATTEA_GITEA_LISTEN_ADDR=0.0.0.0
-python -m chatenv.cli set CHATTEA_GITEA_HTTP_PORT=3000
+python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
+chattea set-token --base-url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
 ```
 
-反向代理场景：
+如果需要改目录或使用已有 Gitea binary，可以设置高级路径字段：
 
 ```bash
-python -m chatenv.cli set CHATTEA_GITEA_BASE_URL=https://git.example.com
-python -m chatenv.cli set CHATTEA_GITEA_LISTEN_ADDR=127.0.0.1
-python -m chatenv.cli set CHATTEA_GITEA_HTTP_PORT=3000
+python -m chatenv.cli set CHATTEA_HOME=/srv/chattea
+python -m chatenv.cli set CHATTEA_BINARY=/usr/local/bin/gitea
+python -m chatenv.cli set CHATTEA_WORK_PATH=/srv/gitea
+python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 ```
-
-这三个变量含义不同：`BASE_URL` 是用户和 API 怎么访问 Gitea；`LISTEN_ADDR` 是进程绑定在哪个 IP/host；`HTTP_PORT` 是进程监听哪个端口。
 
 ### 3. 下载并初始化 Gitea
 
@@ -89,22 +85,49 @@ chattea server install --version 1.26.4
 chattea server init
 ```
 
-`server init` 会生成 Gitea `app.ini`，默认位置是：
+`server init` 会生成 Gitea `app.ini`，默认位置来自 `CHATTEA_CONFIG`：
 
 ```text
 $CHATARCH_HOME/chattea/gitea/custom/conf/app.ini
 ```
 
-如果需要强制交互确认地址和端口，可以使用：
+`listen address` 和 `HTTP port` 是 Gitea app.ini 的内容，不是 ChatEnv。需要改变监听 IP/端口时，作为初始化参数传给 CLI：
+
+本机访问：
 
 ```bash
-chattea server init -i
+chattea server init \
+  --base-url http://127.0.0.1:3000 \
+  --listen-addr 127.0.0.1 \
+  --http-port 3000
 ```
 
-如果在 CI 或脚本里禁止交互，可以使用：
+局域网访问：
 
 ```bash
-chattea server init -I
+chattea server init \
+  --base-url http://172.25.52.106:3000 \
+  --listen-addr 0.0.0.0 \
+  --http-port 3000
+```
+
+反向代理访问：
+
+```bash
+chattea server init \
+  --base-url https://git.example.com \
+  --listen-addr 127.0.0.1 \
+  --http-port 3000
+```
+
+这些参数会落到 Gitea `app.ini`：
+
+```ini
+[server]
+HTTP_ADDR = 127.0.0.1
+HTTP_PORT = 3000
+DOMAIN = git.example.com
+ROOT_URL = https://git.example.com/
 ```
 
 ### 4. 启动和检查服务
@@ -133,21 +156,36 @@ chattea server restart
 
 systemd unit 名固定为 `chattea-gitea.service`。它是内部实现细节，不作为 Env 暴露。
 
-### 5. 创建 token 并配置 ChatTea
+### 5. 查看和修改 Gitea app.ini
 
-在 Gitea 页面创建 API token 后写入 ChatEnv：
+Gitea 背后的服务配置在 `app.ini`，这和 ChatEnv 是两套东西。ChatEnv 负责 ChatTea 的长期参数，`server config` 负责查看或小范围编辑 Gitea app.ini。
 
-```bash
-chattea set-token --base-url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
-```
-
-兼容旧命令：
+查看 app.ini 路径：
 
 ```bash
-chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+chattea server config path
 ```
 
-`set-token` 会写入 `$CHATARCH_HOME/envs/ChatTea/.env`。CLI 输出会 mask token；实际 env 文件需要保存真实 token。
+查看 app.ini 内容，默认会 mask `SECRET_KEY`、`INTERNAL_TOKEN`、`JWT_SECRET` 等敏感值：
+
+```bash
+chattea server config show
+```
+
+读取单个配置：
+
+```bash
+chattea server config get --section server --key HTTP_PORT
+```
+
+修改单个配置：
+
+```bash
+chattea server config set --section server --key HTTP_PORT --value 3001
+chattea server restart
+```
+
+`server config set` 是编辑 Gitea `app.ini`，不是写 ChatEnv。
 
 ### 6. 创建和使用仓库
 
@@ -171,29 +209,13 @@ chattea repo migrate \
 
 ## ChatEnv 字段逐项说明
 
-### `CHATTEA_GITEA_BASE_URL`
+### `CHATTEA_BASE_URL`
 
 这是用户、浏览器和 ChatTea API 访问 Gitea 的完整地址。常见值是 `http://127.0.0.1:3000`、`http://172.25.52.106:3000` 或 `https://git.example.com`。
 
-它会用于 ChatTea API client 的默认 URL，也会写入 Gitea `app.ini` 的 `ROOT_URL`。Gitea 需要的 `DOMAIN` 会从这个 URL 的 host 解析出来。
+它会用于 ChatTea API client 的默认 URL，也会在 `server init` 默认值中用于 Gitea `ROOT_URL`。Gitea `DOMAIN` 会从这个 URL 的 host 解析出来。
 
-决定：保留。这是服务配置里最核心、最用户可理解的入口地址。
-
-### `CHATTEA_GITEA_LISTEN_ADDR`
-
-这是本地 Gitea 进程实际监听的 IP/host。只能写 `127.0.0.1`、`0.0.0.0`、`172.25.52.106` 这类地址，不要写 `http://...`。
-
-`127.0.0.1` 表示只允许本机访问；`0.0.0.0` 表示绑定所有网卡，局域网机器可以访问。它会写入 Gitea `app.ini` 的 `HTTP_ADDR`。
-
-决定：保留。部署服务时绑定地址是真实配置，不应该被 Base URL 偷偷代替。
-
-### `CHATTEA_GITEA_HTTP_PORT`
-
-这是本地 Gitea 进程实际监听的 HTTP 端口。常见值是 `3000`、`3001` 或 `8080`。
-
-它会写入 Gitea `app.ini` 的 `HTTP_PORT`。端口冲突很常见，所以用户需要能明确调整它。
-
-决定：保留。端口是服务运行配置，不是内部细节。
+决定：保留。它是服务身份和 API 入口，是长期共享配置。
 
 ### `CHATTEA_TOKEN`
 
@@ -211,7 +233,7 @@ chattea repo migrate \
 
 决定：保留。这是路径总控配置，但属于高级配置。
 
-### `CHATTEA_GITEA_BINARY`
+### `CHATTEA_BINARY`
 
 这是 Gitea 二进制文件路径。默认是 `$CHATTEA_HOME/bin/gitea`。
 
@@ -219,7 +241,7 @@ chattea repo migrate \
 
 决定：保留。这是部署工具的真实可定制项。
 
-### `CHATTEA_GITEA_WORK_PATH`
+### `CHATTEA_WORK_PATH`
 
 这是 Gitea 的工作目录。Gitea 的仓库数据、SQLite 数据库、session、log 和 `custom/` 目录都在这里。
 
@@ -227,21 +249,37 @@ chattea repo migrate \
 
 决定：保留。这是服务数据位置，必须可配置。
 
-### `CHATTEA_GITEA_CONFIG`
+### `CHATTEA_CONFIG`
 
-这是 Gitea `app.ini` 配置文件路径，不是 ChatTea 自己的配置文件。默认是 `$CHATTEA_GITEA_WORK_PATH/custom/conf/app.ini`。
+这是 Gitea `app.ini` 配置文件路径，不是旧的 ChatTea JSON 配置文件。默认是 `$CHATTEA_WORK_PATH/custom/conf/app.ini`。
 
-高级用户可能已经有自己的 `app.ini`，或者希望把配置文件放到固定位置。普通用户一般不用改。
+高级用户可能已经有自己的 `app.ini`，或者希望把配置文件放到固定位置。普通用户一般不用改；要看内容用 `chattea server config show`。
 
 决定：保留，但属于高级配置。文档必须明确它写的是 Gitea `app.ini` 路径。
 
-## 不作为正式 Env 的旧字段
+## 不作为正式 Env 的旧字段和参数
 
 ### `CHATTEA_URL`
 
-旧版本用它表示 Gitea API base URL。现在它和 `CHATTEA_GITEA_BASE_URL` 语义重复，而且名字不够清楚。
+旧版本用它表示 Gitea API base URL。现在它和 `CHATTEA_BASE_URL` 语义重复，而且名字不够清楚。
 
 新版本只做兼容读取：如果旧环境里存在 `CHATTEA_URL`，`load_config()` 可以 fallback 使用。但 `chatenv cat -t chattea` 不再展示它，`set-token` 也不再写它。
+
+决定：不保留为正式 Env。
+
+### `CHATTEA_GITEA_*`
+
+旧草案里出现过 `CHATTEA_GITEA_BASE_URL`、`CHATTEA_GITEA_BINARY`、`CHATTEA_GITEA_WORK_PATH`、`CHATTEA_GITEA_CONFIG` 等字段。
+
+因为包名已经是 ChatTea，语义就是 Gitea 管理工具，Env 再加一层 `GITEA` 会显得绕。新版本优先用短名，旧字段只做兼容读取。
+
+决定：不保留为正式 Env。
+
+### `CHATTEA_GITEA_LISTEN_ADDR` / `CHATTEA_GITEA_HTTP_PORT`
+
+监听地址和端口会写进 Gitea `app.ini` 的 `HTTP_ADDR` 和 `HTTP_PORT`。
+
+它们是初始化/服务配置参数，不是 ChatEnv 需要长期识别的全局变量。需要设置时使用 `chattea server init --listen-addr ... --http-port ...`，需要查看/修改时使用 `chattea server config`。
 
 决定：不保留为正式 Env。
 
@@ -249,7 +287,7 @@ chattea repo migrate \
 
 Gitea `app.ini` 里确实有 `DOMAIN`，但用户不应该同时维护 `BASE_URL` 和 `DOMAIN`。
 
-ChatTea 会从 `CHATTEA_GITEA_BASE_URL` 解析 host，并自动写入 `DOMAIN`。这样可以避免 URL 和 domain 不一致。
+ChatTea 会从 `CHATTEA_BASE_URL` 或 `server init --base-url` 解析 host，并自动写入 `DOMAIN`。这样可以避免 URL 和 domain 不一致。
 
 决定：不保留。
 
@@ -269,26 +307,22 @@ Gitea 版本是 `chattea server install --version` 的一次性输入。
 
 决定：不保留。
 
-### `CHATTEA_CONFIG`
-
-这是旧 JSON 配置文件路径，用于 `~/.config/chattea/config.json` 兼容读取。
-
-新配置已经统一走 ChatEnv，不应该再让用户理解两套配置系统。
-
-决定：不保留为正式 Env，只做 legacy fallback。
-
 ## Python API
 
 CLI 只是一层薄封装。需要在 Python 中复用时，优先直接调用裸函数或 client：
 
 ```python
 from chattea.commands.server import install_gitea, init_gitea_server, start_gitea_service
+from chattea.commands.server import get_gitea_config_value, set_gitea_config_value
 from chattea.commands.repo import create_repository, clone_repository
 from chattea.api import GiteaClient
 
 binary = install_gitea("1.26.4")
 config = init_gitea_server(base_url="http://127.0.0.1:3000", listen_addr="127.0.0.1", http_port=3000)
 start_gitea_service()
+
+port = get_gitea_config_value("server", "HTTP_PORT")
+set_gitea_config_value("server", "HTTP_PORT", "3001")
 
 client = GiteaClient(url="http://127.0.0.1:3000", token="...")
 repo = create_repository(name="demo", owner="gitea_admin")

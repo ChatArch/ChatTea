@@ -107,7 +107,7 @@ def repo_group() -> None:
 @repo_group.command(name="list")
 @click.option("--owner", default=None, help="Organization owner. Omit to list current user's repositories.")
 @click.option("--limit", default=50, show_default=True)
-@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def repo_list(owner: str | None, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
@@ -124,7 +124,7 @@ def repo_list(owner: str | None, limit: int, url: str | None, token: str | None,
 
 @repo_group.command(name="view")
 @click.argument("repo", required=False)
-@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 @add_interactive_option
@@ -156,7 +156,7 @@ def repo_view(repo: str | None, url: str | None, token: str | None, json_output:
 @click.option("--description", default=None)
 @click.option("--public", "public_repo", is_flag=True, help="Create a public repository. Defaults to private.")
 @click.option("--default-branch", default="main", show_default=True)
-@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 @add_interactive_option
@@ -202,7 +202,7 @@ def repo_create(
 @repo_group.command(name="clone")
 @click.argument("repo", required=False)
 @click.argument("directory", required=False)
-@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--json-output", is_flag=True)
 @add_interactive_option
 def repo_clone(repo: str | None, directory: str | None, url: str | None, json_output: bool, interactive: bool | None) -> None:
@@ -232,7 +232,7 @@ def repo_clone(repo: str | None, directory: str | None, url: str | None, json_ou
 @click.option("--mirror", is_flag=True, help="Create as mirror repository.")
 @click.option("--auth-username", default=None, help="Source repository username.")
 @click.option("--auth-password", default=None, help="Source repository password or token.")
-@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 @add_interactive_option

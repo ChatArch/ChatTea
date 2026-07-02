@@ -26,7 +26,7 @@ def test_config_round_trip_uses_chatenv(monkeypatch, tmp_path):
     assert config.gitea_binary == tmp_path / "arch" / "chattea" / "bin" / "gitea"
     assert config.gitea_work_path == tmp_path / "arch" / "chattea" / "gitea"
     env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text(encoding="utf-8")
-    assert "CHATTEA_GITEA_BASE_URL='http://gitea.local:3000'" in env_text
+    assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
     assert "CHATTEA_URL" not in env_text
 
 
@@ -65,18 +65,14 @@ def test_chatenv_provider_fields_are_registered():
     assert ChatTeaEnvConfig._aliases == ["chattea", "gitea", "tea"]
     assert fields["CHATTEA_TOKEN"].is_sensitive is True
     assert set(fields) == {
-        "CHATTEA_GITEA_BASE_URL",
-        "CHATTEA_GITEA_LISTEN_ADDR",
-        "CHATTEA_GITEA_HTTP_PORT",
+        "CHATTEA_BASE_URL",
         "CHATTEA_TOKEN",
         "CHATTEA_HOME",
-        "CHATTEA_GITEA_BINARY",
-        "CHATTEA_GITEA_WORK_PATH",
-        "CHATTEA_GITEA_CONFIG",
+        "CHATTEA_BINARY",
+        "CHATTEA_WORK_PATH",
+        "CHATTEA_CONFIG",
     }
-    assert fields["CHATTEA_GITEA_BASE_URL"].default == DEFAULT_BASE_URL
-    assert fields["CHATTEA_GITEA_LISTEN_ADDR"].default == DEFAULT_LISTEN_ADDR
-    assert fields["CHATTEA_GITEA_HTTP_PORT"].default == str(DEFAULT_HTTP_PORT)
+    assert fields["CHATTEA_BASE_URL"].default == DEFAULT_BASE_URL
 
 
 def test_chatenv_config_test_validates_values(monkeypatch, tmp_path, capsys):

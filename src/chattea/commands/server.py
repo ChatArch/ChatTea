@@ -25,11 +25,110 @@ INIT_SCHEMA = CommandSchema(
     ),
 )
 
+CONFIG_KEY_SCHEMA = CommandSchema(
+    name="server config get",
+    fields=(
+        CommandField("section", prompt="Gitea app.ini section", required=True, default="server", prompt_if_missing=True),
+        CommandField("key", prompt="Gitea app.ini key", required=True),
+    ),
+)
+
+CONFIG_SET_SCHEMA = CommandSchema(
+    name="server config set",
+    fields=(
+        CommandField("section", prompt="Gitea app.ini section", required=True, default="server", prompt_if_missing=True),
+        CommandField("key", prompt="Gitea app.ini key", required=True),
+        CommandField("value", prompt="Gitea app.ini value", required=True),
+    ),
+)
+
+SENSITIVE_CONFIG_KEYS = {"SECRET_KEY", "INTERNAL_TOKEN", "JWT_SECRET", "LFS_JWT_SECRET"}
+
 
 def _required_path(value: Path | None, name: str) -> Path:
     if value is None:
         raise click.ClickException(f"Missing resolved path for {name}.")
     return value
+
+
+def resolve_gitea_config_path(config_path: Path | None = None) -> Path:
+    """Return the managed Gitea app.ini path."""
+    config = load_config()
+    return config_path or _required_path(config.gitea_config, "CHATTEA_CONFIG")
+
+
+def read_gitea_config(config_path: Path | None = None, mask_sensitive: bool = True) -> str:
+    """Read the managed Gitea app.ini content."""
+    path = resolve_gitea_config_path(config_path)
+    text = path.read_text(encoding="utf-8")
+    return mask_gitea_config(text) if mask_sensitive else text
+
+
+def mask_gitea_config(text: str) -> str:
+    """Mask known sensitive app.ini keys before displaying config content."""
+    lines: list[str] = []
+    for line in text.splitlines():
+        key, sep, _value = line.partition("=")
+        if sep and key.strip().upper() in SENSITIVE_CONFIG_KEYS:
+            lines.append(f"{key.rstrip()} = <masked>")
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def get_gitea_config_value(section: str, key: str, config_path: Path | None = None) -> str:
+    """Return one value from the managed Gitea app.ini."""
+    path = resolve_gitea_config_path(config_path)
+    current_section: str | None = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            current_section = stripped[1:-1].strip()
+            continue
+        if current_section != section:
+            continue
+        existing_key, sep, value = line.partition("=")
+        if sep and existing_key.strip() == key:
+            return value.strip()
+    raise KeyError(f"{section}.{key} not found in {path}")
+
+
+def set_gitea_config_value(section: str, key: str, value: str, config_path: Path | None = None) -> Path:
+    """Set one value in the managed Gitea app.ini, creating the section/key when needed."""
+    path = resolve_gitea_config_path(config_path)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    output: list[str] = []
+    current_section: str | None = None
+    seen_section = False
+    updated = False
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            if seen_section and not updated:
+                output.append(f"{key} = {value}")
+                updated = True
+            current_section = stripped[1:-1].strip()
+            seen_section = current_section == section
+            output.append(line)
+            continue
+        if seen_section and current_section == section:
+            existing_key, sep, _old_value = line.partition("=")
+            if sep and existing_key.strip() == key:
+                output.append(f"{key} = {value}")
+                updated = True
+                continue
+        output.append(line)
+
+    if not seen_section and not updated:
+        if output and output[-1].strip():
+            output.append("")
+        output.extend([f"[{section}]", f"{key} = {value}"])
+    elif seen_section and not updated:
+        output.append(f"{key} = {value}")
+
+    path.write_text("\n".join(output) + "\n", encoding="utf-8")
+    return path
 
 
 def install_gitea(version: str, prefix: Path | None = None, arch: str | None = None, force: bool = False) -> Path:
@@ -52,12 +151,12 @@ def init_gitea_server(
     """Create or reuse the managed Gitea app.ini."""
     config = load_config()
     return server_ops.init_instance(
-        work_path=work_path or _required_path(config.gitea_work_path, "CHATTEA_GITEA_WORK_PATH"),
-        binary=binary or _required_path(config.gitea_binary, "CHATTEA_GITEA_BINARY"),
-        config_path=config_path or _required_path(config.gitea_config, "CHATTEA_GITEA_CONFIG"),
+        work_path=work_path or _required_path(config.gitea_work_path, "CHATTEA_WORK_PATH"),
+        binary=binary or _required_path(config.gitea_binary, "CHATTEA_BINARY"),
+        config_path=config_path or _required_path(config.gitea_config, "CHATTEA_CONFIG"),
         base_url=base_url or config.url,
-        listen_addr=listen_addr or config.gitea_listen_addr,
-        http_port=http_port or config.gitea_http_port,
+        listen_addr=listen_addr or DEFAULT_LISTEN_ADDR,
+        http_port=http_port or DEFAULT_HTTP_PORT,
         run_user=run_user,
         force=force,
     )
@@ -67,10 +166,10 @@ def serve_gitea(binary: Path | None = None, config_path: Path | None = None, wor
     """Run the managed Gitea instance in the foreground."""
     resolved = load_config()
     return server_ops.run_gitea(
-        binary or _required_path(resolved.gitea_binary, "CHATTEA_GITEA_BINARY"),
+        binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY"),
         ["web"],
-        config=config_path or _required_path(resolved.gitea_config, "CHATTEA_GITEA_CONFIG"),
-        work_path=work_path or _required_path(resolved.gitea_work_path, "CHATTEA_GITEA_WORK_PATH"),
+        config=config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG"),
+        work_path=work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH"),
     )
 
 
@@ -78,9 +177,9 @@ def start_gitea_service(binary: Path | None = None, config_path: Path | None = N
     """Install and start the managed user-level systemd service."""
     resolved = load_config()
     service_file = server_ops.write_user_service(
-        binary or _required_path(resolved.gitea_binary, "CHATTEA_GITEA_BINARY"),
-        config_path or _required_path(resolved.gitea_config, "CHATTEA_GITEA_CONFIG"),
-        work_path or _required_path(resolved.gitea_work_path, "CHATTEA_GITEA_WORK_PATH"),
+        binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY"),
+        config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG"),
+        work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH"),
     )
     server_ops.systemctl_user(["daemon-reload"])
     server_ops.systemctl_user(["enable", "--now", server_ops.DEFAULT_SERVICE_NAME])
@@ -118,7 +217,7 @@ def gitea_version(binary: Path | None = None, url: str | None = None) -> dict | 
     try:
         return GiteaClient(url=config.url, token=config.token).version()
     except GiteaAPIError:
-        server_ops.run_gitea(_required_path(config.gitea_binary, "CHATTEA_GITEA_BINARY"), ["--version"])
+        server_ops.run_gitea(_required_path(config.gitea_binary, "CHATTEA_BINARY"), ["--version"])
         return None
 
 
@@ -133,6 +232,71 @@ def check_gitea_health(url: str | None = None) -> dict:
 @click.group(name="server")
 def server_group() -> None:
     """Install and manage a local Gitea server."""
+
+
+@server_group.group(name="config")
+def config_group() -> None:
+    """Inspect and edit the managed Gitea app.ini."""
+
+
+@config_group.command(name="path")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+def config_path_command(config_path: Path | None) -> None:
+    """Show the managed Gitea app.ini path."""
+    click.echo(resolve_gitea_config_path(config_path))
+
+
+@config_group.command(name="show")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--no-mask", is_flag=True, help="Show sensitive app.ini values in plain text.")
+def config_show(config_path: Path | None, no_mask: bool) -> None:
+    """Show the managed Gitea app.ini content."""
+    try:
+        click.echo(read_gitea_config(config_path, mask_sensitive=not no_mask))
+    except OSError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+@config_group.command(name="get")
+@click.option("--section", default=None, help="Gitea app.ini section, for example server.")
+@click.option("--key", default=None, help="Gitea app.ini key, for example HTTP_PORT.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@add_interactive_option
+def config_get(section: str | None, key: str | None, config_path: Path | None, interactive: bool | None) -> None:
+    """Read one value from the managed Gitea app.ini."""
+    provided_section = section if interactive is True else section or "server"
+    values = resolve_command_inputs(
+        schema=CONFIG_KEY_SCHEMA,
+        provided={"section": provided_section, "key": key},
+        interactive=interactive,
+        usage="Usage: chattea server config get --section SECTION --key KEY [-i|-I]",
+    )
+    try:
+        click.echo(get_gitea_config_value(values["section"], values["key"], config_path=config_path))
+    except (KeyError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+@config_group.command(name="set")
+@click.option("--section", default=None, help="Gitea app.ini section, for example server.")
+@click.option("--key", default=None, help="Gitea app.ini key, for example HTTP_PORT.")
+@click.option("--value", default=None, help="Value to write into app.ini.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@add_interactive_option
+def config_set(section: str | None, key: str | None, value: str | None, config_path: Path | None, interactive: bool | None) -> None:
+    """Write one value into the managed Gitea app.ini."""
+    provided_section = section if interactive is True else section or "server"
+    values = resolve_command_inputs(
+        schema=CONFIG_SET_SCHEMA,
+        provided={"section": provided_section, "key": key, "value": value},
+        interactive=interactive,
+        usage="Usage: chattea server config set --section SECTION --key KEY --value VALUE [-i|-I]",
+    )
+    try:
+        path = set_gitea_config_value(values["section"], values["key"], values["value"], config_path=config_path)
+    except OSError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"updated: {path}")
 
 
 @server_group.command(name="install")
@@ -154,12 +318,12 @@ def install(version: str | None, prefix: Path | None, arch: str | None, force: b
 
 
 @server_group.command(name="init")
-@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_GITEA_WORK_PATH.")
-@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_GITEA_CONFIG.")
-@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_GITEA_BINARY.")
-@click.option("--base-url", default=None, help="Gitea public website/API base URL. Defaults to CHATTEA_GITEA_BASE_URL.")
-@click.option("--listen-addr", default=None, help="Gitea listen IP/host. Defaults to CHATTEA_GITEA_LISTEN_ADDR.")
-@click.option("--http-port", default=None, type=int, help="Gitea listen port. Defaults to CHATTEA_GITEA_HTTP_PORT.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--base-url", default=None, help="Gitea public website/API base URL. Defaults to CHATTEA_BASE_URL.")
+@click.option("--listen-addr", default=None, help="Gitea listen IP/host written to app.ini. Defaults to 127.0.0.1.")
+@click.option("--http-port", default=None, type=int, help="Gitea listen port written to app.ini. Defaults to 3000.")
 @click.option("--run-user", default=None)
 @click.option("--force", is_flag=True)
 @add_interactive_option
@@ -184,8 +348,8 @@ def init(
     if interactive is not True:
         provided = {
             "base_url": base_url or config.url,
-            "listen_addr": listen_addr or config.gitea_listen_addr,
-            "http_port": http_port or config.gitea_http_port,
+            "listen_addr": listen_addr or DEFAULT_LISTEN_ADDR,
+            "http_port": http_port or DEFAULT_HTTP_PORT,
         }
     values = resolve_command_inputs(
         schema=INIT_SCHEMA,
@@ -207,18 +371,18 @@ def init(
 
 
 @server_group.command(name="serve")
-@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_GITEA_BINARY.")
-@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_GITEA_CONFIG.")
-@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_GITEA_WORK_PATH.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
 def serve(binary: Path | None, config_path: Path | None, work_path: Path | None) -> None:
     """Run Gitea in the foreground."""
     serve_gitea(binary=binary, config_path=config_path, work_path=work_path)
 
 
 @server_group.command(name="start")
-@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_GITEA_BINARY.")
-@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_GITEA_CONFIG.")
-@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_GITEA_WORK_PATH.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
 def start(binary: Path | None, config_path: Path | None, work_path: Path | None) -> None:
     """Install and start a user systemd service."""
     service_file = start_gitea_service(binary=binary, config_path=config_path, work_path=work_path)
@@ -261,8 +425,8 @@ def logs(follow: bool, lines: int) -> None:
 
 
 @server_group.command(name="version")
-@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_GITEA_BINARY.")
-@click.option("--url", default=None, help="Gitea base URL. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--url", default=None, help="Gitea base URL. Defaults to CHATTEA_BASE_URL.")
 @click.option("--json-output", is_flag=True)
 def version(binary: Path | None, url: str | None, json_output: bool) -> None:
     """Show Gitea binary or server version."""
@@ -272,7 +436,7 @@ def version(binary: Path | None, url: str | None, json_output: bool) -> None:
 
 
 @server_group.command(name="health")
-@click.option("--url", default=None, help="Gitea base URL. Defaults to CHATTEA_GITEA_BASE_URL.")
+@click.option("--url", default=None, help="Gitea base URL. Defaults to CHATTEA_BASE_URL.")
 @click.option("--json-output", is_flag=True)
 def health(url: str | None, json_output: bool) -> None:
     """Check whether the Gitea API is reachable."""
