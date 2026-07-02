@@ -17,24 +17,75 @@
 
 # ChatTea
 
-ChatTea: ChatArch Python package
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，第一版聚焦本地 Gitea 的安装、初始化、启动、token 配置和基础仓库操作。
 
 ## 快速开始
 
 ```bash
 pip install -e ".[dev]"
-chattea hello ChatArch
+chattea --help
 python -m pytest -q
-python -m build
 ```
 
-## CLI 规范
+## 常用流程
 
-这个模板默认依赖 `chatstyle>=0.1.0,<0.2.0` 和 `chatenv>=0.2.0,<0.3.0`，新的命令应优先使用：
+### 安装并初始化 Gitea
 
-- `CommandSchema` / `CommandField` 描述输入。
-- `add_interactive_option()` 提供统一 `-i/-I`。
-- `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
+```bash
+chattea server install --version 1.26.4 --prefix ~/.local/share/chattea/gitea
+chattea server init --work-path ~/gitea --http-port 3000
+chattea server serve --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+```
+
+### 使用 user systemd 管理服务
+
+```bash
+chattea server start --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+chattea server status
+chattea server logs --lines 100
+chattea server stop
+```
+
+### 配置 API token
+
+```bash
+chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+chattea server health
+```
+
+### 仓库操作
+
+```bash
+chattea repo list
+chattea repo view gitea_admin/demo
+chattea repo create --owner gitea_admin --name demo
+chattea repo clone gitea_admin/demo
+chattea repo migrate --clone-url https://github.com/ChatArch/ChatTea.git --owner gitea_admin --name ChatTea
+```
+
+## CLI 结构
+
+```text
+chattea
+├── set-token
+├── server
+│   ├── install
+│   ├── init
+│   ├── serve
+│   ├── start
+│   ├── stop
+│   ├── restart
+│   ├── status
+│   ├── logs
+│   ├── version
+│   └── health
+└── repo
+    ├── list
+    ├── view
+    ├── create
+    ├── clone
+    └── migrate
+```
 
 ## 目录结构
 
@@ -46,4 +97,4 @@ python -m build
 
 ## 开发说明
 
-扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。接口树见 `docs/interface-tree.md`。
