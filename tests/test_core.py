@@ -1,18 +1,55 @@
 from pathlib import Path
+import tomllib
 
 from chattea import server as server_ops
 from chattea.api import GiteaClient
-from chattea.config import ChatTeaConfig, load_config, save_config
+from chattea.config import ChatTeaConfig, ChatTeaEnvConfig, default_chattea_home, load_config, save_config
 
 
-def test_config_round_trip(tmp_path):
-    path = tmp_path / "config.json"
-    save_config(ChatTeaConfig(url="http://gitea.local", token="token"), path)
+def test_config_round_trip_uses_chatenv(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    save_config(ChatTeaConfig(url="http://gitea.local", token="token"))
 
-    config = load_config(path)
+    config = load_config()
 
     assert config.url == "http://gitea.local"
     assert config.token == "token"
+    assert config.home == tmp_path / "arch" / "chattea"
+    assert config.gitea_binary == tmp_path / "arch" / "chattea" / "bin" / "gitea"
+    assert config.gitea_work_path == tmp_path / "arch" / "chattea" / "gitea"
+
+
+def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    path = tmp_path / "config.json"
+    path.write_text('{"url": "http://legacy.local", "token": "legacy-token"}', encoding="utf-8")
+
+    config = load_config(path)
+
+    assert config.url == "http://legacy.local"
+    assert config.token == "legacy-token"
+
+
+def test_default_chattea_home_comes_from_chatarch_home(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+
+    assert default_chattea_home() == tmp_path / "arch" / "chattea"
+
+
+def test_chatenv_provider_fields_are_registered():
+    fields = {field.env_key: field for field in ChatTeaEnvConfig.get_fields().values()}
+
+    assert ChatTeaEnvConfig.get_storage_name() == "ChatTea"
+    assert "chattea" in ChatTeaEnvConfig._aliases
+    assert fields["CHATTEA_TOKEN"].is_sensitive is True
+    assert "CHATTEA_URL" in fields
+    assert "CHATTEA_GITEA_WORK_PATH" in fields
+
+
+def test_pyproject_registers_chatenv_provider():
+    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+
+    assert data["project"]["entry-points"]["chatenv.configs"]["chattea"] == "chattea.config"
 
 
 def test_render_app_ini_contains_core_settings():

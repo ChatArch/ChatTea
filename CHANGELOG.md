@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-02 - 0.2.0
+
+### Changed
+
+- Registered ChatTea as a ChatEnv provider with the `ChatTea` typed profile.
+- Changed `chattea set-token` to write `$CHATARCH_HOME/envs/ChatTea/.env` instead of the legacy JSON config.
+- Normalized default Gitea paths under `$CHATARCH_HOME/chattea` while keeping CLI options for explicit overrides.
+- Kept legacy `~/.config/chattea/config.json` as a read-only fallback for URL/token compatibility.
+
 ## 2026-07-02 - 0.1.1
 
 ### Added

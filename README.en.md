@@ -17,7 +17,7 @@
 
 # ChatTea
 
-ChatTea is ChatArch's Gitea management CLI/API package. The first version focuses on local Gitea installation, initialization, service management, token configuration, and basic repository operations.
+ChatTea is ChatArch's Gitea management CLI/API package for local Gitea installation, initialization, service management, token configuration, and basic repository operations. Since `0.2.0`, ChatTea uses ChatEnv and stores runtime files under `~/.chatarch/chattea` by default.
 
 ## Quick Start
 
@@ -30,11 +30,22 @@ python -m pytest -q
 ## Common Flow
 
 ```bash
-chattea server install --version 1.26.4
-chattea server init --work-path ~/gitea --http-port 3000
-chattea server start --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+chattea server install
+chattea server init
+chattea server start
 chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
 chattea repo list
+```
+
+`set-token` writes the active ChatEnv profile at `$CHATARCH_HOME/envs/ChatTea/.env`. Legacy `~/.config/chattea/config.json` is read only as a compatibility fallback.
+
+Default paths:
+
+```text
+$CHATARCH_HOME/chattea/bin/gitea
+$CHATARCH_HOME/chattea/gitea/custom/conf/app.ini
+$CHATARCH_HOME/chattea/gitea/data/gitea.db
+~/.config/systemd/user/chattea-gitea.service
 ```
 
 ## CLI Tree

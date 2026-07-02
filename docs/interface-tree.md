@@ -28,9 +28,9 @@ chattea
 
 ## Responsibilities
 
-- `set-token`: store the default Gitea base URL and API token for subsequent commands.
+- `set-token`: store the default Gitea base URL and API token in the ChatEnv `ChatTea` active profile.
 - `server install`: download a Gitea Linux binary into a local prefix.
-- `server init`: create a minimal `app.ini` for a local SQLite-backed Gitea instance.
+- `server init`: create a minimal `app.ini` for a local SQLite-backed Gitea instance under `$CHATARCH_HOME/chattea` by default.
 - `server serve`: run Gitea in the foreground for debugging or one-off sessions.
 - `server start/stop/restart/status/logs`: manage the user-level systemd service.
 - `server version/health`: inspect the local binary or configured Gitea HTTP endpoint.
@@ -43,7 +43,7 @@ chattea
 The CLI must stay a thin wrapper. Reusable behavior lives in importable modules so Python callers do not need to shell out:
 
 ```text
-chattea.config  -> load_config, save_config, set_token
+chattea.config  -> ChatTeaEnvConfig, load_config, save_config, set_token
 chattea.api     -> GiteaClient, repo_clone_url
 chattea.git     -> clone_repo
 chattea.server  -> install_binary, init_instance, run_gitea, write_user_service

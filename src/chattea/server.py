@@ -8,10 +8,15 @@ import subprocess
 import urllib.request
 from pathlib import Path
 
+from chattea.config import (
+    DEFAULT_GITEA_VERSION,
+    DEFAULT_SERVICE_NAME,
+    default_chattea_home,
+    default_gitea_work_path,
+)
 
-DEFAULT_PREFIX = Path("~/.local/share/chattea/gitea").expanduser()
-DEFAULT_WORK_PATH = Path("~/gitea").expanduser()
-DEFAULT_SERVICE_NAME = "chattea-gitea.service"
+DEFAULT_PREFIX = default_chattea_home()
+DEFAULT_WORK_PATH = default_gitea_work_path(DEFAULT_PREFIX)
 
 
 def detect_asset_arch() -> str:
@@ -23,7 +28,7 @@ def detect_asset_arch() -> str:
     raise ValueError(f"Unsupported architecture: {platform.machine()}")
 
 
-def install_binary(version: str, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
+def install_binary(version: str = DEFAULT_GITEA_VERSION, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
     arch = arch or detect_asset_arch()
     bin_dir = prefix.expanduser() / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
@@ -109,16 +114,17 @@ ENABLED = false
 def init_instance(
     work_path: Path = DEFAULT_WORK_PATH,
     binary: Path | None = None,
+    config_path: Path | None = None,
     http_port: int = 3000,
     domain: str = "127.0.0.1",
     run_user: str | None = None,
     force: bool = False,
 ) -> Path:
     work = work_path.expanduser()
-    config = work / "custom" / "conf" / "app.ini"
+    config = (config_path or work / "custom" / "conf" / "app.ini").expanduser()
     if config.exists() and not force:
         return config
-    for child in [work / "custom" / "conf", work / "data", work / "log"]:
+    for child in [config.parent, work / "data", work / "log"]:
         child.mkdir(parents=True, exist_ok=True)
     user = run_user or os.environ.get("USER") or "git"
     config.write_text(render_app_ini(work, user, http_port, domain), encoding="utf-8")

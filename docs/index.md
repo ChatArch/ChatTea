@@ -1,6 +1,6 @@
 # ChatTea 文档
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。第一版覆盖从安装到启动 Gitea，以及最常用的 token 和仓库操作。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它覆盖从安装到启动 Gitea，以及最常用的 token 和仓库操作。`0.2.0` 起，ChatTea 接入 ChatEnv，默认路径收敛到 `$CHATARCH_HOME/chattea`。
 
 ## CLI
 
@@ -37,16 +37,16 @@ chattea
 ## 从安装到启动
 
 ```bash
-chattea server install --version 1.26.4
-chattea server init --work-path ~/gitea --http-port 3000
-chattea server start --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+chattea server install
+chattea server init
+chattea server start
 chattea server health --url http://127.0.0.1:3000
 ```
 
 调试时可以使用前台启动：
 
 ```bash
-chattea server serve --work-path ~/gitea --config ~/gitea/custom/conf/app.ini
+chattea server serve
 ```
 
 ## 配置 token
@@ -56,6 +56,32 @@ chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
 ```
 
 `set-token` 只保存 Gitea base URL 和 API token，不维护复杂 auth 子树。
+
+配置写入 ChatEnv active profile：`$CHATARCH_HOME/envs/ChatTea/.env`。旧的 `~/.config/chattea/config.json` 只作为只读兼容 fallback。
+
+默认路径：
+
+```text
+$CHATARCH_HOME/chattea/bin/gitea
+$CHATARCH_HOME/chattea/gitea/custom/conf/app.ini
+$CHATARCH_HOME/chattea/gitea/data/gitea.db
+~/.config/systemd/user/chattea-gitea.service
+```
+
+ChatEnv 字段：
+
+```text
+CHATTEA_URL
+CHATTEA_TOKEN
+CHATTEA_HOME
+CHATTEA_GITEA_VERSION
+CHATTEA_GITEA_BINARY
+CHATTEA_GITEA_WORK_PATH
+CHATTEA_GITEA_CONFIG
+CHATTEA_GITEA_HTTP_PORT
+CHATTEA_GITEA_DOMAIN
+CHATTEA_GITEA_SERVICE_NAME
+```
 
 ## 仓库操作
 
@@ -77,7 +103,7 @@ from chattea.server import install_binary, init_instance
 from chattea.api import GiteaClient
 
 binary = install_binary("1.26.4")
-config = init_instance(Path("~/gitea").expanduser(), binary=binary)
+config = init_instance(binary=binary)
 
 client = GiteaClient(url="http://127.0.0.1:3000", token="...")
 repos = client.list_repos()
