@@ -15,5 +15,5 @@
 ### Added
 
 - Initial ChatArch Python package scaffold for `ChatTea`.
-- Added `chattea` CLI entry point with ChatStyle-backed `hello` command.
+- Added `chattea` CLI entry point scaffold.
 - Added tests, documentation, GitHub Actions CI/preview/deploy workflows, and PyPI Trusted Publishing workflow.

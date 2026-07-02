@@ -3,13 +3,6 @@ from click.testing import CliRunner
 from chattea.cli import main
 
 
-def test_hello_command_accepts_explicit_name():
-    result = CliRunner().invoke(main, ["hello", "ChatArch"])
-
-    assert result.exit_code == 0
-    assert "Hello, ChatArch!" in result.output
-
-
 def test_help_lists_first_version_surface():
     result = CliRunner().invoke(main, ["--help"])
 

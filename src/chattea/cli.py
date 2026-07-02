@@ -7,7 +7,6 @@ from chatstyle import (
     CommandField,
     CommandSchema,
     add_interactive_option,
-    render_success,
     resolve_command_inputs,
 )
 
@@ -16,11 +15,6 @@ from chattea.commands.repo import repo_group
 from chattea.commands.server import server_group
 from chattea.config import mask_token, set_token as save_token
 
-
-HELLO_SCHEMA = CommandSchema(
-    name="hello",
-    fields=(CommandField("name", prompt="name", required=True),),
-)
 
 TOKEN_SCHEMA = CommandSchema(
     name="set-token",
@@ -35,21 +29,6 @@ TOKEN_SCHEMA = CommandSchema(
 @click.version_option(__version__, prog_name="chattea")
 def main() -> None:
     """chattea command line interface."""
-
-
-@main.command()
-@click.argument("name", required=False)
-@add_interactive_option
-def hello(name: str | None, interactive: bool | None) -> None:
-    """Print a greeting with ChatStyle-backed input resolution."""
-
-    values = resolve_command_inputs(
-        schema=HELLO_SCHEMA,
-        provided={"name": name},
-        interactive=interactive,
-        usage="Usage: chattea hello [NAME]",
-    )
-    render_success(f"Hello, {values['name']}!")
 
 
 @main.command(name="set-token")
