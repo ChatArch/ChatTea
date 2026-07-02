@@ -39,7 +39,7 @@ chattea repo list
 
 `set-token` writes the active ChatEnv profile at `$CHATARCH_HOME/envs/ChatTea/.env`. Legacy `~/.config/chattea/config.json` is read only as a compatibility fallback.
 
-ChatEnv aliases: `chattea`, `gti`.
+ChatEnv alias: `chattea`.
 
 Default paths:
 

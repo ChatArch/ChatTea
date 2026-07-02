@@ -35,7 +35,7 @@ class ChatTeaEnvConfig(BaseEnvConfig):
     """Typed ChatEnv configuration for ChatTea."""
 
     _title = "ChatTea Configuration"
-    _aliases = ["chattea", "gti"]
+    _aliases = ["chattea"]
     _storage_dir = "ChatTea"
 
     CHATTEA_URL = EnvField(

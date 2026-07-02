@@ -66,7 +66,7 @@ $CHATARCH_HOME/chattea/gitea/data/gitea.db
 
 `CHATARCH_HOME` 由 ChatEnv 解析，默认是 `~/.chatarch`。ChatTea 自己只定义 `CHATTEA_*` 配置。
 
-ChatEnv 类型别名：`chattea`、`gti`。
+ChatEnv 类型别名：`chattea`。
 
 ### 仓库操作
 

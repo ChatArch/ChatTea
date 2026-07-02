@@ -40,7 +40,6 @@ def test_chatenv_provider_fields_are_registered():
 
     assert ChatTeaEnvConfig.get_storage_name() == "ChatTea"
     assert "chattea" in ChatTeaEnvConfig._aliases
-    assert "gti" in ChatTeaEnvConfig._aliases
     assert "tea" not in ChatTeaEnvConfig._aliases
     assert fields["CHATTEA_TOKEN"].is_sensitive is True
     assert "CHATTEA_URL" in fields
