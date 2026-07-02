@@ -9,9 +9,16 @@ import urllib.request
 from pathlib import Path
 
 from chattea.config import (
+    DEFAULT_BASE_URL,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_LISTEN_ADDR,
     DEFAULT_SERVICE_NAME,
+    base_url_host,
     default_chattea_home,
     default_gitea_work_path,
+    normalize_base_url,
+    validate_http_port,
+    validate_listen_addr,
 )
 
 DEFAULT_PREFIX = default_chattea_home()
@@ -49,12 +56,15 @@ def generate_secret(size: int = 48) -> str:
 def render_app_ini(
     work_path: Path,
     run_user: str,
-    http_port: int,
-    domain: str,
-    root_url: str | None = None,
+    http_port: int = DEFAULT_HTTP_PORT,
+    base_url: str = DEFAULT_BASE_URL,
+    listen_addr: str = DEFAULT_LISTEN_ADDR,
 ) -> str:
     work = work_path.expanduser()
-    root = root_url or f"http://{domain}:{http_port}/"
+    root_url = normalize_base_url(base_url) + "/"
+    domain = base_url_host(root_url)
+    port = validate_http_port(http_port)
+    http_addr = validate_listen_addr(listen_addr)
     return f"""APP_NAME = Gitea
 RUN_USER = {run_user}
 RUN_MODE = prod
@@ -67,9 +77,9 @@ DEFAULT_BRANCH = main
 [server]
 APP_DATA_PATH = {work}/data
 DOMAIN = {domain}
-HTTP_ADDR = 0.0.0.0
-HTTP_PORT = {http_port}
-ROOT_URL = {root}
+HTTP_ADDR = {http_addr}
+HTTP_PORT = {port}
+ROOT_URL = {root_url}
 DISABLE_SSH = true
 LFS_START_SERVER = true
 
@@ -114,8 +124,9 @@ def init_instance(
     work_path: Path = DEFAULT_WORK_PATH,
     binary: Path | None = None,
     config_path: Path | None = None,
-    http_port: int = 3000,
-    domain: str = "127.0.0.1",
+    http_port: int = DEFAULT_HTTP_PORT,
+    base_url: str = DEFAULT_BASE_URL,
+    listen_addr: str = DEFAULT_LISTEN_ADDR,
     run_user: str | None = None,
     force: bool = False,
 ) -> Path:
@@ -126,7 +137,10 @@ def init_instance(
     for child in [config.parent, work / "data", work / "log"]:
         child.mkdir(parents=True, exist_ok=True)
     user = run_user or os.environ.get("USER") or "git"
-    config.write_text(render_app_ini(work, user, http_port, domain), encoding="utf-8")
+    config.write_text(
+        render_app_ini(work, user, http_port=http_port, base_url=base_url, listen_addr=listen_addr),
+        encoding="utf-8",
+    )
     config.chmod(0o600)
     if binary:
         run_gitea(binary, ["migrate"], config=config, work_path=work, check=False)

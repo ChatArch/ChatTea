@@ -5,11 +5,18 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from chatenv import BaseEnvConfig, EnvField, EnvStore, get_paths
 
-DEFAULT_URL = "http://127.0.0.1:3000"
+DEFAULT_BASE_URL = "http://127.0.0.1:3000"
+DEFAULT_LISTEN_ADDR = "127.0.0.1"
+DEFAULT_HTTP_PORT = 3000
 DEFAULT_SERVICE_NAME = "chattea-gitea.service"
+
+
+# Backwards-compatible alias for older callers that imported DEFAULT_URL.
+DEFAULT_URL = DEFAULT_BASE_URL
 
 
 def default_chattea_home() -> Path:
@@ -31,17 +38,57 @@ def default_gitea_config(work_path: Path | None = None, home: Path | None = None
     return work / "custom" / "conf" / "app.ini"
 
 
+def normalize_base_url(value: str | None) -> str:
+    url = str(value or DEFAULT_BASE_URL).strip().rstrip("/")
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("Gitea base URL must be an http(s) URL, for example http://127.0.0.1:3000.")
+    return url
+
+
+def base_url_host(value: str) -> str:
+    parsed = urlparse(normalize_base_url(value))
+    return parsed.hostname or DEFAULT_LISTEN_ADDR
+
+
+def validate_listen_addr(value: str | None) -> str:
+    listen_addr = str(value or DEFAULT_LISTEN_ADDR).strip()
+    if not listen_addr or "://" in listen_addr:
+        raise ValueError("Gitea listen address must be an IP/host only, for example 127.0.0.1 or 0.0.0.0.")
+    return listen_addr
+
+
+def validate_http_port(value: Any, default: int = DEFAULT_HTTP_PORT) -> int:
+    try:
+        port = int(value if value not in (None, "") else default)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Gitea HTTP port must be an integer.") from exc
+    if port < 1 or port > 65535:
+        raise ValueError("Gitea HTTP port must be between 1 and 65535.")
+    return port
+
+
 class ChatTeaEnvConfig(BaseEnvConfig):
     """Typed ChatEnv configuration for ChatTea."""
 
     _title = "ChatTea Configuration"
-    _aliases = ["chattea"]
+    _aliases = ["chattea", "gitea", "tea"]
     _storage_dir = "ChatTea"
 
-    CHATTEA_URL = EnvField(
-        "CHATTEA_URL",
-        default=DEFAULT_URL,
-        desc="Gitea base URL used by ChatTea API commands.",
+    CHATTEA_GITEA_BASE_URL = EnvField(
+        "CHATTEA_GITEA_BASE_URL",
+        default=DEFAULT_BASE_URL,
+        desc="Public Gitea website/API base URL used by ChatTea and Gitea ROOT_URL.",
+    )
+    CHATTEA_GITEA_LISTEN_ADDR = EnvField(
+        "CHATTEA_GITEA_LISTEN_ADDR",
+        default=DEFAULT_LISTEN_ADDR,
+        desc="IP/host that the managed local Gitea process listens on.",
+    )
+    CHATTEA_GITEA_HTTP_PORT = EnvField(
+        "CHATTEA_GITEA_HTTP_PORT",
+        default=str(DEFAULT_HTTP_PORT),
+        desc="HTTP port that the managed local Gitea process listens on.",
     )
     CHATTEA_TOKEN = EnvField(
         "CHATTEA_TOKEN",
@@ -68,41 +115,67 @@ class ChatTeaEnvConfig(BaseEnvConfig):
         default=str(default_gitea_config()),
         desc="Gitea app.ini path. Defaults to CHATTEA_GITEA_WORK_PATH/custom/conf/app.ini.",
     )
-    CHATTEA_GITEA_HTTP_PORT = EnvField(
-        "CHATTEA_GITEA_HTTP_PORT",
-        default="3000",
-        desc="Local Gitea HTTP port used by server init.",
-    )
-    CHATTEA_GITEA_DOMAIN = EnvField(
-        "CHATTEA_GITEA_DOMAIN",
-        default="127.0.0.1",
-        desc="Local Gitea domain used by server init.",
-    )
-    CHATTEA_GITEA_SERVICE_NAME = EnvField(
-        "CHATTEA_GITEA_SERVICE_NAME",
-        default=DEFAULT_SERVICE_NAME,
-        desc="User systemd service name for ChatTea-managed Gitea.",
-    )
+
+    @classmethod
+    def _refresh_dynamic_defaults(cls) -> None:
+        updates = {
+            "CHATTEA_HOME": str(default_chattea_home()),
+            "CHATTEA_GITEA_BINARY": str(default_gitea_binary()),
+            "CHATTEA_GITEA_WORK_PATH": str(default_gitea_work_path()),
+            "CHATTEA_GITEA_CONFIG": str(default_gitea_config()),
+        }
+        for attr, new_default in updates.items():
+            field = getattr(cls, attr)
+            old_default = field.default
+            field.default = new_default
+            if field.value in (None, old_default):
+                field.value = new_default
+
+    @classmethod
+    def get_fields(cls) -> dict[str, EnvField]:
+        cls._refresh_dynamic_defaults()
+        return super().get_fields()
+
+    @classmethod
+    def test(cls) -> None:
+        """Validate local ChatEnv values without touching the Gitea network endpoint."""
+        config = load_config()
+        normalize_base_url(config.url)
+        validate_listen_addr(config.gitea_listen_addr)
+        validate_http_port(config.gitea_http_port)
+        for name, path in {
+            "CHATTEA_HOME": config.home,
+            "CHATTEA_GITEA_BINARY": config.gitea_binary,
+            "CHATTEA_GITEA_WORK_PATH": config.gitea_work_path,
+            "CHATTEA_GITEA_CONFIG": config.gitea_config,
+        }.items():
+            if path is None:
+                raise ValueError(f"{name} did not resolve to a path.")
+        print("ChatTea configuration looks valid.")
 
 
 @dataclass
 class ChatTeaConfig:
-    url: str = DEFAULT_URL
+    url: str = DEFAULT_BASE_URL
     token: str | None = None
     home: Path | None = None
     gitea_binary: Path | None = None
     gitea_work_path: Path | None = None
     gitea_config: Path | None = None
-    gitea_http_port: int = 3000
-    gitea_domain: str = "127.0.0.1"
-    gitea_service_name: str = DEFAULT_SERVICE_NAME
+    gitea_listen_addr: str = DEFAULT_LISTEN_ADDR
+    gitea_http_port: int = DEFAULT_HTTP_PORT
+
+    @property
+    def base_url(self) -> str:
+        return self.url
 
     @classmethod
     def from_mapping(cls, data: dict[str, Any]) -> "ChatTeaConfig":
-        return cls(url=str(data.get("url") or DEFAULT_URL).rstrip("/"), token=data.get("token") or None)
+        url = data.get("base_url") or data.get("url") or DEFAULT_BASE_URL
+        return cls(url=normalize_base_url(str(url)), token=data.get("token") or None)
 
     def to_mapping(self) -> dict[str, Any]:
-        data: dict[str, Any] = {"url": self.url.rstrip("/")}
+        data: dict[str, Any] = {"base_url": normalize_base_url(self.url)}
         if self.token:
             data["token"] = self.token
         return data
@@ -123,7 +196,7 @@ def _load_legacy_config(path: Path | None = None) -> ChatTeaConfig:
         return ChatTeaConfig()
     try:
         return ChatTeaConfig.from_mapping(json.loads(config_path.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, ValueError):
         return ChatTeaConfig()
 
 
@@ -147,11 +220,25 @@ def _explicit_value(key: str, active_values: dict[str, str]) -> str | None:
     return None
 
 
-def _int_value(value: Any, default: int) -> int:
+def _safe_base_url(value: str | None) -> str:
     try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
+        return normalize_base_url(value)
+    except ValueError:
+        return DEFAULT_BASE_URL
+
+
+def _safe_listen_addr(value: str | None) -> str:
+    try:
+        return validate_listen_addr(value)
+    except ValueError:
+        return DEFAULT_LISTEN_ADDR
+
+
+def _safe_http_port(value: Any) -> int:
+    try:
+        return validate_http_port(value)
+    except ValueError:
+        return DEFAULT_HTTP_PORT
 
 
 def load_config(path: Path | None = None) -> ChatTeaConfig:
@@ -160,7 +247,7 @@ def load_config(path: Path | None = None) -> ChatTeaConfig:
     BaseEnvConfig.load_all(get_paths().envs_dir)
     legacy = _load_legacy_config(path)
 
-    explicit_url = _explicit_value("CHATTEA_URL", active_values)
+    explicit_url = _explicit_value("CHATTEA_GITEA_BASE_URL", active_values) or _explicit_value("CHATTEA_URL", active_values)
     explicit_token = _explicit_value("CHATTEA_TOKEN", active_values)
 
     home = _optional_path(_explicit_value("CHATTEA_HOME", active_values)) or default_chattea_home()
@@ -169,15 +256,14 @@ def load_config(path: Path | None = None) -> ChatTeaConfig:
     config_path = _optional_path(_explicit_value("CHATTEA_GITEA_CONFIG", active_values)) or default_gitea_config(work_path)
 
     return ChatTeaConfig(
-        url=str(explicit_url or legacy.url or DEFAULT_URL).rstrip("/"),
+        url=_safe_base_url(explicit_url or legacy.url or DEFAULT_BASE_URL),
         token=explicit_token if explicit_token is not None else legacy.token,
         home=home,
         gitea_binary=binary,
         gitea_work_path=work_path,
         gitea_config=config_path,
-        gitea_http_port=_int_value(_explicit_value("CHATTEA_GITEA_HTTP_PORT", active_values), 3000),
-        gitea_domain=str(_explicit_value("CHATTEA_GITEA_DOMAIN", active_values) or "127.0.0.1"),
-        gitea_service_name=str(_explicit_value("CHATTEA_GITEA_SERVICE_NAME", active_values) or DEFAULT_SERVICE_NAME),
+        gitea_listen_addr=_safe_listen_addr(_explicit_value("CHATTEA_GITEA_LISTEN_ADDR", active_values)),
+        gitea_http_port=_safe_http_port(_explicit_value("CHATTEA_GITEA_HTTP_PORT", active_values)),
     )
 
 
@@ -185,7 +271,7 @@ def save_config(config: ChatTeaConfig, path: Path | None = None) -> Path:
     """Save URL/token to the active ChatTea ChatEnv profile."""
     store = EnvStore(get_paths().envs_dir)
     values = store.load_active(ChatTeaEnvConfig)
-    values["CHATTEA_URL"] = config.url.rstrip("/")
+    values["CHATTEA_GITEA_BASE_URL"] = normalize_base_url(config.url)
     if config.token:
         values["CHATTEA_TOKEN"] = config.token
     return store.save_active(ChatTeaEnvConfig, values)
@@ -193,7 +279,7 @@ def save_config(config: ChatTeaConfig, path: Path | None = None) -> Path:
 
 def set_token(url: str, token: str, path: Path | None = None) -> Path:
     config = load_config(path)
-    config.url = url.rstrip("/")
+    config.url = normalize_base_url(url)
     config.token = token
     return save_config(config, path)
 
@@ -209,8 +295,12 @@ def mask_token(token: str | None) -> str:
 __all__ = [
     "ChatTeaConfig",
     "ChatTeaEnvConfig",
+    "DEFAULT_BASE_URL",
+    "DEFAULT_HTTP_PORT",
+    "DEFAULT_LISTEN_ADDR",
     "DEFAULT_SERVICE_NAME",
     "DEFAULT_URL",
+    "base_url_host",
     "default_chattea_home",
     "default_gitea_binary",
     "default_gitea_config",
@@ -218,6 +308,9 @@ __all__ = [
     "get_config_path",
     "load_config",
     "mask_token",
+    "normalize_base_url",
     "save_config",
     "set_token",
+    "validate_http_port",
+    "validate_listen_addr",
 ]

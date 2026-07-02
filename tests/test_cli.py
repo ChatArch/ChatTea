@@ -41,7 +41,7 @@ def test_set_token_writes_config(monkeypatch, tmp_path):
 
     result = CliRunner().invoke(
         main,
-        ["set-token", "--url", "http://gitea.local:3000", "--token", "secret-token"],
+        ["set-token", "--base-url", "http://gitea.local:3000", "--token", "secret-token"],
     )
 
     assert result.exit_code == 0
@@ -50,8 +50,43 @@ def test_set_token_writes_config(monkeypatch, tmp_path):
     assert str(env_path) in result.output
     assert env_path.exists()
     env_text = env_path.read_text()
-    assert "CHATTEA_URL='http://gitea.local:3000'" in env_text
+    assert "CHATTEA_GITEA_BASE_URL='http://gitea.local:3000'" in env_text
     assert "CHATTEA_TOKEN='secret-token'" in env_text
+    assert "CHATTEA_URL" not in env_text
+
+
+def test_set_token_accepts_legacy_url_option(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+
+    result = CliRunner().invoke(
+        main,
+        ["set-token", "--url", "http://legacy.local:3000", "--token", "secret-token"],
+    )
+
+    assert result.exit_code == 0
+    env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text()
+    assert "CHATTEA_GITEA_BASE_URL='http://legacy.local:3000'" in env_text
+
+
+def test_set_token_no_interactive_fails_fast_when_token_missing():
+    result = CliRunner().invoke(main, ["set-token", "--base-url", "http://gitea.local:3000", "-I"])
+
+    assert result.exit_code != 0
+    assert "token" in result.output.lower()
+
+
+def test_server_install_no_interactive_fails_fast_when_version_missing():
+    result = CliRunner().invoke(main, ["server", "install", "-I"])
+
+    assert result.exit_code != 0
+    assert "version" in result.output.lower()
+
+
+def test_repo_create_no_interactive_fails_fast_when_name_missing():
+    result = CliRunner().invoke(main, ["repo", "create", "-I"])
+
+    assert result.exit_code != 0
+    assert "name" in result.output.lower()
 
 
 def test_repo_list_renders_table(monkeypatch):
@@ -95,7 +130,7 @@ def test_repo_create_calls_api(monkeypatch):
 
 def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp_path):
     monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
-    CliRunner().invoke(main, ["set-token", "--url", "http://gitea.local", "--token", "secret-token"])
+    CliRunner().invoke(main, ["set-token", "--base-url", "http://gitea.local", "--token", "secret-token"])
     captured = {}
 
     def fake_clone(clone_url, directory=None):
