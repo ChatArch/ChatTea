@@ -9,15 +9,33 @@ from typing import Any
 from chatenv import BaseEnvConfig, EnvField, EnvStore, get_paths
 
 DEFAULT_URL = "http://127.0.0.1:3000"
-DEFAULT_GITEA_VERSION = "1.26.4"
 DEFAULT_SERVICE_NAME = "chattea-gitea.service"
+
+
+def default_chattea_home() -> Path:
+    return get_paths().home_dir / "chattea"
+
+
+def default_gitea_binary(home: Path | None = None) -> Path:
+    root = home or default_chattea_home()
+    return root / "bin" / "gitea"
+
+
+def default_gitea_work_path(home: Path | None = None) -> Path:
+    root = home or default_chattea_home()
+    return root / "gitea"
+
+
+def default_gitea_config(work_path: Path | None = None, home: Path | None = None) -> Path:
+    work = work_path or default_gitea_work_path(home)
+    return work / "custom" / "conf" / "app.ini"
 
 
 class ChatTeaEnvConfig(BaseEnvConfig):
     """Typed ChatEnv configuration for ChatTea."""
 
     _title = "ChatTea Configuration"
-    _aliases = ["chattea", "tea"]
+    _aliases = ["chattea", "gti"]
     _storage_dir = "ChatTea"
 
     CHATTEA_URL = EnvField(
@@ -32,23 +50,22 @@ class ChatTeaEnvConfig(BaseEnvConfig):
     )
     CHATTEA_HOME = EnvField(
         "CHATTEA_HOME",
+        default=str(default_chattea_home()),
         desc="ChatTea data root. Defaults to CHATARCH_HOME/chattea.",
-    )
-    CHATTEA_GITEA_VERSION = EnvField(
-        "CHATTEA_GITEA_VERSION",
-        default=DEFAULT_GITEA_VERSION,
-        desc="Default Gitea binary version for server install.",
     )
     CHATTEA_GITEA_BINARY = EnvField(
         "CHATTEA_GITEA_BINARY",
+        default=str(default_gitea_binary()),
         desc="Gitea binary path. Defaults to CHATTEA_HOME/bin/gitea.",
     )
     CHATTEA_GITEA_WORK_PATH = EnvField(
         "CHATTEA_GITEA_WORK_PATH",
+        default=str(default_gitea_work_path()),
         desc="Gitea work path. Defaults to CHATTEA_HOME/gitea.",
     )
     CHATTEA_GITEA_CONFIG = EnvField(
         "CHATTEA_GITEA_CONFIG",
+        default=str(default_gitea_config()),
         desc="Gitea app.ini path. Defaults to CHATTEA_GITEA_WORK_PATH/custom/conf/app.ini.",
     )
     CHATTEA_GITEA_HTTP_PORT = EnvField(
@@ -73,7 +90,6 @@ class ChatTeaConfig:
     url: str = DEFAULT_URL
     token: str | None = None
     home: Path | None = None
-    gitea_version: str = DEFAULT_GITEA_VERSION
     gitea_binary: Path | None = None
     gitea_work_path: Path | None = None
     gitea_config: Path | None = None
@@ -90,25 +106,6 @@ class ChatTeaConfig:
         if self.token:
             data["token"] = self.token
         return data
-
-
-def default_chattea_home() -> Path:
-    return get_paths().home_dir / "chattea"
-
-
-def default_gitea_binary(home: Path | None = None) -> Path:
-    root = home or default_chattea_home()
-    return root / "bin" / "gitea"
-
-
-def default_gitea_work_path(home: Path | None = None) -> Path:
-    root = home or default_chattea_home()
-    return root / "gitea"
-
-
-def default_gitea_config(work_path: Path | None = None, home: Path | None = None) -> Path:
-    work = work_path or default_gitea_work_path(home)
-    return work / "custom" / "conf" / "app.ini"
 
 
 def get_config_path() -> Path:
@@ -140,6 +137,16 @@ def _optional_path(value: Any) -> Path | None:
     return Path(str(value)).expanduser()
 
 
+def _explicit_value(key: str, active_values: dict[str, str]) -> str | None:
+    value = os.getenv(key)
+    if value not in (None, ""):
+        return value
+    value = active_values.get(key)
+    if value not in (None, ""):
+        return value
+    return None
+
+
 def _int_value(value: Any, default: int) -> int:
     try:
         return int(value)
@@ -153,23 +160,24 @@ def load_config(path: Path | None = None) -> ChatTeaConfig:
     BaseEnvConfig.load_all(get_paths().envs_dir)
     legacy = _load_legacy_config(path)
 
-    explicit_url = os.getenv("CHATTEA_URL") or active_values.get("CHATTEA_URL")
-    explicit_token = os.getenv("CHATTEA_TOKEN") or active_values.get("CHATTEA_TOKEN")
+    explicit_url = _explicit_value("CHATTEA_URL", active_values)
+    explicit_token = _explicit_value("CHATTEA_TOKEN", active_values)
 
-    home = _optional_path(ChatTeaEnvConfig.CHATTEA_HOME.value) or default_chattea_home()
-    work_path = _optional_path(ChatTeaEnvConfig.CHATTEA_GITEA_WORK_PATH.value) or default_gitea_work_path(home)
+    home = _optional_path(_explicit_value("CHATTEA_HOME", active_values)) or default_chattea_home()
+    binary = _optional_path(_explicit_value("CHATTEA_GITEA_BINARY", active_values)) or default_gitea_binary(home)
+    work_path = _optional_path(_explicit_value("CHATTEA_GITEA_WORK_PATH", active_values)) or default_gitea_work_path(home)
+    config_path = _optional_path(_explicit_value("CHATTEA_GITEA_CONFIG", active_values)) or default_gitea_config(work_path)
 
     return ChatTeaConfig(
         url=str(explicit_url or legacy.url or DEFAULT_URL).rstrip("/"),
         token=explicit_token if explicit_token is not None else legacy.token,
         home=home,
-        gitea_version=str(ChatTeaEnvConfig.CHATTEA_GITEA_VERSION.value or DEFAULT_GITEA_VERSION),
-        gitea_binary=_optional_path(ChatTeaEnvConfig.CHATTEA_GITEA_BINARY.value) or default_gitea_binary(home),
+        gitea_binary=binary,
         gitea_work_path=work_path,
-        gitea_config=_optional_path(ChatTeaEnvConfig.CHATTEA_GITEA_CONFIG.value) or default_gitea_config(work_path),
-        gitea_http_port=_int_value(ChatTeaEnvConfig.CHATTEA_GITEA_HTTP_PORT.value, 3000),
-        gitea_domain=str(ChatTeaEnvConfig.CHATTEA_GITEA_DOMAIN.value or "127.0.0.1"),
-        gitea_service_name=str(ChatTeaEnvConfig.CHATTEA_GITEA_SERVICE_NAME.value or DEFAULT_SERVICE_NAME),
+        gitea_config=config_path,
+        gitea_http_port=_int_value(_explicit_value("CHATTEA_GITEA_HTTP_PORT", active_values), 3000),
+        gitea_domain=str(_explicit_value("CHATTEA_GITEA_DOMAIN", active_values) or "127.0.0.1"),
+        gitea_service_name=str(_explicit_value("CHATTEA_GITEA_SERVICE_NAME", active_values) or DEFAULT_SERVICE_NAME),
     )
 
 
@@ -201,7 +209,6 @@ def mask_token(token: str | None) -> str:
 __all__ = [
     "ChatTeaConfig",
     "ChatTeaEnvConfig",
-    "DEFAULT_GITEA_VERSION",
     "DEFAULT_SERVICE_NAME",
     "DEFAULT_URL",
     "default_chattea_home",

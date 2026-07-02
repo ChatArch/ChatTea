@@ -32,7 +32,7 @@ python -m pytest -q
 ### 安装并初始化 Gitea
 
 ```bash
-chattea server install
+chattea server install --version 1.26.4
 chattea server init
 chattea server serve
 ```
@@ -65,6 +65,8 @@ $CHATARCH_HOME/chattea/gitea/data/gitea.db
 ```
 
 `CHATARCH_HOME` 由 ChatEnv 解析，默认是 `~/.chatarch`。ChatTea 自己只定义 `CHATTEA_*` 配置。
+
+ChatEnv 类型别名：`chattea`、`gti`。
 
 ### 仓库操作
 

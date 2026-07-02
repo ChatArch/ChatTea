@@ -37,7 +37,7 @@ chattea
 ## 从安装到启动
 
 ```bash
-chattea server install
+chattea server install --version 1.26.4
 chattea server init
 chattea server start
 chattea server health --url http://127.0.0.1:3000
@@ -74,7 +74,6 @@ ChatEnv 字段：
 CHATTEA_URL
 CHATTEA_TOKEN
 CHATTEA_HOME
-CHATTEA_GITEA_VERSION
 CHATTEA_GITEA_BINARY
 CHATTEA_GITEA_WORK_PATH
 CHATTEA_GITEA_CONFIG

@@ -22,15 +22,15 @@ def server_group() -> None:
 
 
 @server_group.command(name="install")
-@click.option("--version", default=None, help="Gitea version. Defaults to CHATTEA_GITEA_VERSION.")
+@click.option("--version", required=True, help="Gitea version, for example 1.26.4.")
 @click.option("--prefix", type=click.Path(file_okay=False, path_type=Path), default=None, help="Install prefix. Defaults to CHATTEA_HOME.")
 @click.option("--arch", default=None, help="Asset architecture override, for example amd64 or arm64.")
 @click.option("--force", is_flag=True, help="Overwrite an existing binary.")
-def install(version: str | None, prefix: Path | None, arch: str | None, force: bool) -> None:
+def install(version: str, prefix: Path | None, arch: str | None, force: bool) -> None:
     """Download the Gitea binary."""
     config = load_config()
     resolved_prefix = prefix or config.home or server_ops.DEFAULT_PREFIX
-    binary = server_ops.install_binary(version or config.gitea_version, prefix=resolved_prefix, arch=arch, force=force)
+    binary = server_ops.install_binary(version, prefix=resolved_prefix, arch=arch, force=force)
     click.echo(f"installed: {binary}")
 
 

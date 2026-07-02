@@ -30,7 +30,7 @@ python -m pytest -q
 ## Common Flow
 
 ```bash
-chattea server install
+chattea server install --version 1.26.4
 chattea server init
 chattea server start
 chattea set-token --url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
@@ -38,6 +38,8 @@ chattea repo list
 ```
 
 `set-token` writes the active ChatEnv profile at `$CHATARCH_HOME/envs/ChatTea/.env`. Legacy `~/.config/chattea/config.json` is read only as a compatibility fallback.
+
+ChatEnv aliases: `chattea`, `gti`.
 
 Default paths:
 

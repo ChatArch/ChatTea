@@ -9,7 +9,6 @@ import urllib.request
 from pathlib import Path
 
 from chattea.config import (
-    DEFAULT_GITEA_VERSION,
     DEFAULT_SERVICE_NAME,
     default_chattea_home,
     default_gitea_work_path,
@@ -28,7 +27,7 @@ def detect_asset_arch() -> str:
     raise ValueError(f"Unsupported architecture: {platform.machine()}")
 
 
-def install_binary(version: str = DEFAULT_GITEA_VERSION, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
+def install_binary(version: str, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
     arch = arch or detect_asset_arch()
     bin_dir = prefix.expanduser() / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
