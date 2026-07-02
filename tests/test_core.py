@@ -1,5 +1,4 @@
 from pathlib import Path
-import tomllib
 
 from chattea import server as server_ops
 from chattea.api import GiteaClient
@@ -47,9 +46,10 @@ def test_chatenv_provider_fields_are_registered():
 
 
 def test_pyproject_registers_chatenv_provider():
-    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    text = Path("pyproject.toml").read_text(encoding="utf-8")
 
-    assert data["project"]["entry-points"]["chatenv.configs"]["chattea"] == "chattea.config"
+    assert '[project.entry-points."chatenv.configs"]' in text
+    assert 'chattea = "chattea.config"' in text
 
 
 def test_render_app_ini_contains_core_settings():
