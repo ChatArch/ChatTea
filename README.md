@@ -17,7 +17,7 @@
 
 # ChatTea
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦本地 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`0.2.0` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦本地 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
 
 ## 快速开始
 
@@ -28,6 +28,24 @@ python -m pytest -q
 ```
 
 ## 从零启动一个 Gitea 服务
+
+### 0. 新机器安装
+
+稳定版：
+
+```bash
+python -m pip install -U ChatTea
+chattea --version
+```
+
+源码开发：
+
+```bash
+git clone https://github.com/ChatArch/ChatTea.git
+cd ChatTea
+python -m pip install -e ".[dev,docs]"
+python -m pytest -q
+```
 
 ### 1. 初始化 ChatEnv
 
@@ -80,7 +98,36 @@ chattea server restart
 
 `server config show` 默认会 mask `SECRET_KEY`、`INTERNAL_TOKEN`、`JWT_SECRET` 等敏感值。
 
-### 5. 仓库操作
+### 5. 更新和自启动
+
+更新 ChatTea 包：
+
+```bash
+python -m pip install -U ChatTea
+python -m chatenv.cli test -t chattea -I
+chattea --version
+```
+
+更新 Gitea binary：
+
+```bash
+chattea server stop
+chattea server install --version 1.26.5 --force
+chattea server start
+chattea server health
+```
+
+启用 user systemd 自启动：
+
+```bash
+chattea server start
+chattea server status
+loginctl enable-linger "$USER"
+```
+
+`loginctl enable-linger` 可能需要管理员策略允许；如果失败，服务仍可在当前登录会话里运行，但退出登录后不一定保持。
+
+### 6. 仓库操作
 
 ```bash
 chattea repo create --owner gitea_admin --name demo

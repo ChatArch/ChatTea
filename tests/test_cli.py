@@ -16,7 +16,7 @@ def test_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.2.0" in result.output
+    assert "0.2.1" in result.output
 
 
 def test_server_help_lists_lifecycle_commands():

@@ -1,28 +1,20 @@
 # Changelog
 
-## 2026-07-02 - 0.2.0
+## 0.2.1
 
-### Changed
+Patch release for the ChatTea Gitea lifecycle workflow.
 
-- Registered ChatTea as a ChatEnv provider with the `ChatTea` typed profile.
-- Changed `chattea set-token` to write `$CHATARCH_HOME/envs/ChatTea/.env` instead of the legacy JSON config.
-- Normalized default Gitea paths under `$CHATARCH_HOME/chattea` while keeping CLI options for explicit overrides.
-- Kept legacy `~/.config/chattea/config.json` as a read-only fallback for URL/token compatibility.
+- Simplified official ChatEnv names to short `CHATTEA_*` fields.
+- Kept legacy `CHATTEA_URL` and old `CHATTEA_GITEA_*` names as read-only compatibility fallbacks.
+- Moved listen address and HTTP port out of ChatEnv and into `chattea server init` parameters backed by Gitea `app.ini`.
+- Added `chattea server config path/show/get/set` for managed Gitea `app.ini` inspection and small edits.
+- Documented new-machine setup, update/upgrade steps, user systemd autostart, and app.ini boundaries.
+- Expanded tests for ChatEnv validation, ChatStyle fail-fast behavior, and app.ini config commands.
 
-## 2026-07-02 - 0.1.1
+## 0.2.0
 
-### Added
+Initial ChatEnv-backed ChatTea release line.
 
-- Added first-version Gitea lifecycle CLI: `chattea server install/init/serve/start/stop/restart/status/logs/version/health`.
-- Added top-level `chattea set-token` for default Gitea URL and API token configuration.
-- Added basic repository CLI: `chattea repo list/view/create/clone/migrate`.
-- Added reusable Python modules so callers can use the bare API without shelling out to the CLI: `chattea.config`, `chattea.api`, `chattea.git`, and `chattea.server`.
-- Added `docs/interface-tree.md` to document the P0 interface tree and deferred surface.
-
-## 2026-06-24 - 0.1.0
-
-### Added
-
-- Initial ChatArch Python package scaffold for `ChatTea`.
-- Added `chattea` CLI entry point scaffold.
-- Added tests, documentation, GitHub Actions CI/preview/deploy workflows, and PyPI Trusted Publishing workflow.
+- Added local Gitea binary installation and managed service lifecycle commands.
+- Added token configuration and basic repository operations.
+- Registered the ChatTea ChatEnv provider.

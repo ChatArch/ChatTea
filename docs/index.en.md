@@ -1,6 +1,6 @@
 # ChatTea Docs
 
-ChatTea is ChatArch's Gitea management CLI/API package. It covers local installation, initialization, service management, app.ini inspection/editing, token configuration, and basic repository operations. Since `0.2.0`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
+ChatTea is ChatArch's Gitea management CLI/API package. It covers local installation, initialization, service management, app.ini inspection/editing, token configuration, and basic repository operations. Since `0.2.1`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
 
 ## CLI
 
@@ -12,6 +12,22 @@ chattea repo --help
 ```
 
 ## End-to-End Local Gitea Setup
+
+Install on a new machine:
+
+```bash
+python -m pip install -U ChatTea
+chattea --version
+```
+
+For source development:
+
+```bash
+git clone https://github.com/ChatArch/ChatTea.git
+cd ChatTea
+python -m pip install -e ".[dev,docs]"
+python -m pytest -q
+```
 
 ```bash
 python -m chatenv.cli init -t chattea -I
@@ -63,6 +79,35 @@ chattea server restart
 ```
 
 `server config show` masks known sensitive keys by default.
+
+## Update and Autostart
+
+Update ChatTea:
+
+```bash
+python -m pip install -U ChatTea
+python -m chatenv.cli test -t chattea -I
+chattea --version
+```
+
+Update the managed Gitea binary:
+
+```bash
+chattea server stop
+chattea server install --version 1.26.5 --force
+chattea server start
+chattea server health
+```
+
+Enable user systemd autostart:
+
+```bash
+chattea server start
+chattea server status
+loginctl enable-linger "$USER"
+```
+
+Some systems require administrator policy for `loginctl enable-linger`. Without lingering, the user service may not survive logout.
 
 ## Token and Repository Flow
 

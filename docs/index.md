@@ -1,6 +1,6 @@
 # ChatTea 文档
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责下载安装到启动本地 Gitea，也提供 token 配置、仓库创建、仓库查看、clone、迁移，以及 Gitea `app.ini` 的查看和小范围编辑。`0.2.0` 起，ChatTea 配置接入 ChatEnv，正式 Env 只保留长期、常用、跨命令共享的配置。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责下载安装到启动本地 Gitea，也提供 token 配置、仓库创建、仓库查看、clone、迁移，以及 Gitea `app.ini` 的查看和小范围编辑。`0.2.1` 起，ChatTea 配置接入 ChatEnv，正式 Env 只保留长期、常用、跨命令共享的配置。
 
 ## CLI
 
@@ -38,6 +38,90 @@ chattea
     ├── create
     ├── clone
     └── migrate
+```
+
+## 新机器配置清单
+
+在一台新机器上，先确认 Python 环境、ChatEnv、ChatTea 和 Gitea runtime 目录都准备好。推荐先用普通用户安装和运行，ChatTea 默认使用 user systemd，不需要 root 级系统服务。
+
+### 1. 安装 ChatTea
+
+从 PyPI 安装稳定版：
+
+```bash
+python -m pip install -U ChatTea
+```
+
+从源码调试或参与开发：
+
+```bash
+git clone https://github.com/ChatArch/ChatTea.git
+cd ChatTea
+python -m pip install -e ".[dev,docs]"
+```
+
+确认 CLI 可用：
+
+```bash
+chattea --version
+chattea --help
+```
+
+### 2. 初始化 ChatEnv profile
+
+ChatTea 的长期配置走 ChatEnv。新机器先创建 active profile，再查看默认值：
+
+```bash
+python -m chatenv.cli init -t chattea -I
+python -m chatenv.cli cat -t chattea
+python -m chatenv.cli test -t chattea -I
+```
+
+最少需要设置 Gitea 网站/API 地址：
+
+```bash
+python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
+```
+
+如果数据目录不想放在默认 `$CHATARCH_HOME/chattea`，再设置高级路径：
+
+```bash
+python -m chatenv.cli set CHATTEA_HOME=/srv/chattea
+python -m chatenv.cli set CHATTEA_WORK_PATH=/srv/gitea
+python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
+```
+
+### 3. 初始化 Gitea app.ini
+
+`listen addr`、`HTTP port`、`DOMAIN`、`ROOT_URL` 都属于 Gitea `app.ini`，不属于 ChatEnv。新机器按访问场景选择一组参数。
+
+本机访问：
+
+```bash
+chattea server install --version 1.26.4
+chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
+```
+
+局域网访问：
+
+```bash
+chattea server install --version 1.26.4
+chattea server init --base-url http://172.25.52.106:3000 --listen-addr 0.0.0.0 --http-port 3000
+```
+
+反向代理访问：
+
+```bash
+chattea server install --version 1.26.4
+chattea server init --base-url https://git.example.com --listen-addr 127.0.0.1 --http-port 3000
+```
+
+初始化后可以检查生成的配置：
+
+```bash
+chattea server config path
+chattea server config show
+chattea server config get --section server --key ROOT_URL
 ```
 
 ## 从零创建一个本地 Gitea 服务
@@ -156,7 +240,94 @@ chattea server restart
 
 systemd unit 名固定为 `chattea-gitea.service`。它是内部实现细节，不作为 Env 暴露。
 
-### 5. 查看和修改 Gitea app.ini
+## 自启动和运行维护
+
+ChatTea 使用 user systemd 管理 Gitea。`chattea server start` 会写入 user unit、执行 `systemctl --user daemon-reload`，并 `enable --now` 固定的 `chattea-gitea.service`。
+
+首次启用：
+
+```bash
+chattea server start
+chattea server status
+chattea server health
+```
+
+查看日志：
+
+```bash
+chattea server logs --lines 100
+chattea server logs --follow
+```
+
+如果希望用户退出登录后服务仍保持运行，机器需要启用 user lingering：
+
+```bash
+loginctl enable-linger "$USER"
+```
+
+有些系统需要管理员权限才能启用 lingering；如果这条命令失败，请让管理员执行或确认机器的 user systemd 策略。启用后可以重启机器，再检查：
+
+```bash
+systemctl --user status chattea-gitea.service
+chattea server health
+```
+
+如果只是临时调试，不需要自启动，可以不用 `server start`，直接前台运行：
+
+```bash
+chattea server serve
+```
+
+## 更新和升级
+
+更新分成三类：更新 ChatTea 包、更新 Gitea binary、更新 Gitea app.ini。不要把三者混在一起。
+
+### 更新 ChatTea 包
+
+从 PyPI 更新：
+
+```bash
+python -m pip install -U ChatTea
+chattea --version
+python -m chatenv.cli test -t chattea -I
+```
+
+从源码分支更新：
+
+```bash
+git pull
+python -m pip install -e ".[dev,docs]"
+python -m pytest -q
+chattea --version
+```
+
+### 更新 Gitea binary
+
+更新 Gitea 本体时，先停止服务，再覆盖 binary，最后启动并健康检查：
+
+```bash
+chattea server stop
+chattea server install --version 1.26.5 --force
+chattea server start
+chattea server version
+chattea server health
+```
+
+如果 Gitea 新版本需要数据库迁移，Gitea 通常会在启动时处理；更新前仍建议备份 `CHATTEA_WORK_PATH`，尤其是 `data/gitea.db` 和 `data/gitea-repositories/`。
+
+### 更新 Gitea app.ini
+
+小范围修改用 `server config set`，例如改端口：
+
+```bash
+chattea server config set --section server --key HTTP_PORT --value 3001
+chattea server restart
+chattea server config get --section server --key HTTP_PORT
+```
+
+不要随便用 `chattea server init --force` 覆盖已有 `app.ini`。`--force` 会重新生成配置和安全密钥，只适合明确要重建本地测试实例的场景。生产或长期使用的实例应该优先备份并用 `server config set` 修改单项配置。
+
+## 查看和修改 Gitea app.ini
 
 Gitea 背后的服务配置在 `app.ini`，这和 ChatEnv 是两套东西。ChatEnv 负责 ChatTea 的长期参数，`server config` 负责查看或小范围编辑 Gitea app.ini。
 
@@ -187,7 +358,7 @@ chattea server restart
 
 `server config set` 是编辑 Gitea `app.ini`，不是写 ChatEnv。
 
-### 6. 创建和使用仓库
+## 创建和使用仓库
 
 ```bash
 chattea repo create --owner gitea_admin --name demo
