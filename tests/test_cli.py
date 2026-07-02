@@ -97,15 +97,15 @@ def test_repo_create_calls_api(monkeypatch):
     assert captured["private"] is True
 
 
-def test_repo_clone_uses_configured_url_and_token(monkeypatch, tmp_path):
+def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp_path):
     config_path = tmp_path / "config.json"
     monkeypatch.setenv("CHATTEA_CONFIG", str(config_path))
     CliRunner().invoke(main, ["set-token", "--url", "http://gitea.local", "--token", "secret-token"])
     captured = {}
 
-    def fake_clone(clone_url, directory=None, token=None, set_token_after=True):
-        captured.update({"clone_url": clone_url, "directory": directory, "token": token, "set_token_after": set_token_after})
-        return {"path": "/workspace/demo", "token_configured": bool(token and set_token_after)}
+    def fake_clone(clone_url, directory=None):
+        captured.update({"clone_url": clone_url, "directory": directory})
+        return {"path": "/workspace/demo"}
 
     monkeypatch.setattr("chattea.commands.repo.git_clone_repo", fake_clone)
 
@@ -113,9 +113,8 @@ def test_repo_clone_uses_configured_url_and_token(monkeypatch, tmp_path):
 
     assert result.exit_code == 0
     assert "cloned: gitea_admin/demo" in result.output
+    assert "token:" not in result.output
     assert captured == {
         "clone_url": "http://gitea.local/gitea_admin/demo.git",
         "directory": "demo",
-        "token": "secret-token",
-        "set_token_after": True,
     }

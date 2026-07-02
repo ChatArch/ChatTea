@@ -105,18 +105,15 @@ def repo_create(
 @click.argument("repo")
 @click.argument("directory", required=False)
 @click.option("--url", default=None, help="Gitea base URL. Defaults to saved config.")
-@click.option("--token", default=None)
-@click.option("--set-token/--no-set-token", default=True, show_default=True)
 @click.option("--json-output", is_flag=True)
-def repo_clone(repo: str, directory: str | None, url: str | None, token: str | None, set_token: bool, json_output: bool) -> None:
+def repo_clone(repo: str, directory: str | None, url: str | None, json_output: bool) -> None:
     """Clone a Gitea repository."""
     owner, name = split_repo(repo)
     config = load_config()
     base_url = (url or config.url).rstrip("/")
-    resolved_token = token if token is not None else config.token
     clone_url = repo_clone_url(base_url, owner, name)
     try:
-        payload = git_clone_repo(clone_url, directory=directory, token=resolved_token, set_token_after=set_token)
+        payload = git_clone_repo(clone_url, directory=directory)
     except Exception as exc:
         raise click.ClickException(f"git clone failed for {repo}: {exc}") from exc
     payload["repo"] = repo
@@ -125,7 +122,6 @@ def repo_clone(repo: str, directory: str | None, url: str | None, token: str | N
         return
     click.echo(f"cloned: {repo}")
     click.echo(f"path: {payload['path']}")
-    click.echo(f"token: {'configured' if payload.get('token_configured') else 'not configured'}")
 
 
 @repo_group.command(name="migrate")

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from chattea import server as server_ops
+from chattea.api import GiteaClient
 from chattea.config import ChatTeaConfig, load_config, save_config
 
 
@@ -37,3 +38,42 @@ def test_write_user_service(tmp_path, monkeypatch):
     assert "ExecStart=" in text
     assert "gitea web" in text
     assert "--config" in text
+
+
+def test_create_repo_uses_orgs_endpoint_for_org_owner(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None):
+        calls.append((method, path, data, params))
+        if path == "/user":
+            return {"login": "gitea_admin"}
+        return {"full_name": "ChatArch/demo", "private": True}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    payload = client.create_repo(name="demo", owner="ChatArch")
+
+    assert payload["full_name"] == "ChatArch/demo"
+    assert calls[0][1] == "/user"
+    assert calls[1][0] == "POST"
+    assert calls[1][1] == "/orgs/ChatArch/repos"
+
+
+def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None):
+        calls.append((method, path, data, params))
+        if path == "/user":
+            return {"login": "gitea_admin"}
+        return {"full_name": "gitea_admin/demo", "private": True}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    payload = client.create_repo(name="demo", owner="gitea_admin")
+
+    assert payload["full_name"] == "gitea_admin/demo"
+    assert calls[1][0] == "POST"
+    assert calls[1][1] == "/user/repos"

@@ -35,7 +35,7 @@ chattea
 - `server start/stop/restart/status/logs`: manage the user-level systemd service.
 - `server version/health`: inspect the local binary or configured Gitea HTTP endpoint.
 - `repo list/view/create`: cover basic repository inventory and creation via Gitea API.
-- `repo clone`: clone from the configured Gitea instance and apply repo-local credentials when a token is available.
+- `repo clone`: clone from the configured Gitea instance without configuring Git auth headers.
 - `repo migrate`: create a Gitea migration from an existing Git clone URL.
 
 ## Python API Boundary

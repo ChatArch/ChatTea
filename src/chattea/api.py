@@ -91,7 +91,7 @@ class GiteaClient:
             except GiteaAPIError:
                 me = {}
             if owner != me.get("login"):
-                return self.request("POST", f"/org/{quote(owner)}/repos", data=payload)
+                return self.request("POST", f"/orgs/{quote(owner)}/repos", data=payload)
         return self.request("POST", "/user/repos", data=payload)
 
     def migrate_repo(
