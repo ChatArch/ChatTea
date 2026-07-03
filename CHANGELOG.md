@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.2
 
 - Added `chattea project` for repository-scoped Gitea Project board automation, including project CRUD, column CRUD, and issue/PR card list/add/remove/move commands.
 - Added reusable `GiteaClient` methods for the ChatArch Gitea repository Project API.
