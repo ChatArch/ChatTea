@@ -11,6 +11,7 @@ from chatstyle import (
 )
 
 from chattea import __version__
+from chattea.commands.project import project_group
 from chattea.commands.repo import repo_group
 from chattea.commands.server import server_group
 from chattea.config import DEFAULT_BASE_URL, mask_token, set_token as save_token
@@ -59,6 +60,7 @@ def set_token(base_url: str | None, legacy_url: str | None, token: str | None, i
 
 main.add_command(server_group)
 main.add_command(repo_group)
+main.add_command(project_group)
 
 
 if __name__ == "__main__":

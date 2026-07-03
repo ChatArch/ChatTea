@@ -134,12 +134,28 @@ chattea
 │       ├── show
 │       ├── get
 │       └── set
-└── repo
+├── repo
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── clone
+│   └── migrate
+└── project
     ├── list
     ├── view
     ├── create
-    ├── clone
-    └── migrate
+    ├── edit
+    ├── delete
+    ├── column
+    │   ├── list
+    │   ├── create
+    │   ├── edit
+    │   └── delete
+    └── issue
+        ├── list
+        ├── add
+        ├── remove
+        └── move
 ```
 
 ## Development Notes

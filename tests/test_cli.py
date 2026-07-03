@@ -174,3 +174,105 @@ def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp
         "clone_url": "http://gitea.local/gitea_admin/demo.git",
         "directory": "demo",
     }
+
+def test_project_help_lists_single_repo_project_commands():
+    result = CliRunner().invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "project" in result.output
+
+    project = CliRunner().invoke(main, ["project", "--help"])
+    assert project.exit_code == 0
+    for command in ["list", "view", "create", "edit", "delete", "column", "issue"]:
+        assert command in project.output
+
+    column = CliRunner().invoke(main, ["project", "column", "--help"])
+    assert column.exit_code == 0
+    for command in ["list", "create", "edit", "delete"]:
+        assert command in column.output
+
+    issue = CliRunner().invoke(main, ["project", "issue", "--help"])
+    assert issue.exit_code == 0
+    for command in ["list", "add", "remove", "move"]:
+        assert command in issue.output
+
+
+def test_project_create_calls_api(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def create_repo_project(self, owner, repo, title, description=None, card_type=None):
+            captured.update({"owner": owner, "repo": repo, "title": title, "description": description, "card_type": card_type})
+            return {"id": 7, "title": title, "state": "open", "type": "repository"}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["project", "create", "--repo", "gitea_admin/demo", "--title", "Roadmap", "--description", "Plan", "--card-type", "text_only"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "project: 7 Roadmap" in result.output
+    assert captured == {
+        "init": {"url": None, "token": None},
+        "owner": "gitea_admin",
+        "repo": "demo",
+        "title": "Roadmap",
+        "description": "Plan",
+        "card_type": "text_only",
+    }
+
+
+def test_project_column_edit_keeps_sorting_zero(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def edit_project_column(self, owner, repo, project_id, column_id, title=None, color=None, sorting=None):
+            captured.update({"owner": owner, "repo": repo, "project_id": project_id, "column_id": column_id, "title": title, "color": color, "sorting": sorting})
+            return {"id": column_id, "title": title or "Todo", "sorting": sorting, "project_id": project_id}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["project", "column", "edit", "--repo", "gitea_admin/demo", "1", "2", "--title", "Todo", "--sorting", "0"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured["sorting"] == 0
+
+
+def test_project_issue_move_calls_api(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def move_project_issue(self, owner, repo, project_id, issue_id, column_id, sorting=None):
+            captured.update({"owner": owner, "repo": repo, "project_id": project_id, "issue_id": issue_id, "column_id": column_id, "sorting": sorting})
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["project", "issue", "move", "--repo", "gitea_admin/demo", "1", "42", "--column", "2", "--sorting", "0"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured == {"owner": "gitea_admin", "repo": "demo", "project_id": 1, "issue_id": 42, "column_id": 2, "sorting": 0}
+
+
+def test_project_delete_requires_yes_when_non_interactive():
+    result = CliRunner().invoke(main, ["project", "delete", "--repo", "gitea_admin/demo", "1", "-I"])
+
+    assert result.exit_code != 0
+    assert "--yes" in result.output

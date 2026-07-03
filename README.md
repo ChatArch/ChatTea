@@ -145,6 +145,17 @@ chattea repo migrate \
   --name ChatTea
 ```
 
+### 7. 单仓库 Project board 操作
+
+`chattea project` 封装 Gitea repository-scoped Project board API，不是 GitHub Projects v2 兼容层。
+
+```bash
+chattea project create --repo gitea_admin/demo --title Roadmap
+chattea project column create --repo gitea_admin/demo 1 --title Todo
+chattea project issue add --repo gitea_admin/demo 1 2 42
+chattea project issue move --repo gitea_admin/demo 1 42 --column 3 --sorting 0
+```
+
 ## ChatEnv 字段
 
 正式字段只有这些：
@@ -190,12 +201,28 @@ chattea
 │       ├── show
 │       ├── get
 │       └── set
-└── repo
+├── repo
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── clone
+│   └── migrate
+└── project
     ├── list
     ├── view
     ├── create
-    ├── clone
-    └── migrate
+    ├── edit
+    ├── delete
+    ├── column
+    │   ├── list
+    │   ├── create
+    │   ├── edit
+    │   └── delete
+    └── issue
+        ├── list
+        ├── add
+        ├── remove
+        └── move
 ```
 
 ## Python API

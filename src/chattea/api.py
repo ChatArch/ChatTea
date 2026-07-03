@@ -118,5 +118,128 @@ class GiteaClient:
         return self.request("POST", "/repos/migrate", data=payload)
 
 
+    @staticmethod
+    def _project_params(**kwargs: Any) -> dict[str, Any] | None:
+        params = {key: value for key, value in kwargs.items() if value is not None}
+        return params or None
+
+    @staticmethod
+    def _project_payload(**kwargs: Any) -> dict[str, Any]:
+        return {key: value for key, value in kwargs.items() if value is not None}
+
+    def list_repo_projects(self, owner: str, repo: str, state: str = "open", limit: int = 50, page: int | None = None) -> list[dict[str, Any]]:
+        return self.request(
+            "GET",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects",
+            params=self._project_params(state=state, limit=limit, page=page),
+        )
+
+    def get_repo_project(self, owner: str, repo: str, project_id: int) -> dict[str, Any]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}")
+
+    def create_repo_project(
+        self,
+        owner: str,
+        repo: str,
+        title: str,
+        description: str | None = None,
+        card_type: str | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects",
+            data=self._project_payload(title=title, description=description, card_type=card_type),
+        )
+
+    def edit_repo_project(
+        self,
+        owner: str,
+        repo: str,
+        project_id: int,
+        title: str | None = None,
+        description: str | None = None,
+        state: str | None = None,
+        card_type: str | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "PATCH",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}",
+            data=self._project_payload(title=title, description=description, state=state, card_type=card_type),
+        )
+
+    def delete_repo_project(self, owner: str, repo: str, project_id: int) -> None:
+        return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}")
+
+    def list_project_columns(self, owner: str, repo: str, project_id: int, limit: int = 50, page: int | None = None) -> list[dict[str, Any]]:
+        return self.request(
+            "GET",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns",
+            params=self._project_params(limit=limit, page=page),
+        )
+
+    def create_project_column(self, owner: str, repo: str, project_id: int, title: str, color: str | None = None) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns",
+            data=self._project_payload(title=title, color=color),
+        )
+
+    def edit_project_column(
+        self,
+        owner: str,
+        repo: str,
+        project_id: int,
+        column_id: int,
+        title: str | None = None,
+        color: str | None = None,
+        sorting: int | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "PATCH",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}",
+            data=self._project_payload(title=title, color=color, sorting=sorting),
+        )
+
+    def delete_project_column(self, owner: str, repo: str, project_id: int, column_id: int) -> None:
+        return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}")
+
+    def list_project_column_issues(
+        self,
+        owner: str,
+        repo: str,
+        project_id: int,
+        column_id: int,
+        limit: int = 50,
+        page: int | None = None,
+    ) -> list[dict[str, Any]]:
+        return self.request(
+            "GET",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}/issues",
+            params=self._project_params(limit=limit, page=page),
+        )
+
+    def add_issue_to_project_column(self, owner: str, repo: str, project_id: int, column_id: int, issue_id: int) -> dict[str, Any] | None:
+        return self.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}/issues/{issue_id}")
+
+    def remove_issue_from_project_column(self, owner: str, repo: str, project_id: int, column_id: int, issue_id: int) -> None:
+        return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}/issues/{issue_id}")
+
+    def move_project_issue(
+        self,
+        owner: str,
+        repo: str,
+        project_id: int,
+        issue_id: int,
+        column_id: int,
+        sorting: int | None = None,
+    ) -> dict[str, Any] | None:
+        return self.request(
+            "POST",
+            f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/issues/{issue_id}/move",
+            data=self._project_payload(column_id=column_id, sorting=sorting),
+        )
+
+
+
 def repo_clone_url(base_url: str, owner: str, repo: str) -> str:
     return f"{base_url.rstrip('/')}/{quote(owner)}/{quote(repo)}.git"
