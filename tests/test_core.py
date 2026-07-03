@@ -202,3 +202,13 @@ def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
         ("DELETE", "/repos/gitea_admin/demo/projects/1/columns/2/issues/42", None, None),
         ("POST", "/repos/gitea_admin/demo/projects/1/issues/42/move", {"column_id": 3, "sorting": 0}, None),
     ]
+
+def test_runtime_dependency_bounds_are_release_reviewed():
+    import tomllib
+
+    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    deps = set(data["project"]["dependencies"])
+
+    assert "chatenv>=0.2.2,<0.3.0" in deps
+    assert "chatstyle>=0.1.0,<0.2.0" in deps
+    assert "click>=8.4.2,<9.0" in deps

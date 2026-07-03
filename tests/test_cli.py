@@ -276,3 +276,16 @@ def test_project_delete_requires_yes_when_non_interactive():
 
     assert result.exit_code != 0
     assert "--yes" in result.output
+
+def test_project_create_no_interactive_fails_fast_when_required_inputs_missing():
+    result = CliRunner().invoke(main, ["project", "create", "-I"])
+
+    assert result.exit_code != 0
+    assert "repo" in result.output.lower() or "title" in result.output.lower()
+
+
+def test_project_list_no_interactive_fails_fast_when_repo_missing():
+    result = CliRunner().invoke(main, ["project", "list", "-I"])
+
+    assert result.exit_code != 0
+    assert "repo" in result.output.lower()
