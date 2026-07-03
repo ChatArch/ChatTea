@@ -162,3 +162,56 @@ def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
     assert payload["full_name"] == "gitea_admin/demo"
     assert calls[1][0] == "POST"
     assert calls[1][1] == "/user/repos"
+
+def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None):
+        calls.append((method, path, data, params))
+        return {"method": method, "path": path}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    client.list_repo_projects("gitea_admin", "demo", state="all", limit=25)
+    client.get_repo_project("gitea_admin", "demo", 1)
+    client.create_repo_project("gitea_admin", "demo", "Roadmap", description="Plan", card_type="text_only")
+    client.edit_repo_project("gitea_admin", "demo", 1, title="Next", state="closed")
+    client.delete_repo_project("gitea_admin", "demo", 1)
+    client.list_project_columns("gitea_admin", "demo", 1)
+    client.create_project_column("gitea_admin", "demo", 1, "Todo", color="#FF0000")
+    client.edit_project_column("gitea_admin", "demo", 1, 2, sorting=0)
+    client.delete_project_column("gitea_admin", "demo", 1, 2)
+    client.list_project_column_issues("gitea_admin", "demo", 1, 2, limit=10)
+    client.add_issue_to_project_column("gitea_admin", "demo", 1, 2, 42)
+    client.remove_issue_from_project_column("gitea_admin", "demo", 1, 2, 42)
+    client.move_project_issue("gitea_admin", "demo", 1, 42, 3, sorting=0)
+
+    assert calls == [
+        ("GET", "/repos/gitea_admin/demo/projects", None, {"state": "all", "limit": 25}),
+        ("GET", "/repos/gitea_admin/demo/projects/1", None, None),
+        ("POST", "/repos/gitea_admin/demo/projects", {"title": "Roadmap", "description": "Plan", "card_type": "text_only"}, None),
+        ("PATCH", "/repos/gitea_admin/demo/projects/1", {"title": "Next", "state": "closed"}, None),
+        ("DELETE", "/repos/gitea_admin/demo/projects/1", None, None),
+        ("GET", "/repos/gitea_admin/demo/projects/1/columns", None, {"limit": 50}),
+        ("POST", "/repos/gitea_admin/demo/projects/1/columns", {"title": "Todo", "color": "#FF0000"}, None),
+        ("PATCH", "/repos/gitea_admin/demo/projects/1/columns/2", {"sorting": 0}, None),
+        ("DELETE", "/repos/gitea_admin/demo/projects/1/columns/2", None, None),
+        ("GET", "/repos/gitea_admin/demo/projects/1/columns/2/issues", None, {"limit": 10}),
+        ("POST", "/repos/gitea_admin/demo/projects/1/columns/2/issues/42", None, None),
+        ("DELETE", "/repos/gitea_admin/demo/projects/1/columns/2/issues/42", None, None),
+        ("POST", "/repos/gitea_admin/demo/projects/1/issues/42/move", {"column_id": 3, "sorting": 0}, None),
+    ]
+
+def test_runtime_dependency_bounds_are_release_reviewed():
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10 test environment
+        import tomli as tomllib
+
+    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    deps = set(data["project"]["dependencies"])
+
+    assert "chatenv>=0.2.2,<0.3.0" in deps
+    assert "chatstyle>=0.1.0,<0.2.0" in deps
+    assert "click>=8.4.2,<9.0" in deps

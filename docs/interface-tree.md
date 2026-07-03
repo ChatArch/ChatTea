@@ -23,12 +23,28 @@ chattea
 │       ├── show
 │       ├── get
 │       └── set
-└── repo
+├── repo
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── clone
+│   └── migrate
+└── project
     ├── list
     ├── view
     ├── create
-    ├── clone
-    └── migrate
+    ├── edit
+    ├── delete
+    ├── column
+    │   ├── list
+    │   ├── create
+    │   ├── edit
+    │   └── delete
+    └── issue
+        ├── list
+        ├── add
+        ├── remove
+        └── move
 ```
 
 ## Responsibilities
@@ -43,6 +59,9 @@ chattea
 - `repo list/view/create`: cover basic repository inventory and creation via Gitea API.
 - `repo clone`: clone from the configured Gitea instance without configuring Git auth headers.
 - `repo migrate`: create a Gitea migration from an existing Git clone URL.
+- `project list/view/create/edit/delete`: manage repository-scoped Gitea Projects.
+- `project column list/create/edit/delete`: manage columns in a repository Project board.
+- `project issue list/add/remove/move`: manage issue/PR cards in Project columns.
 
 ## CLI to Python Function Mapping
 
@@ -69,13 +88,26 @@ chattea repo view             -> chattea.commands.repo.view_repository
 chattea repo create           -> chattea.commands.repo.create_repository
 chattea repo clone            -> chattea.commands.repo.clone_repository
 chattea repo migrate          -> chattea.commands.repo.migrate_repository
+chattea project list          -> chattea.commands.project.list_projects
+chattea project view          -> chattea.commands.project.view_project
+chattea project create        -> chattea.commands.project.create_project
+chattea project edit          -> chattea.commands.project.edit_project
+chattea project delete        -> chattea.commands.project.delete_project
+chattea project column list   -> chattea.commands.project.list_columns
+chattea project column create -> chattea.commands.project.create_column
+chattea project column edit   -> chattea.commands.project.edit_column
+chattea project column delete -> chattea.commands.project.delete_column
+chattea project issue list    -> chattea.commands.project.list_column_issues
+chattea project issue add     -> chattea.commands.project.add_issue
+chattea project issue remove  -> chattea.commands.project.remove_issue
+chattea project issue move    -> chattea.commands.project.move_issue
 ```
 
 Lower-level reusable modules stay available:
 
 ```text
 chattea.config  -> ChatTeaEnvConfig, load_config, save_config, set_token
-chattea.api     -> GiteaClient, repo_clone_url
+chattea.api     -> GiteaClient, repo_clone_url, repository Project API methods
 chattea.git     -> clone_repo
 chattea.server  -> install_binary, init_instance, run_gitea, write_user_service
 ```
@@ -121,4 +153,4 @@ Commands with recoverable missing input use ChatStyle `CommandSchema`, `CommandF
 
 ## Deferred Surface
 
-PR, Actions, releases, hooks, org membership, and admin CRUD are intentionally deferred until the local install/start/repo workflow is stable.
+PR, Actions, releases, hooks, org membership, and admin CRUD are intentionally deferred until the local install/start/repo/project workflow is stable.
