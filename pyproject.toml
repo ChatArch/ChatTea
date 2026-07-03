@@ -29,7 +29,7 @@ chattea = "chattea.cli:main"
 chattea = "chattea.config"
 
 [project.optional-dependencies]
-dev = ["build", "pytest", "twine"]
+dev = ["build", "pytest", "twine", "tomli>=2.4.1,<3.0; python_version<'3.11'"]
 docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]
 
 [tool.setuptools.dynamic]

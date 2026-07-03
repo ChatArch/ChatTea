@@ -204,7 +204,10 @@ def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
     ]
 
 def test_runtime_dependency_bounds_are_release_reviewed():
-    import tomllib
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10 test environment
+        import tomli as tomllib
 
     data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
     deps = set(data["project"]["dependencies"])
