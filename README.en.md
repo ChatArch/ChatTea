@@ -118,11 +118,16 @@ chattea server restart
 ```text
 chattea
 ├── set-token
+├── api
 ├── auth
 │   ├── login
 │   ├── status
 │   └── token
-├── api
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
 ├── server
 │   ├── install
 │   ├── init
@@ -168,7 +173,7 @@ chattea
         └── move
 ```
 
-`project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The full GitHub-aligned target tree is documented in `docs/cli-alignment.md`.
+`token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
 
 ## Development Notes
 

@@ -11,6 +11,70 @@ chattea server config --help
 chattea repo --help
 ```
 
+## CLI Tree
+
+See `cli-alignment.md` for the evidence-bound alignment target.
+
+```text
+chattea
+├── set-token
+├── api
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
+├── server
+│   ├── install
+│   ├── init
+│   ├── serve
+│   ├── start
+│   ├── stop
+│   ├── restart
+│   ├── status
+│   ├── logs
+│   ├── version
+│   ├── health
+│   └── config
+│       ├── path
+│       ├── show
+│       ├── get
+│       └── set
+├── repo
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── clone
+│   └── migrate
+└── project
+    ├── list
+    ├── view
+    ├── create
+    ├── edit
+    ├── delete
+    ├── column
+    │   ├── list
+    │   ├── create
+    │   ├── edit
+    │   └── delete
+    ├── card
+    │   ├── list
+    │   ├── add
+    │   ├── remove
+    │   └── move
+    └── issue
+        ├── list
+        ├── add
+        ├── remove
+        └── move
+```
+
+`token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
+
 ## End-to-End Local Gitea Setup
 
 Install on a new machine:

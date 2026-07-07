@@ -11,6 +11,7 @@ from chattea.commands.auth import auth_group, render_token_config, resolve_login
 from chattea.commands.project import project_group
 from chattea.commands.repo import repo_group
 from chattea.commands.server import server_group
+from chattea.commands.token import token_group
 
 
 @click.group()
@@ -35,6 +36,7 @@ main.add_command(server_group)
 main.add_command(repo_group)
 main.add_command(project_group)
 main.add_command(auth_group)
+main.add_command(token_group)
 main.add_command(api_command)
 
 

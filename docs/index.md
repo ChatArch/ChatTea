@@ -18,11 +18,16 @@ chattea repo --help
 ```text
 chattea
 ├── set-token
+├── api
 ├── auth
 │   ├── login
 │   ├── status
 │   └── token
-├── api
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
 ├── server
 │   ├── install
 │   ├── init
@@ -68,7 +73,7 @@ chattea
         └── move
 ```
 
-`project issue` is a compatibility alias for `project card`. Use `project card` in new docs and automation. See `cli-alignment.md` for the annotated target tree.
+`token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
 
 ## 新机器配置清单
 

@@ -7,11 +7,16 @@ ChatTea follows a GitHub-familiar resource model for Gitea APIs, plus ChatTea-sp
 ```text
 chattea
 ├── set-token
+├── api
 ├── auth
 │   ├── login
 │   ├── status
 │   └── token
-├── api
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
 ├── server
 │   ├── install
 │   ├── init
@@ -81,13 +86,14 @@ See `docs/cli-alignment.md` for the annotated target tree. In short, future API 
 
 ChatTea-specific custom commands stay:
 
-- `set-token`: quick ChatEnv token setup.
+- `set-token`: configure an existing Gitea token in ChatEnv and repo-local git config.
 - `server`: internal/self-hosted Gitea install, app.ini, process, and health management.
 
 ## Responsibilities
 
 - `set-token`: store the default Gitea base URL and API token in the ChatEnv `ChatTea` active profile.
-- `auth login/status/token`: GitHub-familiar namespace for the same authentication state.
+- `token create/list/delete/bootstrap`: create/list/delete Gitea access tokens via BasicAuth; bootstrap creates a token and then configures ChatTea/Git credentials.
+- `auth login/status/token`: auxiliary namespace over the same credential state.
 - `api`: raw Gitea API passthrough for routes not yet wrapped by first-class commands.
 - `server install`: install latest ChatArch internal Gitea by default; `--version` can pin a release.
 - `server init`: create a minimal `app.ini` for a local SQLite-backed Gitea instance; listen address and HTTP port are CLI init parameters, not Env fields.

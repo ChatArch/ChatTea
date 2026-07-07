@@ -10,6 +10,7 @@ def test_help_lists_first_version_surface():
     assert result.exit_code == 0
     assert "set-token" in result.output
     assert "auth" in result.output
+    assert "token" in result.output
     assert "api" in result.output
     assert "server" in result.output
     assert "repo" in result.output
@@ -400,3 +401,57 @@ def test_api_command_calls_raw_route(monkeypatch):
         "data": {"title": "Bug"},
         "params": {"state": "open"},
     }
+
+
+def test_token_create_uses_password_env_and_masks_token(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def create_access_token(self, username, password, name, scopes):
+            captured.update({"username": username, "password": password, "name": name, "scopes": scopes})
+            return {"id": 1, "name": name, "token": "generated-token", "scopes": scopes}
+
+    monkeypatch.setattr("chattea.commands.token.GiteaClient", FakeClient)
+    monkeypatch.setenv("GITEA_PASSWORD", "pw")
+
+    result = CliRunner().invoke(
+        main,
+        ["token", "create", "--base-url", "http://gitea.local", "--username", "gitea_admin", "--password-env", "GITEA_PASSWORD", "--name", "chattea", "--scope", "all"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "generated-token" not in result.output
+    assert "token: generat...token" in result.output
+    assert captured == {"init": {"url": "http://gitea.local", "token": ""}, "username": "gitea_admin", "password": "pw", "name": "chattea", "scopes": ["all"]}
+
+
+def test_token_bootstrap_creates_token_and_configures_credentials(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    monkeypatch.setenv("GITEA_PASSWORD", "pw")
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def create_access_token(self, username, password, name, scopes):
+            captured.update({"username": username, "password": password, "name": name, "scopes": scopes})
+            return {"id": 1, "name": name, "sha1": "generated-token", "scopes": scopes}
+
+    monkeypatch.setattr("chattea.commands.token.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["token", "bootstrap", "--base-url", "http://gitea.local", "--username", "gitea_admin", "--password-env", "GITEA_PASSWORD", "--name", "chattea", "--scope", "write:repository,write:issue"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "generated-token" not in result.output
+    assert "configured: http://gitea.local" in result.output
+    env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text()
+    assert "CHATTEA_BASE_URL='http://gitea.local'" in env_text
+    assert "CHATTEA_TOKEN='generated-token'" in env_text
+    assert captured["scopes"] == ["write:repository", "write:issue"]

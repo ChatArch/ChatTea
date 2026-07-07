@@ -250,6 +250,31 @@ def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
     assert calls[1][1] == "/user/repos"
 
 
+def test_access_token_api_methods_use_basic_auth(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="")
+
+    def fake_request(method, path, data=None, params=None, extra_headers=None):
+        calls.append((method, path, data, params, extra_headers))
+        if method == "POST":
+            return {"name": data["name"], "token": "generated-token", "scopes": data["scopes"]}
+        if method == "GET":
+            return [{"id": 1, "name": "chattea"}]
+        return None
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    assert client.create_access_token("gitea_admin", "pw", "chattea", ["all"])["token"] == "generated-token"
+    assert client.list_access_tokens("gitea_admin", "pw") == [{"id": 1, "name": "chattea"}]
+    assert client.delete_access_token("gitea_admin", "pw", "1") is None
+
+    assert calls[0][0:4] == ("POST", "/users/gitea_admin/tokens", {"name": "chattea", "scopes": ["all"]}, None)
+    assert calls[1][0:4] == ("GET", "/users/gitea_admin/tokens", None, {"limit": 50})
+    assert calls[2][0:4] == ("DELETE", "/users/gitea_admin/tokens/1", None, None)
+    for call in calls:
+        assert call[4]["Authorization"].startswith("Basic ")
+
+
 def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
     calls = []
     client = GiteaClient(url="http://gitea.local", token="token")

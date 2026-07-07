@@ -35,6 +35,7 @@ src/chattea/
 ├── credentials.py                     # set-token, token resolution, repo-local git credential helpers.
 ├── server.py                          # local Gitea install/service/config primitives.
 └── commands/
+    ├── token.py                       # Click command group + thin wrappers around token functions.
     ├── repo.py                        # Click command group + thin wrappers around repo functions.
     ├── issue.py                       # Click command group + thin wrappers around issue functions.
     ├── pr.py                          # Click command group + thin wrappers around pull request functions.
@@ -55,14 +56,18 @@ This layout should follow the CLI tree when practical. It can stay flexible when
 - Provide the token source used by API commands such as `repo`, `issue`, `pr`, `project`, `release`, and Actions commands.
 - Keep raw tokens out of normal command output.
 
-Token resolution for API commands should be centralized and consistent:
+Token resolution for API commands is centralized and consistent:
 
 1. Explicit CLI token argument, when provided.
 2. Repo-local git credential/config derived from the current Gitea remote, when available.
 3. ChatTea ChatEnv profile token.
 4. Clean failure if the command requires authentication and no token is available.
 
-This is a ChatTea/ChatArch mechanism. It may reuse lessons from ChatGH, but it must be adapted to Gitea remotes and ChatTea's config model.
+Token creation is separate from token configuration:
+
+- `token create` uses Gitea BasicAuth against `POST /users/{username}/tokens` to create an access token.
+- `token bootstrap` creates an access token and immediately calls the same credential configuration path as `set-token`.
+- `set-token` configures an already-created token for ChatTea and git transport.
 
 ## Confirmed Current ChatTea CLI
 
@@ -72,6 +77,15 @@ This is the currently implemented surface on the working branch. It is not the c
 chattea
 ├── set-token                         # `chattea.commands.auth.configure_token` -> ChatEnv + repo-local git extraHeader credential.
 ├── api                               # Raw Gitea API passthrough via `chattea.commands.api.call_api`.
+├── auth                              # Auxiliary status/login namespace; uses the same credential backend as set-token.
+│   ├── login                         # Configure Gitea API + repo-local git credentials.
+│   ├── status                        # Show configured base URL and masked token state.
+│   └── token                         # Show masked configured token.
+├── token                             # Gitea access token lifecycle through BasicAuth.
+│   ├── create                        # POST /users/{username}/tokens -> `create_access_token`.
+│   ├── list                          # GET /users/{username}/tokens -> `list_access_tokens`.
+│   ├── delete                        # DELETE /users/{username}/tokens/{token} -> `delete_access_token`.
+│   └── bootstrap                     # create token + configure ChatTea/Git credentials.
 ├── server                            # Local/internal Gitea lifecycle management.
 │   ├── install                       # `chattea.commands.server.install_gitea` -> `chattea.server.install_binary`.
 │   ├── init                          # `chattea.commands.server.init_gitea_server`.
@@ -118,6 +132,8 @@ Compatibility aliases such as `project issue` may exist for transition, but they
 
 The following domains are confirmed from Gitea Swagger annotations in `core/gitea/routers/api/v1/**` and can be implemented as real commands. Each command added under these domains must still follow the implementation contract above.
 
+- `user`: admin user creation/edit/delete routes under `/admin/users`; used for managed local bootstrap.
+- `token`: `/users/{username}/tokens` list/create/delete; create requires BasicAuth or reverse proxy auth.
 - `issue`: `/repos/{owner}/{repo}/issues`, comments, labels, reactions, pin/lock, dependencies, attachments, time tracking.
 - `label`: `/repos/{owner}/{repo}/labels` and optional org label routes.
 - `milestone`: `/repos/{owner}/{repo}/milestones`.
@@ -132,6 +148,15 @@ The following domains are confirmed from Gitea Swagger annotations in `core/gite
 - `secret`: repo/org/user scoped `/actions/secrets` routes, noting user scope lacks a list route in the observed annotations.
 - `variable`: repo/org/user scoped `/actions/variables` routes.
 - `status`: `/repos/{owner}/{repo}/statuses/{sha}` and combined status routes.
+
+## Bootstrap Direction
+
+Initial configuration should be implemented as real workflow composition, not a placeholder command.
+
+- `server bootstrap` or top-level `bootstrap` is a local managed-Gitea flow: install, init, start, create default user, generate/create token, run set-token, and verify `/user`.
+- `token bootstrap` is the remote/existing-Gitea flow: BasicAuth create token, run set-token, and verify `/user`.
+- Passwords should be read from prompt or `--password-env`; raw passwords should not be stored in ChatEnv or printed.
+- Generated access tokens should be saved through the credential path, then masked in normal output.
 
 ## Non-Goals
 
