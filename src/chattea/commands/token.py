@@ -10,7 +10,7 @@ from chattea.api import GiteaClient
 from chattea.config import DEFAULT_BASE_URL, mask_token
 from chattea.credentials import configure_token as configure_credentials
 
-DEFAULT_TOKEN_NAME = "chattea"
+DEFAULT_TOKEN_NAME = "default"
 DEFAULT_TOKEN_SCOPES = ("all",)
 
 

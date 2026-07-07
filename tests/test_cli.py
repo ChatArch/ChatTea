@@ -419,13 +419,13 @@ def test_token_create_uses_password_env_and_masks_token(monkeypatch):
 
     result = CliRunner().invoke(
         main,
-        ["token", "create", "--base-url", "http://gitea.local", "--username", "gitea_admin", "--password-env", "GITEA_PASSWORD", "--name", "chattea", "--scope", "all"],
+        ["token", "create", "--base-url", "http://gitea.local", "--username", "gitea_admin", "--password-env", "GITEA_PASSWORD"],
     )
 
     assert result.exit_code == 0, result.output
     assert "generated-token" not in result.output
     assert "token: generat...token" in result.output
-    assert captured == {"init": {"url": "http://gitea.local", "token": ""}, "username": "gitea_admin", "password": "pw", "name": "chattea", "scopes": ["all"]}
+    assert captured == {"init": {"url": "http://gitea.local", "token": ""}, "username": "gitea_admin", "password": "pw", "name": "default", "scopes": ["all"]}
 
 
 def test_token_bootstrap_creates_token_and_configures_credentials(monkeypatch, tmp_path):

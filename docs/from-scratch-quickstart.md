@@ -211,15 +211,21 @@ gitea admin user generate-access-token \
   --config app.ini \
   --work-path ... \
   --username gitea_admin \
-  --token-name chattea \
+  --token-name default \
   --scopes all \
   --raw
 ```
 
-Initial bootstrap may use:
+Initial bootstrap uses the highest built-in Gitea token scope by default:
 
 ```text
 all
+```
+
+Default token name:
+
+```text
+default
 ```
 
 After the full chain is stable, scopes can be tightened.
