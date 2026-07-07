@@ -446,6 +446,72 @@ def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
     ]
 
 
+def test_repo_collaboration_api_methods_use_repo_scoped_endpoints(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None, extra_headers=None):
+        calls.append((method, path, data, params))
+        if path.endswith(".diff"):
+            return "diff --git a/demo b/demo"
+        return {"method": method, "path": path}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    client.list_issues("gitea_admin", "demo", state="all", limit=10)
+    client.get_issue("gitea_admin", "demo", 1)
+    client.create_issue("gitea_admin", "demo", "Bug", body="Body", labels=[1], assignees=["root"])
+    client.edit_issue("gitea_admin", "demo", 1, state="closed")
+    client.list_issue_comments("gitea_admin", "demo", 1)
+    client.create_issue_comment("gitea_admin", "demo", 1, "Looks good")
+    client.edit_issue_comment("gitea_admin", "demo", 9, "Updated")
+    client.delete_issue_comment("gitea_admin", "demo", 9)
+    client.add_issue_labels("gitea_admin", "demo", 1, [2])
+    client.remove_issue_label("gitea_admin", "demo", 1, 2)
+    client.add_issue_assignees("gitea_admin", "demo", 1, ["root"])
+    client.list_labels("gitea_admin", "demo")
+    client.create_label("gitea_admin", "demo", "bug", "ff0000")
+    client.edit_label("gitea_admin", "demo", 1, name="defect")
+    client.delete_label("gitea_admin", "demo", 1)
+    client.list_milestones("gitea_admin", "demo", state="all")
+    client.create_milestone("gitea_admin", "demo", "v1")
+    client.edit_milestone("gitea_admin", "demo", 1, state="closed")
+    client.delete_milestone("gitea_admin", "demo", 1)
+    client.list_pulls("gitea_admin", "demo", state="open")
+    client.get_pull("gitea_admin", "demo", 2)
+    client.get_pull_diff("gitea_admin", "demo", 2)
+    client.create_pull("gitea_admin", "demo", "PR", "feature", "main")
+    client.edit_pull("gitea_admin", "demo", 2, state="closed")
+    client.merge_pull("gitea_admin", "demo", 2, merge_style="merge")
+    client.list_pull_commits("gitea_admin", "demo", 2)
+    client.list_pull_files("gitea_admin", "demo", 2)
+    client.list_pull_reviews("gitea_admin", "demo", 2)
+    client.create_pull_review("gitea_admin", "demo", 2, body="ok")
+    client.submit_pull_review("gitea_admin", "demo", 2, 3, event="APPROVE")
+    client.list_releases("gitea_admin", "demo")
+    client.get_latest_release("gitea_admin", "demo")
+    client.create_release("gitea_admin", "demo", "v1.0.0")
+    client.edit_release("gitea_admin", "demo", 1, name="v1")
+    client.list_release_assets("gitea_admin", "demo", 1)
+    client.delete_release_asset("gitea_admin", "demo", 1, 2)
+
+    assert ("GET", "/repos/gitea_admin/demo/issues", None, {"state": "all", "limit": 10}) in calls
+    assert ("POST", "/repos/gitea_admin/demo/issues", {"title": "Bug", "body": "Body", "labels": [1], "assignees": ["root"]}, None) in calls
+    assert ("PATCH", "/repos/gitea_admin/demo/issues/1", {"state": "closed"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/issues/1/comments", {"body": "Looks good"}, None) in calls
+    assert ("PATCH", "/repos/gitea_admin/demo/issues/comments/9", {"body": "Updated"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/issues/1/labels", {"labels": [2]}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/issues/1/assignees", {"assignees": ["root"]}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/labels", {"name": "bug", "color": "ff0000"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/milestones", {"title": "v1"}, None) in calls
+    assert ("GET", "/repos/gitea_admin/demo/pulls/2.diff", None, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/pulls", {"title": "PR", "head": "feature", "base": "main"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/pulls/2/merge", {"Do": "merge"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/pulls/2/reviews", {"body": "ok"}, None) in calls
+    assert ("POST", "/repos/gitea_admin/demo/releases", {"tag_name": "v1.0.0"}, None) in calls
+    assert ("GET", "/repos/gitea_admin/demo/releases/1/assets", None, {"limit": 50}) in calls
+
+
 def test_project_card_functions_are_importable_aliases(monkeypatch):
     calls = []
 

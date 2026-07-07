@@ -51,6 +51,53 @@ chattea
 │   ├── create
 │   ├── clone
 │   └── migrate
+├── issue
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   ├── reopen
+│   ├── delete
+│   ├── comment
+│   ├── label
+│   └── assign
+├── label
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   └── delete
+├── milestone
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   └── delete
+├── pr
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   ├── reopen
+│   ├── merge
+│   ├── diff
+│   ├── patch
+│   ├── commits
+│   ├── files
+│   ├── comment
+│   └── review
+├── release
+│   ├── list
+│   ├── view
+│   ├── latest
+│   ├── by-tag
+│   ├── create
+│   ├── edit
+│   ├── delete
+│   └── asset
 └── project
     ├── list
     ├── view
@@ -58,23 +105,13 @@ chattea
     ├── edit
     ├── delete
     ├── column
-    │   ├── list
-    │   ├── create
-    │   ├── edit
-    │   └── delete
     ├── card
-    │   ├── list
-    │   ├── add
-    │   ├── remove
-    │   └── move
     └── issue
-        ├── list
-        ├── add
-        ├── remove
-        └── move
 ```
 
-`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `issue`, `label`, `milestone`, `pr`, and `release` cover the current repo-level collaboration surface. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. `pr checkout` and Workflow/Runner surfaces are intentionally deferred.
+
+See [Repo Collaboration Quick Start](repo-collaboration-quickstart.md) for a local end-to-end repo collaboration smoke flow with terminal screenshots.
 
 ## 新机器配置清单
 

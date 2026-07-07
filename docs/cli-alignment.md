@@ -109,6 +109,53 @@ chattea
 │   ├── create                        # Gitea API-backed `create_repository`.
 │   ├── clone                         # Local git helper `clone_repository`.
 │   └── migrate                       # Gitea API-backed `migrate_repository`.
+├── issue                             # Repository issue operations; backed by /repos/{owner}/{repo}/issues.
+│   ├── list                          # GET /repos/{owner}/{repo}/issues.
+│   ├── view                          # GET /repos/{owner}/{repo}/issues/{index}.
+│   ├── create                        # POST /repos/{owner}/{repo}/issues.
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/issues/{index}.
+│   ├── close                         # PATCH issue state=closed.
+│   ├── reopen                        # PATCH issue state=open.
+│   ├── delete                        # DELETE /repos/{owner}/{repo}/issues/{index}.
+│   ├── comment                       # Issue comment API.
+│   ├── label                         # Issue label assignment API.
+│   └── assign                        # Issue assignee API.
+├── label                             # Repository labels.
+│   ├── list                          # GET /repos/{owner}/{repo}/labels.
+│   ├── view                          # GET /repos/{owner}/{repo}/labels/{id}.
+│   ├── create                        # POST /repos/{owner}/{repo}/labels.
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/labels/{id}.
+│   └── delete                        # DELETE /repos/{owner}/{repo}/labels/{id}.
+├── milestone                         # Repository milestones.
+│   ├── list                          # GET /repos/{owner}/{repo}/milestones.
+│   ├── view                          # GET /repos/{owner}/{repo}/milestones/{id}.
+│   ├── create                        # POST /repos/{owner}/{repo}/milestones.
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/milestones/{id}.
+│   ├── close                         # PATCH milestone state=closed.
+│   └── delete                        # DELETE /repos/{owner}/{repo}/milestones/{id}.
+├── pr                                # Pull request operations; no local checkout helper in this tree.
+│   ├── list                          # GET /repos/{owner}/{repo}/pulls.
+│   ├── view                          # GET /repos/{owner}/{repo}/pulls/{index}.
+│   ├── create                        # POST /repos/{owner}/{repo}/pulls.
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/pulls/{index}.
+│   ├── close                         # PATCH PR state=closed.
+│   ├── reopen                        # PATCH PR state=open.
+│   ├── merge                         # POST /repos/{owner}/{repo}/pulls/{index}/merge.
+│   ├── diff                          # GET /repos/{owner}/{repo}/pulls/{index}.diff.
+│   ├── patch                         # GET /repos/{owner}/{repo}/pulls/{index}.patch.
+│   ├── commits                       # GET /repos/{owner}/{repo}/pulls/{index}/commits.
+│   ├── files                         # GET /repos/{owner}/{repo}/pulls/{index}/files.
+│   ├── comment                       # PR issue-comment helpers through issue comment routes.
+│   └── review                        # PR review list/create/submit routes.
+├── release                           # Repository releases.
+│   ├── list                          # GET /repos/{owner}/{repo}/releases.
+│   ├── view                          # GET /repos/{owner}/{repo}/releases/{id}.
+│   ├── latest                        # GET /repos/{owner}/{repo}/releases/latest.
+│   ├── by-tag                        # GET /repos/{owner}/{repo}/releases/tags/{tag}.
+│   ├── create                        # POST /repos/{owner}/{repo}/releases.
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/releases/{id}.
+│   ├── delete                        # DELETE /repos/{owner}/{repo}/releases/{id}.
+│   └── asset                         # Release asset list/delete; upload awaits multipart client support.
 └── project                           # Repository-scoped Gitea Project board, not GitHub Projects v2.
     ├── list                          # GET /repos/{owner}/{repo}/projects.
     ├── view                          # GET /repos/{owner}/{repo}/projects/{id}.
