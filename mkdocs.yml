@@ -7,5 +7,6 @@ theme:
 nav:
   - 首页: index.md
   - 接口树: interface-tree.md
+  - 从零开始 Quick Start: from-scratch-quickstart.md
   - CLI 对齐计划: cli-alignment.md
   - English: index.en.md
