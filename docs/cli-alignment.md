@@ -9,7 +9,7 @@ The target tree is based on these sources:
 - Current ChatTea CLI registry in `src/chattea/cli.py` and `src/chattea/commands/*`.
 - Current Gitea API routes and Swagger annotations under `../gitea/routers/api/v1/**`.
 - Current ChatArch Gitea release assets used by CI: `https://github.com/ChatArch/gitea/releases/download/v1.0.0/gitea-1.0.0-linux-amd64.xz`.
-- GitHub/GH CLI resource model: `repo`, `issue`, `pr`, `release`, workflow/run concepts.
+- GitHub/GH CLI resource model: `repo`, `issue`, `pr`, `release`, workflow/run concepts. This is a naming/UX reference, not a rule to copy commands without Gitea support.
 
 ## Product target
 
@@ -39,7 +39,11 @@ ChatTea deliberately keeps these non-GitHub-CLI commands:
 - `set-token`: quick ChatTea command to write `CHATTEA_BASE_URL` and `CHATTEA_TOKEN` into ChatEnv. This stays even though `auth login` also exists.
 - `server`: self-hosted Gitea lifecycle management. GitHub CLI talks to GitHub SaaS and does not install GitHub; ChatTea manages local/internal Gitea.
 
+`set-token` is intentionally not the same as ChatGH `set-token`. ChatGH `set-token` configures GitHub HTTPS credentials for the current Git repository, and can optionally save the token into ChatGH env config. ChatTea `set-token` configures the Gitea website/API base URL and API token in ChatEnv; it does not configure git transport credentials.
+
 ## Target CLI tree with notes
+
+Entries marked "target" are planned CLI surface for later phases. They are not implemented by this PR unless they appear in the current tree in `docs/interface-tree.md`. Before implementing any target command, verify the backing Gitea API route or mark it explicitly as a local helper.
 
 ```text
 chattea
@@ -48,17 +52,17 @@ chattea
 │   ├── login                         # Configure Gitea base URL and API token.
 │   ├── status                        # Show configured endpoint and masked token state.
 │   ├── token                         # Show masked token for quick verification.
-│   └── logout                        # Future: clear active ChatTea token/profile values.
+│   └── logout                        # Target: clear active ChatTea token/profile values.
 ├── api                               # Raw Gitea API passthrough for routes not yet wrapped.
 ├── repo                              # Repository operations; aligns with GitHub/Gitea repo concepts.
 │   ├── list
 │   ├── view
 │   ├── create
 │   ├── clone
-│   ├── fork                          # Future: create a fork.
-│   ├── delete                        # Future: delete a repository; destructive, requires confirmation.
+│   ├── fork                          # Target: create a fork through Gitea repo fork API.
+│   ├── delete                        # Target: delete a repository; destructive, requires confirmation.
 │   ├── migrate                       # Gitea-specific migration from an existing Git URL.
-│   └── transfer                      # Future: transfer repository owner.
+│   └── transfer                      # Target: transfer repository owner through Gitea repo transfer API.
 ├── issue                             # Top-level Issue API, independent from Project cards.
 │   ├── list
 │   ├── view
@@ -92,9 +96,9 @@ chattea
 │   ├── close
 │   ├── reopen
 │   ├── merge
-│   ├── diff                          # Show the PR diff; useful for review without opening a browser.
-│   ├── patch                         # Show/download patch form of the PR diff.
-│   ├── checkout                      # Local git helper: fetch and check out the PR branch.
+│   ├── diff                          # Gitea API-backed: fetch the PR diff for review without opening a browser.
+│   ├── patch                         # Gitea API-backed: fetch patch-form PR diff.
+│   ├── checkout                      # Local git helper, not a Gitea API route: fetch and check out the PR branch.
 │   ├── files                         # List files changed by the PR.
 │   ├── commits                       # List commits included in the PR.
 │   └── review                        # Review lifecycle and requested reviewer operations.
@@ -159,8 +163,8 @@ chattea
 │   ├── token                         # Create a registration token for a scope.
 │   ├── edit
 │   ├── delete
-│   ├── install                       # Future local runner binary install.
-│   ├── register                      # Future local runner registration.
+│   ├── install                       # Target local helper: install runner binary, not a Gitea REST route.
+│   ├── register                      # Target local helper: register local runner using a registration token.
 │   ├── start
 │   ├── stop
 │   ├── status
