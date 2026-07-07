@@ -109,6 +109,10 @@ What this proves:
 - `issue close` updates issue state through the issue edit route.
 - `issue list --state all` shows the final closed issue state.
 
+The same result is visible in the Gitea web UI. The issue page shows the closed issue created by ChatTea, with the `docs` label, `v1.0` milestone, and the comment created through `chattea issue comment create`.
+
+![Gitea web UI showing the closed issue created by ChatTea](assets/repo-collaboration/gitea-issue-web.png)
+
 ## 3. Release Command Error Handling
 
 The release route is backed by `POST /api/v1/repos/{owner}/{repo}/releases`, but a release cannot be created on an empty repository. The smoke run intentionally tried this against the empty `cli-demo` repository to verify the CLI reports a clean Gitea API error instead of a Python traceback.
