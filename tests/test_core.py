@@ -1,11 +1,13 @@
 from pathlib import Path
 import hashlib
 import lzma
+import subprocess
 
 from chattea import server as server_ops
 from chattea.api import GiteaClient
 from chattea.commands.api import call_api, parse_json_data, parse_query_params
 from chattea.commands.project import add_card, list_cards, move_card, remove_card
+from chattea.credentials import configure_token, git_extraheader_key, read_git_token, resolve_token, token_from_extraheader
 from chattea.config import (
     ChatTeaConfig,
     ChatTeaEnvConfig,
@@ -32,6 +34,39 @@ def test_config_round_trip_uses_chatenv(monkeypatch, tmp_path):
     env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text(encoding="utf-8")
     assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
     assert "CHATTEA_URL" not in env_text
+
+
+def _init_git_repo(path: Path, remote_url: str) -> None:
+    subprocess.run(["git", "init"], cwd=path, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "remote", "add", "origin", remote_url], cwd=path, check=True, capture_output=True, text=True)
+
+
+def test_configure_token_writes_repo_local_git_auth(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_git_repo(repo, "https://gitea.local/gitea_admin/demo.git")
+
+    result = configure_token("https://gitea.local", "repo-token", cwd=repo, save_env=False)
+
+    assert result["git_configured"] is True
+    assert result["git_key"] == "http.https://gitea.local/gitea_admin/demo.extraHeader"
+    assert read_git_token(cwd=repo) == "repo-token"
+    assert token_from_extraheader(subprocess.run(["git", "config", "--local", "--get", str(result["git_key"])], cwd=repo, check=True, capture_output=True, text=True).stdout) == "repo-token"
+
+
+def test_gitea_client_resolves_token_from_git_config(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_git_repo(repo, "https://gitea.local/gitea_admin/demo.git")
+    configure_token("https://gitea.local", "repo-token", cwd=repo, save_env=False)
+    monkeypatch.chdir(repo)
+
+    client = GiteaClient(url="https://gitea.local")
+
+    assert resolve_token(base_url="https://gitea.local", cwd=repo) == "repo-token"
+    assert client.token == "repo-token"
 
 
 def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_path):

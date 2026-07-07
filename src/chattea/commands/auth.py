@@ -3,7 +3,8 @@ from __future__ import annotations
 import click
 from chatstyle import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
 
-from chattea.config import DEFAULT_BASE_URL, load_config, mask_token, set_token as save_token
+from chattea.config import DEFAULT_BASE_URL, load_config, mask_token
+from chattea.credentials import configure_token as configure_credentials
 
 TOKEN_SCHEMA = CommandSchema(
     name="auth login",
@@ -14,15 +15,22 @@ TOKEN_SCHEMA = CommandSchema(
 )
 
 
-def configure_token(base_url: str, token: str):
-    """Store the default Gitea base URL and API token in ChatEnv."""
-    return save_token(base_url, token)
+def configure_token(base_url: str, token: str, *, repo: str | None = None) -> dict[str, object]:
+    """Configure ChatTea API and git transport credentials."""
+    return configure_credentials(base_url, token, repo=repo)
 
 
 def render_token_config(base_url: str, token: str) -> list[str]:
     """Return non-sensitive status lines for a token configuration update."""
-    path = configure_token(base_url, token)
-    return [f"configured: {base_url.rstrip('/')}", f"token: {mask_token(token)}", f"config: {path}"]
+    result = configure_token(base_url, token)
+    lines = [f"configured: {str(result['base_url']).rstrip('/')}", f"token: {mask_token(token)}"]
+    if result.get("env_path"):
+        lines.append(f"config: {result['env_path']}")
+    if result.get("git_key"):
+        lines.append(f"git_config: {result['git_key']}")
+    else:
+        lines.append("git_config: not configured (run inside a Gitea git repository to configure repo-local git auth)")
+    return lines
 
 
 def resolve_login_values(base_url: str | None, legacy_url: str | None, token: str | None, interactive: bool | None) -> dict[str, str]:
@@ -49,7 +57,7 @@ def auth_group() -> None:
 @click.option("--token", default=None, help="Gitea API token.")
 @add_interactive_option
 def auth_login(base_url: str | None, legacy_url: str | None, token: str | None, interactive: bool | None) -> None:
-    """Configure the default Gitea base URL and API token."""
+    """Configure Gitea API and repo-local git credentials."""
     values = resolve_login_values(base_url, legacy_url, token, interactive)
     for line in render_token_config(values["base_url"], values["token"]):
         click.echo(line)

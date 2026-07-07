@@ -1,4 +1,5 @@
 from click.testing import CliRunner
+import subprocess
 
 from chattea.cli import main
 
@@ -55,6 +56,33 @@ def test_set_token_writes_config(monkeypatch, tmp_path):
     assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
     assert "CHATTEA_TOKEN='secret-token'" in env_text
     assert "CHATTEA_URL" not in env_text
+
+
+def test_set_token_configures_repo_local_git_auth(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "remote", "add", "origin", "https://gitea.local/gitea_admin/demo.git"], cwd=repo, check=True, capture_output=True, text=True)
+    monkeypatch.chdir(repo)
+
+    result = CliRunner().invoke(
+        main,
+        ["set-token", "--base-url", "https://gitea.local", "--token", "secret-token"],
+        catch_exceptions=False,
+        obj={},
+    )
+
+    assert result.exit_code == 0
+    assert "git_config: http.https://gitea.local/gitea_admin/demo.extraHeader" in result.output
+    header = subprocess.run(
+        ["git", "config", "--local", "--get", "http.https://gitea.local/gitea_admin/demo.extraHeader"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "Authorization: Basic " in header
 
 
 def test_set_token_accepts_legacy_url_option(monkeypatch, tmp_path):

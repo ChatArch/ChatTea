@@ -7,6 +7,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
 from chattea.config import ChatTeaConfig, load_config
+from chattea.credentials import resolve_token
 
 
 class GiteaAPIError(RuntimeError):
@@ -17,7 +18,7 @@ class GiteaClient:
     def __init__(self, url: str | None = None, token: str | None = None) -> None:
         config = load_config()
         self.url = (url or config.url).rstrip("/")
-        self.token = token if token is not None else config.token
+        self.token = resolve_token(token, base_url=self.url, config=config)
 
     def request(
         self,

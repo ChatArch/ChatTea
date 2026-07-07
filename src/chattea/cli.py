@@ -25,7 +25,7 @@ def main() -> None:
 @click.option("--token", default=None, help="Gitea API token.")
 @add_interactive_option
 def set_token(base_url: str | None, legacy_url: str | None, token: str | None, interactive: bool | None) -> None:
-    """Configure the default Gitea base URL and API token."""
+    """Configure Gitea API and repo-local git credentials."""
     values = resolve_login_values(base_url, legacy_url, token, interactive)
     for line in render_token_config(values["base_url"], values["token"]):
         click.echo(line)
