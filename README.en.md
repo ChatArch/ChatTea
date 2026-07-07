@@ -198,6 +198,30 @@ chattea
 │   ├── edit
 │   ├── delete
 │   └── asset
+├── runner
+│   ├── token
+│   ├── list
+│   ├── view
+│   ├── edit
+│   ├── delete
+│   └── setup
+├── run
+│   ├── list
+│   ├── view
+│   ├── jobs
+│   ├── logs
+│   ├── rerun
+│   ├── rerun-failed
+│   └── delete
+├── job
+│   ├── view
+│   ├── logs
+│   └── rerun
+├── artifact
+│   ├── list
+│   ├── view
+│   ├── download
+│   └── delete
 └── project
     ├── list
     ├── view
@@ -209,9 +233,11 @@ chattea
     └── issue
 ```
 
-`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `issue`, `label`, `milestone`, `pr`, and `release` cover the current repo-level collaboration surface. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. `pr checkout` and Workflow/Runner surfaces are intentionally deferred.
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `issue`, `label`, `milestone`, `pr`, and `release` cover repo-level collaboration. `runner`, `run`, `job`, and `artifact` cover the first Gitea Actions/Flow surface: runner registration/lifecycle, PR-triggered runs, jobs, logs, and artifacts. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`.
 
 See `docs/repo-collaboration-quickstart.md` for a local end-to-end repo collaboration smoke flow with terminal screenshots.
+
+See `docs/actions-flow-quickstart.md` for the Actions runner/run/job/log smoke flow.
 
 ## Development Notes
 
