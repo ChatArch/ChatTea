@@ -36,6 +36,43 @@ Next required from-scratch step:
   chattea server bootstrap
 ```
 
+## Server vs Client Boundary
+
+ChatTea has two roles in the full workflow.
+
+```text
+Server side
+  The machine that runs the managed ChatArch Gitea service.
+  It owns the Gitea binary, app.ini, database, repositories, logs, initial admin, and generated access token.
+
+Client side
+  Any machine that wants to manage that Gitea service through ChatTea.
+  It does not need the Gitea binary or app.ini. It only needs ChatTea, a base URL, and an access token.
+```
+
+From-scratch bootstrap is server-side:
+
+```text
+chattea server bootstrap
+  Runs on the server machine.
+  Creates the local Gitea service, initial admin, and initial access token.
+  Writes the generated token to the server machine's ChatEnv profile.
+```
+
+Client setup starts after a token exists:
+
+```text
+chattea set-token
+  Runs on a client machine when a token is already available.
+  Writes CHATTEA_BASE_URL and CHATTEA_TOKEN to that client's ChatEnv profile.
+
+chattea token bootstrap
+  Runs on a client machine when the Gitea service and username/password already exist.
+  Uses BasicAuth to create a token through REST, then writes it to that client's ChatEnv profile.
+```
+
+This means a blank server does not begin as a client. It first bootstraps the service locally with `server bootstrap`. After that, the same machine can also act as a client because it has `CHATTEA_BASE_URL` and `CHATTEA_TOKEN` configured. Other developer or CI machines become clients by running `set-token` or `token bootstrap` against the server URL.
+
 ## A. Blank Machine To Local Gitea
 
 Target one-command entry:
