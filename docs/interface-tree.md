@@ -263,6 +263,32 @@ chattea release edit          -> chattea.commands.release.edit_release
 chattea release delete        -> chattea.commands.release.delete_release
 chattea release asset list    -> chattea.commands.release.list_assets
 chattea release asset delete  -> chattea.commands.release.delete_asset
+chattea runner token          -> chattea.commands.runner.create_runner_token
+chattea runner list           -> chattea.commands.runner.list_registered_runners
+chattea runner view           -> chattea.commands.runner.view_registered_runner
+chattea runner edit           -> chattea.commands.runner.edit_registered_runner
+chattea runner delete         -> chattea.commands.runner.delete_registered_runner
+chattea runner setup install  -> chattea.commands.runner.install_runner
+chattea runner setup register -> chattea.commands.runner.register_runner
+chattea runner setup start    -> chattea.commands.runner.start_runner_service
+chattea runner setup stop     -> chattea.commands.runner.stop_runner_service
+chattea runner setup status   -> chattea.commands.runner.runner_service_status
+chattea runner setup logs     -> chattea.commands.runner.runner_service_logs
+chattea runner setup doctor   -> chattea.commands.runner.runner_root / runner_binary / runner_config checks
+chattea run list              -> chattea.commands.run.list_runs
+chattea run view              -> chattea.commands.run.view_run
+chattea run jobs              -> chattea.commands.run.list_run_jobs
+chattea run logs              -> chattea.commands.run.run_logs
+chattea run rerun             -> chattea.commands.run.rerun_run
+chattea run rerun-failed      -> chattea.commands.run.rerun_run
+chattea run delete            -> chattea.commands.run.delete_run
+chattea job view              -> chattea.commands.job.view_job
+chattea job logs              -> chattea.commands.job.job_logs
+chattea job rerun             -> chattea.commands.job.rerun_job
+chattea artifact list         -> chattea.commands.artifact.list_artifacts
+chattea artifact view         -> chattea.commands.artifact.view_artifact
+chattea artifact download     -> chattea.commands.artifact.download_artifact
+chattea artifact delete       -> chattea.commands.artifact.delete_artifact
 chattea project list          -> chattea.commands.project.list_projects
 chattea project view          -> chattea.commands.project.view_project
 chattea project create        -> chattea.commands.project.create_project
@@ -282,9 +308,9 @@ Lower-level reusable modules stay available:
 
 ```text
 chattea.config  -> ChatTeaEnvConfig, load_config, save_config, set_token
-chattea.api     -> GiteaClient, repo_clone_url, repository Project API methods
-chattea.git     -> clone_repo
+chattea.api     -> GiteaClient, repo_clone_url, repository Project API methods, Actions run/job/artifact/runner API methods
 chattea.server  -> install_binary, init_instance, run_gitea, write_user_service
+chattea.commands.runner -> runner binary install, registration, user service helpers
 ```
 
 CLI command modules should parse options, call these functions/classes, and render results only.

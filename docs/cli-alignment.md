@@ -187,6 +187,7 @@ The following domains are confirmed from Gitea Swagger annotations in `core/gite
 - `milestone`: `/repos/{owner}/{repo}/milestones`.
 - `pr`: `/repos/{owner}/{repo}/pulls`, diff/patch, files, commits, merge, update, reviews, requested reviewers.
 - `release`: `/repos/{owner}/{repo}/releases` and release assets.
+- `runner` / `run` / `job` / `artifact`: Gitea Actions MVP surface for runner registration/lifecycle and PR-triggered run/job/log/artifact inspection. API-backed commands map to `/repos/{owner}/{repo}/actions/...`; `runner setup` commands are local system helpers that install/register/start a `gitea-runner` process.
 - `project`: repository-scoped `/repos/{owner}/{repo}/projects` only; not GitHub Projects v2.
 - `workflow`: `/repos/{owner}/{repo}/actions/workflows`.
 - `run`: `/repos/{owner}/{repo}/actions/runs`.

@@ -26,18 +26,19 @@ class GiteaClient:
         self.url = (url or config.url).rstrip("/")
         self.token = resolve_token(token, base_url=self.url, config=config)
 
-    def request(
+    def request_raw(
         self,
         method: str,
         path: str,
         data: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
-    ) -> Any:
+        accept: str = "application/json",
+    ) -> bytes:
         query = f"?{urlencode(params)}" if params else ""
         url = f"{self.url}/api/v1{path}{query}"
         body = None if data is None else json.dumps(data).encode("utf-8")
-        headers = {"Accept": "application/json", "User-Agent": "chattea"}
+        headers = {"Accept": accept, "User-Agent": "chattea"}
         if data is not None:
             headers["Content-Type"] = "application/json"
         if self.token:
@@ -47,7 +48,7 @@ class GiteaClient:
         request = Request(url, data=body, headers=headers, method=method.upper())
         try:
             with urlopen(request, timeout=30) as response:
-                raw = response.read()
+                return response.read()
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             try:
@@ -59,6 +60,16 @@ class GiteaClient:
             raise GiteaAPIError(f"Gitea API error ({exc.code}) for {path}: {detail}", status_code=exc.code, path=path) from exc
         except URLError as exc:
             raise GiteaAPIError(f"Gitea API request failed for {path}: {exc.reason}") from exc
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+    ) -> Any:
+        raw = self.request_raw(method, path, data=data, params=params, extra_headers=extra_headers)
         if not raw:
             return None
         try:
@@ -417,6 +428,78 @@ class GiteaClient:
 
     def delete_release_asset(self, owner: str, repo: str, release_id: int, asset_id: int) -> None:
         return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/releases/{release_id}/assets/{asset_id}")
+
+
+    def list_action_runs(self, owner: str, repo: str, *, limit: int = 50, page: int | None = None, status: str | None = None) -> dict[str, Any] | list[dict[str, Any]]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs", params=self._params(limit=limit, page=page, status=status))
+
+    def get_action_run(self, owner: str, repo: str, run_id: int) -> dict[str, Any]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}")
+
+    def rerun_action_run(self, owner: str, repo: str, run_id: int) -> Any:
+        return self.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}/rerun")
+
+    def rerun_failed_action_run(self, owner: str, repo: str, run_id: int) -> Any:
+        return self.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}/rerun-failed-jobs")
+
+    def delete_action_run(self, owner: str, repo: str, run_id: int) -> Any:
+        return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}")
+
+    def list_action_run_jobs(self, owner: str, repo: str, run_id: int, *, limit: int = 50, page: int | None = None) -> dict[str, Any] | list[dict[str, Any]]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}/jobs", params=self._params(limit=limit, page=page))
+
+    def get_action_job(self, owner: str, repo: str, job_id: int) -> dict[str, Any]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/jobs/{job_id}")
+
+    def get_action_job_logs(self, owner: str, repo: str, job_id: int) -> str:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/jobs/{job_id}/logs")
+
+    def rerun_action_job(self, owner: str, repo: str, run_id: int, job_id: int) -> Any:
+        return self.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}/jobs/{job_id}/rerun")
+
+    def list_action_artifacts(self, owner: str, repo: str, *, run_id: int | None = None, limit: int = 50, page: int | None = None) -> dict[str, Any] | list[dict[str, Any]]:
+        path = f"/repos/{quote(owner)}/{quote(repo)}/actions/runs/{run_id}/artifacts" if run_id is not None else f"/repos/{quote(owner)}/{quote(repo)}/actions/artifacts"
+        return self.request("GET", path, params=self._params(limit=limit, page=page))
+
+    def get_action_artifact(self, owner: str, repo: str, artifact_id: int) -> dict[str, Any]:
+        return self.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/artifacts/{artifact_id}")
+
+    def delete_action_artifact(self, owner: str, repo: str, artifact_id: int) -> Any:
+        return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/actions/artifacts/{artifact_id}")
+
+    def download_action_artifact_zip(self, owner: str, repo: str, artifact_id: int) -> bytes:
+        return self.request_raw("GET", f"/repos/{quote(owner)}/{quote(repo)}/actions/artifacts/{artifact_id}/zip", accept="application/zip")
+
+    @staticmethod
+    def _runner_scope_path(scope: str, *, owner: str | None = None, repo: str | None = None, org: str | None = None) -> str:
+        if scope == "repo":
+            if not owner or not repo:
+                raise ValueError("repo runner scope requires owner and repo")
+            return f"/repos/{quote(owner)}/{quote(repo)}/actions/runners"
+        if scope == "org":
+            if not org:
+                raise ValueError("org runner scope requires org")
+            return f"/orgs/{quote(org)}/actions/runners"
+        if scope == "user":
+            return "/user/actions/runners"
+        if scope == "admin":
+            return "/admin/actions/runners"
+        raise ValueError("runner scope must be repo, org, user, or admin")
+
+    def create_runner_registration_token(self, scope: str = "repo", *, owner: str | None = None, repo: str | None = None, org: str | None = None) -> dict[str, Any]:
+        return self.request("POST", self._runner_scope_path(scope, owner=owner, repo=repo, org=org) + "/registration-token")
+
+    def list_runners(self, scope: str = "repo", *, owner: str | None = None, repo: str | None = None, org: str | None = None, limit: int = 50, page: int | None = None) -> dict[str, Any] | list[dict[str, Any]]:
+        return self.request("GET", self._runner_scope_path(scope, owner=owner, repo=repo, org=org), params=self._params(limit=limit, page=page))
+
+    def get_runner(self, runner_id: int, scope: str = "repo", *, owner: str | None = None, repo: str | None = None, org: str | None = None) -> dict[str, Any]:
+        return self.request("GET", self._runner_scope_path(scope, owner=owner, repo=repo, org=org) + f"/{runner_id}")
+
+    def edit_runner(self, runner_id: int, scope: str = "repo", *, owner: str | None = None, repo: str | None = None, org: str | None = None, disabled: bool | None = None) -> dict[str, Any]:
+        return self.request("PATCH", self._runner_scope_path(scope, owner=owner, repo=repo, org=org) + f"/{runner_id}", data=self._payload(disabled=disabled))
+
+    def delete_runner(self, runner_id: int, scope: str = "repo", *, owner: str | None = None, repo: str | None = None, org: str | None = None) -> Any:
+        return self.request("DELETE", self._runner_scope_path(scope, owner=owner, repo=repo, org=org) + f"/{runner_id}")
 
 
 def repo_clone_url(base_url: str, owner: str, repo: str) -> str:
