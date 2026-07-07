@@ -73,6 +73,20 @@ chattea token bootstrap
 
 This means a blank server does not begin as a client. It first bootstraps the service locally with `server bootstrap`. After that, the same machine can also act as a client because it has `CHATTEA_BASE_URL` and `CHATTEA_TOKEN` configured. Other developer or CI machines become clients by running `set-token` or `token bootstrap` against the server URL.
 
+First-phase scope is one target Gitea instance:
+
+```text
+In scope:
+  One server-side Gitea instance.
+  One active client target per machine/profile.
+  Same-machine server+client and remote-client-to-server flows.
+
+Out of scope for now:
+  Managing multiple Gitea instances from one active ChatTea profile.
+  Instance switching UX.
+  Multi-service naming and lifecycle isolation.
+```
+
 ## A. Blank Machine To Local Gitea
 
 Target one-command entry:
