@@ -31,6 +31,7 @@ chattea
 ├── server
 │   ├── install
 │   ├── init
+│   ├── bootstrap
 │   ├── serve
 │   ├── start
 │   ├── stop
@@ -73,7 +74,7 @@ chattea
         └── move
 ```
 
-`token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
 
 ## 新机器配置清单
 

@@ -27,7 +27,7 @@ def test_server_help_lists_lifecycle_commands():
     result = CliRunner().invoke(main, ["server", "--help"])
 
     assert result.exit_code == 0
-    for command in ["install", "init", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config"]:
+    for command in ["install", "init", "bootstrap", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config"]:
         assert command in result.output
 
 
@@ -136,6 +136,43 @@ def test_server_install_defaults_to_latest_internal_gitea(monkeypatch, tmp_path)
     assert result.exit_code == 0, result.output
     assert captured["version"] == "latest"
     assert "installed:" in result.output
+
+
+def test_server_bootstrap_reads_chatenv_and_masks_password(monkeypatch, tmp_path):
+    captured = {}
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    monkeypatch.setenv("CHATTEA_BASE_URL", "http://gitea.local:3000")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_USER", "root")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_EMAIL", "root@example.invalid")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_PASSWORD", "super-secret-password")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_TOKEN_NAME", "default")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_TOKEN_SCOPES", "all")
+
+    def fake_bootstrap_gitea_server(**kwargs):
+        captured.update(kwargs)
+        return {
+            "binary": tmp_path / "bin" / "gitea",
+            "config": tmp_path / "gitea" / "custom" / "conf" / "app.ini",
+            "work_path": tmp_path / "gitea",
+            "admin_user": kwargs["admin_user"],
+            "token": "generat...token",
+            "credentials": {"env_path": tmp_path / "arch" / "envs" / "ChatTea" / ".env"},
+            "service": None,
+        }
+
+    monkeypatch.setattr("chattea.commands.server.bootstrap_gitea_server", fake_bootstrap_gitea_server)
+
+    result = CliRunner().invoke(main, ["server", "bootstrap", "-I"])
+
+    assert result.exit_code == 0, result.output
+    assert "super-secret-password" not in result.output
+    assert "token: generat...token" in result.output
+    assert captured["base_url"] == "http://gitea.local:3000"
+    assert captured["admin_user"] == "root"
+    assert captured["admin_password"] == "super-secret-password"
+    assert captured["admin_email"] == "root@example.invalid"
+    assert captured["token_name"] == "default"
+    assert captured["token_scopes"] == "all"
 
 
 def test_repo_create_no_interactive_fails_fast_when_name_missing():

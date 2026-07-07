@@ -30,10 +30,12 @@ Current implementation status:
 Implemented in PR #5:
   chattea set-token
   chattea token create/list/delete/bootstrap
+  chattea server bootstrap
   centralized token resolution
 
-Next required from-scratch step:
-  chattea server bootstrap
+First-phase server bootstrap status:
+  local install/init/admin/token/credential chain implemented
+  service start is optional with --start-service
 ```
 
 ## Server vs Client Boundary

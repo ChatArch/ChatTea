@@ -20,6 +20,7 @@ chattea
 ├── server
 │   ├── install
 │   ├── init
+│   ├── bootstrap
 │   ├── serve
 │   ├── start
 │   ├── stop

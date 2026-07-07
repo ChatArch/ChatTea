@@ -89,6 +89,7 @@ chattea
 ├── server                            # Local/internal Gitea lifecycle management.
 │   ├── install                       # `chattea.commands.server.install_gitea` -> `chattea.server.install_binary`.
 │   ├── init                          # `chattea.commands.server.init_gitea_server`.
+│   ├── bootstrap                     # local install/init/admin/token/credential workflow via `bootstrap_gitea_server`.
 │   ├── serve                         # `chattea.commands.server.serve_gitea`.
 │   ├── start                         # `chattea.commands.server.start_gitea_service`.
 │   ├── stop                          # `chattea.commands.server.stop_gitea_service`.

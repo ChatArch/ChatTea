@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import click
@@ -8,7 +10,9 @@ from chatstyle import CommandField, CommandSchema, add_interactive_option, resol
 
 from chattea import server as server_ops
 from chattea.api import GiteaAPIError, GiteaClient
-from chattea.config import DEFAULT_BASE_URL, DEFAULT_HTTP_PORT, DEFAULT_LISTEN_ADDR, load_config
+from chattea.config import DEFAULT_BASE_URL, DEFAULT_HTTP_PORT, DEFAULT_LISTEN_ADDR, load_config, mask_token
+from chattea.credentials import configure_token as configure_credentials
+from chattea.commands.token import DEFAULT_TOKEN_NAME, DEFAULT_TOKEN_SCOPES
 
 
 INSTALL_SCHEMA = CommandSchema(
@@ -22,6 +26,18 @@ INIT_SCHEMA = CommandSchema(
         CommandField("base_url", prompt="Gitea base URL", required=True, default=DEFAULT_BASE_URL, prompt_if_missing=True),
         CommandField("listen_addr", prompt="Gitea listen address", required=True, default=DEFAULT_LISTEN_ADDR, prompt_if_missing=True),
         CommandField("http_port", prompt="Gitea HTTP port", kind="int", required=True, default=DEFAULT_HTTP_PORT, prompt_if_missing=True),
+    ),
+)
+
+BOOTSTRAP_SCHEMA = CommandSchema(
+    name="server bootstrap",
+    fields=(
+        CommandField("base_url", prompt="Gitea base URL", required=True, default=DEFAULT_BASE_URL, prompt_if_missing=True),
+        CommandField("admin_user", prompt="Initial admin username", required=True, default="gitea_admin", prompt_if_missing=True),
+        CommandField("admin_email", prompt="Initial admin email", required=True, default="gitea_admin@example.invalid", prompt_if_missing=True),
+        CommandField("admin_password", prompt="Initial admin password", required=True, sensitive=True),
+        CommandField("token_name", prompt="Initial token name", required=True, default=DEFAULT_TOKEN_NAME, prompt_if_missing=True),
+        CommandField("token_scopes", prompt="Initial token scopes", required=True, default=",".join(DEFAULT_TOKEN_SCOPES), prompt_if_missing=True),
     ),
 )
 
@@ -160,6 +176,140 @@ def init_gitea_server(
         run_user=run_user,
         force=force,
     )
+
+
+def _password_from_env(env_name: str | None) -> str | None:
+    if not env_name:
+        return None
+    value = os.getenv(env_name)
+    if not value:
+        raise click.ClickException(f"Environment variable {env_name} is not set or is empty.")
+    return value
+
+
+def _gitea_admin_base_command(binary: Path, config_path: Path, work_path: Path) -> list[str]:
+    return [str(binary.expanduser()), "--config", str(config_path.expanduser()), "--work-path", str(work_path.expanduser()), "admin", "user"]
+
+
+def create_admin_user(
+    username: str,
+    password: str,
+    email: str,
+    *,
+    binary: Path | None = None,
+    config_path: Path | None = None,
+    work_path: Path | None = None,
+    must_change_password: bool = False,
+) -> dict[str, str]:
+    """Create the initial local Gitea admin through the Gitea admin CLI."""
+    resolved = load_config()
+    target_binary = binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY")
+    target_config = config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG")
+    target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
+    command = [
+        *_gitea_admin_base_command(target_binary, target_config, target_work),
+        "create",
+        "--username",
+        username,
+        "--password",
+        password,
+        "--email",
+        email,
+        "--admin",
+        f"--must-change-password={'true' if must_change_password else 'false'}",
+    ]
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or str(exc)).replace(password, "[REDACTED]")
+        lowered = detail.lower()
+        if "already exists" not in lowered and "already been used" not in lowered:
+            raise click.ClickException(detail.strip()) from exc
+    return {"username": username, "email": email}
+
+
+def generate_admin_token(
+    username: str,
+    *,
+    token_name: str = DEFAULT_TOKEN_NAME,
+    token_scopes: str = ",".join(DEFAULT_TOKEN_SCOPES),
+    binary: Path | None = None,
+    config_path: Path | None = None,
+    work_path: Path | None = None,
+) -> str:
+    """Generate an initial access token through the local Gitea admin CLI."""
+    resolved = load_config()
+    target_binary = binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY")
+    target_config = config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG")
+    target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
+    result = subprocess.run(
+        [
+            *_gitea_admin_base_command(target_binary, target_config, target_work),
+            "generate-access-token",
+            "--username",
+            username,
+            "--token-name",
+            token_name,
+            "--scopes",
+            token_scopes,
+            "--raw",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    token = result.stdout.strip()
+    if not token:
+        raise click.ClickException("Gitea admin CLI did not return a token.")
+    return token
+
+
+def bootstrap_gitea_server(
+    *,
+    base_url: str,
+    admin_user: str,
+    admin_password: str,
+    admin_email: str,
+    token_name: str = DEFAULT_TOKEN_NAME,
+    token_scopes: str = ",".join(DEFAULT_TOKEN_SCOPES),
+    version: str | None = "latest",
+    prefix: Path | None = None,
+    work_path: Path | None = None,
+    config_path: Path | None = None,
+    binary: Path | None = None,
+    listen_addr: str | None = None,
+    http_port: int | None = None,
+    force: bool = False,
+    start_service: bool = False,
+) -> dict[str, object]:
+    """Bootstrap a local ChatArch Gitea and configure ChatTea credentials."""
+    installed_binary = binary or install_gitea(version, prefix=prefix, force=force)
+    resolved_config = init_gitea_server(
+        work_path=work_path,
+        config_path=config_path,
+        binary=installed_binary,
+        base_url=base_url,
+        listen_addr=listen_addr,
+        http_port=http_port,
+        force=force,
+    )
+    resolved = load_config()
+    resolved_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
+    create_admin_user(admin_user, admin_password, admin_email, binary=installed_binary, config_path=resolved_config, work_path=resolved_work)
+    token = generate_admin_token(admin_user, token_name=token_name, token_scopes=token_scopes, binary=installed_binary, config_path=resolved_config, work_path=resolved_work)
+    credentials = configure_credentials(base_url, token)
+    service = start_gitea_service(binary=installed_binary, config_path=resolved_config, work_path=resolved_work) if start_service else None
+    return {
+        "binary": installed_binary,
+        "config": resolved_config,
+        "work_path": resolved_work,
+        "admin_user": admin_user,
+        "token": mask_token(token),
+        "token_name": token_name,
+        "token_scopes": token_scopes,
+        "credentials": credentials,
+        "service": service,
+    }
 
 
 def serve_gitea(binary: Path | None = None, config_path: Path | None = None, work_path: Path | None = None):
@@ -369,6 +519,92 @@ def init(
         force=force,
     )
     click.echo(f"config: {resolved_config}")
+
+
+@server_group.command(name="bootstrap")
+@click.option("--version", default="latest", show_default=True, help="ChatArch Gitea version. Defaults to latest.")
+@click.option("--prefix", type=click.Path(file_okay=False, path_type=Path), default=None, help="Install prefix. Defaults to CHATTEA_HOME.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Existing Gitea binary path. Skips install when provided.")
+@click.option("--base-url", default=None, help="Gitea public website/API base URL. Defaults to CHATTEA_BASE_URL.")
+@click.option("--listen-addr", default=None, help="Gitea listen IP/host written to app.ini. Defaults to 127.0.0.1.")
+@click.option("--http-port", default=None, type=int, help="Gitea listen port written to app.ini. Defaults to 3000.")
+@click.option("--admin-user", default=None, help="Initial admin username. Defaults to CHATTEA_BOOTSTRAP_ADMIN_USER.")
+@click.option("--admin-email", default=None, help="Initial admin email. Defaults to CHATTEA_BOOTSTRAP_ADMIN_EMAIL.")
+@click.option("--admin-password-env", default=None, help="Environment variable containing the initial admin password.")
+@click.option("--token-name", default=None, help="Initial access token name. Defaults to CHATTEA_BOOTSTRAP_TOKEN_NAME or default.")
+@click.option("--token-scopes", default=None, help="Initial access token scopes. Defaults to CHATTEA_BOOTSTRAP_TOKEN_SCOPES or all.")
+@click.option("--force", is_flag=True, help="Overwrite app.ini and binary when applicable.")
+@click.option("--start-service", is_flag=True, help="Start the user-level systemd service after bootstrap.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@add_interactive_option
+def bootstrap(
+    version: str | None,
+    prefix: Path | None,
+    work_path: Path | None,
+    config_path: Path | None,
+    binary: Path | None,
+    base_url: str | None,
+    listen_addr: str | None,
+    http_port: int | None,
+    admin_user: str | None,
+    admin_email: str | None,
+    admin_password_env: str | None,
+    token_name: str | None,
+    token_scopes: str | None,
+    force: bool,
+    start_service: bool,
+    json_output: bool,
+    interactive: bool | None,
+) -> None:
+    """Bootstrap a local Gitea server, admin user, token, and ChatTea credentials."""
+    config = load_config()
+    password = _password_from_env(admin_password_env) or config.bootstrap_admin_password
+    provided = {
+        "base_url": base_url if interactive is True else base_url or config.url,
+        "admin_user": admin_user if interactive is True else admin_user or config.bootstrap_admin_user,
+        "admin_email": admin_email if interactive is True else admin_email or config.bootstrap_admin_email,
+        "admin_password": password,
+        "token_name": token_name if interactive is True else token_name or config.bootstrap_token_name,
+        "token_scopes": token_scopes if interactive is True else token_scopes or config.bootstrap_token_scopes,
+    }
+    values = resolve_command_inputs(
+        schema=BOOTSTRAP_SCHEMA,
+        provided=provided,
+        interactive=interactive,
+        usage="Usage: chattea server bootstrap [--base-url URL] [--admin-user USER] [--admin-password-env ENV] [-i|-I]",
+    )
+    result = bootstrap_gitea_server(
+        base_url=values["base_url"],
+        admin_user=values["admin_user"],
+        admin_password=values["admin_password"],
+        admin_email=values["admin_email"],
+        token_name=values["token_name"],
+        token_scopes=values["token_scopes"],
+        version=version,
+        prefix=prefix,
+        work_path=work_path,
+        config_path=config_path,
+        binary=binary,
+        listen_addr=listen_addr,
+        http_port=http_port,
+        force=force,
+        start_service=start_service,
+    )
+    if json_output:
+        click.echo(json.dumps(result, indent=2, default=str))
+        return
+    click.echo(f"binary: {result['binary']}")
+    click.echo(f"config: {result['config']}")
+    click.echo(f"work_path: {result['work_path']}")
+    click.echo(f"admin: {result['admin_user']}")
+    click.echo(f"token: {result['token']}")
+    credentials = result["credentials"]
+    if isinstance(credentials, dict) and credentials.get("env_path"):
+        click.echo(f"chatenv: {credentials['env_path']}")
+    if result.get("service"):
+        click.echo(f"service: {result['service']}")
 
 
 @server_group.command(name="serve")
