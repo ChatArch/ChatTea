@@ -4,10 +4,11 @@ import lzma
 import subprocess
 
 from chattea import server as server_ops
-from chattea.api import GiteaClient
+from chattea.api import GiteaAPIError, GiteaClient
 from chattea.commands.api import call_api, parse_json_data, parse_query_params
 from chattea.commands.project import add_card, list_cards, move_card, remove_card
 from chattea.commands.server import bootstrap_gitea_server
+from chattea.commands.token import bootstrap_access_token
 from chattea.credentials import configure_token, git_extraheader_key, read_git_token, resolve_token, token_from_extraheader
 from chattea.config import (
     ChatTeaConfig,
@@ -265,6 +266,7 @@ def test_bootstrap_gitea_server_composes_local_admin_and_credentials(monkeypatch
     assert result["config"] == config
     assert result["admin_user"] == "root"
     assert result["token"] == "generat...token"
+    assert result["token_source"] == "generated"
     assert calls == [
         ("install", "latest", None, False),
         ("init", {"work_path": work, "config_path": None, "binary": binary, "base_url": "http://gitea.local:3000", "listen_addr": None, "http_port": None, "force": False}),
@@ -336,6 +338,71 @@ def test_access_token_api_methods_use_basic_auth(monkeypatch):
     assert calls[2][0:4] == ("DELETE", "/users/gitea_admin/tokens/1", None, None)
     for call in calls:
         assert call[4]["Authorization"].startswith("Basic ")
+
+
+def test_bootstrap_access_token_rotates_existing_default_token(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    calls = []
+
+    def fake_create(username, password, *, name="default", scopes=None, base_url=None):
+        calls.append(("create", username, name, scopes, base_url))
+        if len([call for call in calls if call[0] == "create"]) == 1:
+            raise GiteaAPIError("token already exists", status_code=409, path="/users/root/tokens")
+        return {"name": name, "sha1": "rotated-token", "scopes": scopes}
+
+    def fake_delete(username, password, token_id_or_name, *, base_url=None):
+        calls.append(("delete", username, token_id_or_name, base_url))
+
+    monkeypatch.setattr("chattea.commands.token.create_access_token", fake_create)
+    monkeypatch.setattr("chattea.commands.token.delete_access_token", fake_delete)
+    monkeypatch.setattr("chattea.commands.token.configure_credentials", lambda base_url, token: calls.append(("configure", base_url, token)) or {"base_url": base_url})
+
+    result = bootstrap_access_token("root", "pw", base_url="http://gitea.local:3000", name="default", scopes=["all"])
+
+    assert result["token_action"] == "rotated"
+    assert result["token"]["sha1"] == "rotated-token"
+    assert calls == [
+        ("create", "root", "default", ["all"], "http://gitea.local:3000"),
+        ("delete", "root", "default", "http://gitea.local:3000"),
+        ("create", "root", "default", ["all"], "http://gitea.local:3000"),
+        ("configure", "http://gitea.local:3000", "rotated-token"),
+    ]
+
+
+def test_bootstrap_gitea_server_reuses_configured_token_when_admin_token_exists(monkeypatch, tmp_path):
+    calls = []
+    binary = tmp_path / "bin" / "gitea"
+    config = tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+    work = tmp_path / "gitea"
+
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    save_config(ChatTeaConfig(url="http://gitea.local:3000", token="existing-token"))
+    monkeypatch.setattr("chattea.commands.server.install_gitea", lambda version=None, prefix=None, force=False: binary)
+    monkeypatch.setattr("chattea.commands.server.init_gitea_server", lambda **kwargs: config)
+    monkeypatch.setattr("chattea.commands.server.create_admin_user", lambda username, password, email, **kwargs: calls.append(("create-user", username)) or {"username": username})
+
+    def duplicate_token(username, **kwargs):
+        calls.append(("generate-token", username, kwargs))
+        import click
+
+        raise click.ClickException("Gitea access token named 'default' already exists.")
+
+    monkeypatch.setattr("chattea.commands.server.generate_admin_token", duplicate_token)
+    monkeypatch.setattr("chattea.commands.server.configure_credentials", lambda base_url, token: calls.append(("configure", base_url, token)) or {"base_url": base_url})
+
+    result = bootstrap_gitea_server(
+        base_url="http://gitea.local:3000",
+        admin_user="root",
+        admin_password="pw",
+        admin_email="root@example.invalid",
+        token_name="default",
+        token_scopes="all",
+        work_path=work,
+    )
+
+    assert result["token"] == "existin...token"
+    assert result["token_source"] == "reused"
+    assert calls[-1] == ("configure", "http://gitea.local:3000", "existing-token")
 
 
 def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):

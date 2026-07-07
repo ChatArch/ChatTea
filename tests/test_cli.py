@@ -487,6 +487,7 @@ def test_token_bootstrap_creates_token_and_configures_credentials(monkeypatch, t
 
     assert result.exit_code == 0, result.output
     assert "generated-token" not in result.output
+    assert "token_action: created" in result.output
     assert "configured: http://gitea.local" in result.output
     env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text()
     assert "CHATTEA_BASE_URL='http://gitea.local'" in env_text

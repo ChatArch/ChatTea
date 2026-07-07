@@ -93,7 +93,7 @@ ChatTea-specific custom commands stay:
 ## Responsibilities
 
 - `set-token`: store the default Gitea base URL and API token in the ChatEnv `ChatTea` active profile.
-- `token create/list/delete/bootstrap`: create/list/delete Gitea access tokens via BasicAuth; bootstrap creates a token and then configures ChatTea/Git credentials.
+- `token create/list/delete/bootstrap`: create/list/delete Gitea access tokens via BasicAuth; bootstrap creates or rotates the managed token and then configures ChatTea/Git credentials.
 - `auth login/status/token`: auxiliary namespace over the same credential state.
 - `api`: raw Gitea API passthrough for routes not yet wrapped by first-class commands.
 - `server install`: install latest ChatArch internal Gitea by default; `--version` can pin a release.
@@ -119,7 +119,12 @@ chattea auth login            -> chattea.commands.auth.configure_token
 chattea auth status           -> chattea.config.load_config
 chattea auth token            -> chattea.config.load_config
 chattea api                   -> chattea.commands.api.call_api
+chattea token create          -> chattea.commands.token.create_access_token
+chattea token list            -> chattea.commands.token.list_access_tokens
+chattea token delete          -> chattea.commands.token.delete_access_token
+chattea token bootstrap       -> chattea.commands.token.bootstrap_access_token
 chattea server install        -> chattea.commands.server.install_gitea
+chattea server bootstrap      -> chattea.commands.server.bootstrap_gitea_server
 chattea server init           -> chattea.commands.server.init_gitea_server
 chattea server serve          -> chattea.commands.server.serve_gitea
 chattea server start          -> chattea.commands.server.start_gitea_service

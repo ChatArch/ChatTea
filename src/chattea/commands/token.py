@@ -6,12 +6,13 @@ from typing import Any
 
 import click
 
-from chattea.api import GiteaClient
+from chattea.api import GiteaAPIError, GiteaClient
 from chattea.config import DEFAULT_BASE_URL, mask_token
 from chattea.credentials import configure_token as configure_credentials
 
 DEFAULT_TOKEN_NAME = "default"
 DEFAULT_TOKEN_SCOPES = ("all",)
+TOKEN_IF_EXISTS_CHOICES = ("error", "rotate")
 
 
 def parse_scopes(scopes: tuple[str, ...] | list[str] | str | None) -> list[str]:
@@ -51,6 +52,12 @@ def delete_access_token(username: str, password: str, token_id_or_name: str, *, 
     return GiteaClient(url=base_url, token="").delete_access_token(username, password, token_id_or_name)
 
 
+def token_name_exists_error(exc: GiteaAPIError) -> bool:
+    """Return whether a Gitea token create error looks like a duplicate token name."""
+    message = str(exc).lower()
+    return exc.status_code in {400, 409, 422} and "token" in message and ("exist" in message or "already" in message)
+
+
 def bootstrap_access_token(
     username: str,
     password: str,
@@ -58,14 +65,25 @@ def bootstrap_access_token(
     base_url: str = DEFAULT_BASE_URL,
     name: str = DEFAULT_TOKEN_NAME,
     scopes: list[str] | None = None,
+    if_exists: str = "rotate",
 ) -> dict[str, Any]:
     """Create a token and immediately configure ChatTea credentials."""
-    payload = create_access_token(username, password, name=name, scopes=scopes, base_url=base_url)
+    if if_exists not in TOKEN_IF_EXISTS_CHOICES:
+        raise click.ClickException(f"Unsupported --if-exists value: {if_exists}")
+    try:
+        payload = create_access_token(username, password, name=name, scopes=scopes, base_url=base_url)
+        token_action = "created"
+    except GiteaAPIError as exc:
+        if if_exists != "rotate" or not token_name_exists_error(exc):
+            raise click.ClickException(str(exc)) from exc
+        delete_access_token(username, password, name, base_url=base_url)
+        payload = create_access_token(username, password, name=name, scopes=scopes, base_url=base_url)
+        token_action = "rotated"
     token = payload.get("token") or payload.get("sha1")
     if not token:
         raise click.ClickException("Gitea did not return an access token.")
     configured = configure_credentials(base_url, str(token))
-    return {"token": payload, "configured": configured}
+    return {"token": payload, "configured": configured, "token_action": token_action}
 
 
 def _render_json(payload: Any) -> None:
@@ -143,10 +161,11 @@ def token_delete(base_url: str | None, username: str, password_env: str, token_i
 @click.option("--password-env", required=True, help="Environment variable containing the Gitea password.")
 @click.option("--name", "token_name", default=DEFAULT_TOKEN_NAME, show_default=True, help="Access token name.")
 @click.option("--scope", "scopes", multiple=True, help="Access token scope. May be repeated or comma-separated. Defaults to all.")
+@click.option("--if-exists", type=click.Choice(TOKEN_IF_EXISTS_CHOICES), default="rotate", show_default=True, help="Behavior when the named token already exists.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-def token_bootstrap(base_url: str, username: str, password_env: str, token_name: str, scopes: tuple[str, ...], json_output: bool) -> None:
+def token_bootstrap(base_url: str, username: str, password_env: str, token_name: str, scopes: tuple[str, ...], if_exists: str, json_output: bool) -> None:
     """Create a token and configure ChatTea/Git credentials in one step."""
-    payload = bootstrap_access_token(username, password_from_env(password_env), base_url=base_url, name=token_name, scopes=parse_scopes(scopes))
+    payload = bootstrap_access_token(username, password_from_env(password_env), base_url=base_url, name=token_name, scopes=parse_scopes(scopes), if_exists=if_exists)
     if json_output:
         safe_payload = dict(payload)
         safe_payload["token"] = dict(safe_payload["token"])
@@ -156,6 +175,7 @@ def token_bootstrap(base_url: str, username: str, password_env: str, token_name:
         _render_json(safe_payload)
         return
     _render_token_create(payload["token"], show_token=False)
+    click.echo(f"token_action: {payload['token_action']}")
     configured = payload["configured"]
     click.echo(f"configured: {str(configured['base_url']).rstrip('/')}")
     if configured.get("env_path"):

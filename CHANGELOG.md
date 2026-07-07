@@ -4,6 +4,7 @@
 
 - Added `auth` as a GitHub-familiar authentication namespace while keeping `set-token` as a ChatTea quick configuration command.
 - Added `chattea api` for raw Gitea API passthrough to support routes not yet wrapped by first-class commands.
+- Hardened bootstrap reruns: `token bootstrap` rotates an existing managed token by default, and `server bootstrap` can reuse the configured token when the local admin token name already exists.
 - Added `chattea project card` as the primary Project board card command group while keeping `chattea project issue` as a compatibility alias.
 - Changed `chattea server install` to default to the latest ChatArch internal Gitea release instead of requiring a community Gitea version.
 - Documented the GitHub-aligned ChatTea target CLI tree, including notes for PR diff/checkout, Project cards, Actions runs/jobs/artifacts/runners, and ChatTea-specific `server`/`set-token` commands.

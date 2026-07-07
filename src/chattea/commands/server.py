@@ -191,6 +191,31 @@ def _gitea_admin_base_command(binary: Path, config_path: Path, work_path: Path) 
     return [str(binary.expanduser()), "--config", str(config_path.expanduser()), "--work-path", str(work_path.expanduser()), "admin", "user"]
 
 
+def _safe_process_detail(exc: subprocess.CalledProcessError, *secrets: str | None) -> str:
+    detail = exc.stderr or exc.stdout or str(exc)
+    for secret in secrets:
+        if secret:
+            detail = detail.replace(secret, "[REDACTED]")
+    return detail.strip()
+
+
+def _looks_already_exists(detail: str) -> bool:
+    lowered = detail.lower()
+    return "already exists" in lowered or "already been used" in lowered or ("already" in lowered and "exist" in lowered)
+
+
+def _looks_token_name_exists(detail: str) -> bool:
+    lowered = detail.lower()
+    return "token" in lowered and _looks_already_exists(lowered)
+
+
+def _configured_token_for_base_url(base_url: str) -> str | None:
+    config = load_config()
+    if config.token and config.url.rstrip("/") == base_url.rstrip("/"):
+        return config.token
+    return None
+
+
 def create_admin_user(
     username: str,
     password: str,
@@ -221,10 +246,9 @@ def create_admin_user(
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as exc:
-        detail = (exc.stderr or exc.stdout or str(exc)).replace(password, "[REDACTED]")
-        lowered = detail.lower()
-        if "already exists" not in lowered and "already been used" not in lowered:
-            raise click.ClickException(detail.strip()) from exc
+        detail = _safe_process_detail(exc, password)
+        if not _looks_already_exists(detail):
+            raise click.ClickException(detail) from exc
     return {"username": username, "email": email}
 
 
@@ -242,22 +266,28 @@ def generate_admin_token(
     target_binary = binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY")
     target_config = config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG")
     target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
-    result = subprocess.run(
-        [
-            *_gitea_admin_base_command(target_binary, target_config, target_work),
-            "generate-access-token",
-            "--username",
-            username,
-            "--token-name",
-            token_name,
-            "--scopes",
-            token_scopes,
-            "--raw",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                *_gitea_admin_base_command(target_binary, target_config, target_work),
+                "generate-access-token",
+                "--username",
+                username,
+                "--token-name",
+                token_name,
+                "--scopes",
+                token_scopes,
+                "--raw",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        detail = _safe_process_detail(exc)
+        if _looks_token_name_exists(detail):
+            raise click.ClickException(f"Gitea access token named {token_name!r} already exists.") from exc
+        raise click.ClickException(detail) from exc
     token = result.stdout.strip()
     if not token:
         raise click.ClickException("Gitea admin CLI did not return a token.")
@@ -296,7 +326,19 @@ def bootstrap_gitea_server(
     resolved = load_config()
     resolved_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
     create_admin_user(admin_user, admin_password, admin_email, binary=installed_binary, config_path=resolved_config, work_path=resolved_work)
-    token = generate_admin_token(admin_user, token_name=token_name, token_scopes=token_scopes, binary=installed_binary, config_path=resolved_config, work_path=resolved_work)
+    try:
+        token = generate_admin_token(admin_user, token_name=token_name, token_scopes=token_scopes, binary=installed_binary, config_path=resolved_config, work_path=resolved_work)
+        token_source = "generated"
+    except click.ClickException as exc:
+        if not _looks_token_name_exists(str(exc)):
+            raise
+        token = _configured_token_for_base_url(base_url)
+        if not token:
+            raise click.ClickException(
+                f"Gitea access token named {token_name!r} already exists, but no existing CHATTEA_TOKEN is configured for {base_url}. "
+                "Use a different --token-name or run chattea set-token with the existing token."
+            ) from exc
+        token_source = "reused"
     credentials = configure_credentials(base_url, token)
     service = start_gitea_service(binary=installed_binary, config_path=resolved_config, work_path=resolved_work) if start_service else None
     return {
@@ -307,6 +349,7 @@ def bootstrap_gitea_server(
         "token": mask_token(token),
         "token_name": token_name,
         "token_scopes": token_scopes,
+        "token_source": token_source,
         "credentials": credentials,
         "service": service,
     }
@@ -600,6 +643,8 @@ def bootstrap(
     click.echo(f"work_path: {result['work_path']}")
     click.echo(f"admin: {result['admin_user']}")
     click.echo(f"token: {result['token']}")
+    if result.get("token_source"):
+        click.echo(f"token_source: {result['token_source']}")
     credentials = result["credentials"]
     if isinstance(credentials, dict) and credentials.get("env_path"):
         click.echo(f"chatenv: {credentials['env_path']}")
