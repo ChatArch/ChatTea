@@ -1,6 +1,7 @@
 from click.testing import CliRunner
 import subprocess
 
+from chattea.api import GiteaAPIError
 from chattea.cli import main
 
 
@@ -548,3 +549,20 @@ def test_repo_collaboration_cli_calls_importable_client(monkeypatch):
     assert ("create_issue", "gitea_admin", "demo", "Bug", None, {"labels": [1, 2], "milestone": None, "assignees": ["root"], "closed": None}) in calls
     assert ("get_pull_diff", "gitea_admin", "demo", 5, "diff") in calls
     assert ("create_release", "gitea_admin", "demo", "v1.0.0", {"name": None, "body": None, "target_commitish": None, "draft": True, "prerelease": None}) in calls
+
+
+def test_gitea_api_errors_render_without_traceback(monkeypatch):
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def create_release(self, owner, repo, tag_name, **kwargs):
+            raise GiteaAPIError("Gitea API error (422) for /repos/smoke/cli-demo/releases: repo is empty", status_code=422)
+
+    monkeypatch.setattr("chattea.commands._shared.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(main, ["release", "create", "--repo", "smoke/cli-demo", "--tag", "v0.1.0"])
+
+    assert result.exit_code != 0
+    assert "Error: Gitea API error (422)" in result.output
+    assert "Traceback" not in result.output

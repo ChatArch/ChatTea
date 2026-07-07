@@ -7,11 +7,13 @@ from urllib.parse import urlencode, quote
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
+import click
+
 from chattea.config import ChatTeaConfig, load_config
 from chattea.credentials import resolve_token
 
 
-class GiteaAPIError(RuntimeError):
+class GiteaAPIError(click.ClickException, RuntimeError):
     def __init__(self, message: str, *, status_code: int | None = None, path: str | None = None) -> None:
         super().__init__(message)
         self.status_code = status_code

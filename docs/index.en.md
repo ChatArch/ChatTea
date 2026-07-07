@@ -111,6 +111,8 @@ chattea
 
 `server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `issue`, `label`, `milestone`, `pr`, and `release` cover the current repo-level collaboration surface. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. `pr checkout` and Workflow/Runner surfaces are intentionally deferred.
 
+See [Repo Collaboration Quick Start](repo-collaboration-quickstart.md) for a local end-to-end repo collaboration smoke flow with terminal screenshots.
+
 ## End-to-End Local Gitea Setup
 
 Install on a new machine:

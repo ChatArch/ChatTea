@@ -43,6 +43,17 @@ def render_json(payload: Any) -> None:
     click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
 
 
+def render_value(value: Any) -> str:
+    if isinstance(value, dict):
+        for key in ("login", "name", "title", "full_name"):
+            if value.get(key):
+                return str(value[key])
+        return json.dumps(value, ensure_ascii=False, default=str)
+    if isinstance(value, list):
+        return ",".join(render_value(item) for item in value)
+    return "" if value is None else str(value)
+
+
 def render_items(items: list[dict[str, Any]], *fields: str) -> None:
     for item in items:
-        click.echo("\t".join(str(item.get(field, "")) for field in fields))
+        click.echo("\t".join(render_value(item.get(field)) for field in fields))
