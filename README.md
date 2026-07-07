@@ -17,7 +17,7 @@
 
 # ChatTea
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦本地 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦内部 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`server install` 默认安装最新 ChatArch 内部 Gitea release；`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
 
 ## 快速开始
 
@@ -60,6 +60,7 @@ python -m chatenv.cli test -t chattea
 ```bash
 python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
 chattea set-token --base-url http://127.0.0.1:3000 --token "$GITEA_TOKEN"
+chattea auth status
 ```
 
 高级路径配置：
@@ -74,7 +75,7 @@ python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 ### 3. 安装并初始化 Gitea
 
 ```bash
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
 chattea server start
 chattea server health
@@ -112,7 +113,7 @@ chattea --version
 
 ```bash
 chattea server stop
-chattea server install --version 1.26.5 --force
+chattea server install --force
 chattea server start
 chattea server health
 ```
@@ -147,13 +148,13 @@ chattea repo migrate \
 
 ### 7. 单仓库 Project board 操作
 
-`chattea project` 封装 Gitea repository-scoped Project board API，不是 GitHub Projects v2 兼容层。
+`chattea project` 封装 Gitea repository-scoped Project board API，不是 GitHub Projects v2 兼容层。Project 中的 issue/PR 是 card，所以主入口是 `project card`；`project issue` 仅作为兼容 alias 保留。
 
 ```bash
 chattea project create --repo gitea_admin/demo --title Roadmap
 chattea project column create --repo gitea_admin/demo 1 --title Todo
-chattea project issue add --repo gitea_admin/demo 1 2 42
-chattea project issue move --repo gitea_admin/demo 1 42 --column 3 --sorting 0
+chattea project card add --repo gitea_admin/demo 1 2 42
+chattea project card move --repo gitea_admin/demo 1 42 --column 3 --sorting 0
 ```
 
 ## ChatEnv 字段
@@ -185,9 +186,20 @@ CHATTEA_CONFIG
 ```text
 chattea
 ├── set-token
+├── api
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
 ├── server
 │   ├── install
 │   ├── init
+│   ├── bootstrap
 │   ├── serve
 │   ├── start
 │   ├── stop
@@ -218,12 +230,19 @@ chattea
     │   ├── create
     │   ├── edit
     │   └── delete
+    ├── card
+    │   ├── list
+    │   ├── add
+    │   ├── remove
+    │   └── move
     └── issue
         ├── list
         ├── add
         ├── remove
         └── move
 ```
+
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
 
 ## Python API
 
@@ -235,7 +254,7 @@ from chattea.commands.server import get_gitea_config_value, set_gitea_config_val
 from chattea.commands.repo import create_repository, clone_repository
 from chattea.api import GiteaClient
 
-install_gitea("1.26.4")
+install_gitea()
 init_gitea_server(base_url="http://127.0.0.1:3000", listen_addr="127.0.0.1", http_port=3000)
 start_gitea_service()
 set_gitea_config_value("server", "HTTP_PORT", "3001")

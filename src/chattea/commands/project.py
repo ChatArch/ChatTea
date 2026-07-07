@@ -134,9 +134,19 @@ def list_column_issues(repo: str, project_id: int, column_id: int, limit: int = 
     return _client(url, token).list_project_column_issues(owner, name, project_id, column_id, limit=limit)
 
 
+def list_cards(repo: str, project_id: int, column_id: int, limit: int = 50, url: str | None = None, token: str | None = None) -> list[dict[str, Any]]:
+    """List issue/PR cards in a project column."""
+    return list_column_issues(repo, project_id, column_id, limit=limit, url=url, token=token)
+
+
 def add_issue(repo: str, project_id: int, column_id: int, issue_id: int, url: str | None = None, token: str | None = None) -> dict[str, Any] | None:
     owner, name = _repo_parts(repo)
     return _client(url, token).add_issue_to_project_column(owner, name, project_id, column_id, issue_id)
+
+
+def add_card(repo: str, project_id: int, column_id: int, issue_id: int, url: str | None = None, token: str | None = None) -> dict[str, Any] | None:
+    """Add an issue/PR card to a project column."""
+    return add_issue(repo, project_id, column_id, issue_id, url=url, token=token)
 
 
 def remove_issue(repo: str, project_id: int, column_id: int, issue_id: int, url: str | None = None, token: str | None = None) -> None:
@@ -144,9 +154,19 @@ def remove_issue(repo: str, project_id: int, column_id: int, issue_id: int, url:
     _client(url, token).remove_issue_from_project_column(owner, name, project_id, column_id, issue_id)
 
 
+def remove_card(repo: str, project_id: int, column_id: int, issue_id: int, url: str | None = None, token: str | None = None) -> None:
+    """Remove an issue/PR card from a project column."""
+    remove_issue(repo, project_id, column_id, issue_id, url=url, token=token)
+
+
 def move_issue(repo: str, project_id: int, issue_id: int, column_id: int, sorting: int | None = None, url: str | None = None, token: str | None = None) -> dict[str, Any] | None:
     owner, name = _repo_parts(repo)
     return _client(url, token).move_project_issue(owner, name, project_id, issue_id, column_id, sorting=sorting)
+
+
+def move_card(repo: str, project_id: int, issue_id: int, column_id: int, sorting: int | None = None, url: str | None = None, token: str | None = None) -> dict[str, Any] | None:
+    """Move an issue/PR card to another project column."""
+    return move_issue(repo, project_id, issue_id, column_id, sorting=sorting, url=url, token=token)
 
 
 @click.group(name="project")
@@ -351,12 +371,12 @@ def column_delete(repo: str | None, project_id: int | None, column_id: int | Non
     click.echo(f"deleted: column {column_id}")
 
 
-@project_group.group(name="issue")
-def issue_group() -> None:
+@project_group.group(name="card")
+def card_group() -> None:
     """Project issue/PR card helpers."""
 
 
-@issue_group.command(name="list")
+@card_group.command(name="list")
 @click.option("--repo", default=None, help="Repository in owner/name form.")
 @click.argument("project_id", type=int, required=False)
 @click.argument("column_id", type=int, required=False)
@@ -380,7 +400,7 @@ def issue_list(repo: str | None, project_id: int | None, column_id: int | None, 
     _echo_table(payload, [("id", "id"), ("number", "number"), ("title", "title"), ("state", "state")])
 
 
-@issue_group.command(name="add")
+@card_group.command(name="add")
 @click.option("--repo", default=None, help="Repository in owner/name form.")
 @click.argument("project_id", type=int, required=False)
 @click.argument("column_id", type=int, required=False)
@@ -404,7 +424,7 @@ def issue_add(repo: str | None, project_id: int | None, column_id: int | None, i
     click.echo(f"added: issue {issue_id} to column {column_id}")
 
 
-@issue_group.command(name="remove")
+@card_group.command(name="remove")
 @click.option("--repo", default=None, help="Repository in owner/name form.")
 @click.argument("project_id", type=int, required=False)
 @click.argument("column_id", type=int, required=False)
@@ -427,7 +447,7 @@ def issue_remove(repo: str | None, project_id: int | None, column_id: int | None
     click.echo(f"removed: issue {issue_id} from column {column_id}")
 
 
-@issue_group.command(name="move")
+@card_group.command(name="move")
 @click.option("--repo", default=None, help="Repository in owner/name form.")
 @click.argument("project_id", type=int, required=False)
 @click.argument("issue_id", type=int, required=False)
@@ -450,3 +470,6 @@ def issue_move(repo: str | None, project_id: int | None, issue_id: int | None, c
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     click.echo(f"moved: issue {issue_id} to column {column_id}")
+
+
+project_group.add_command(card_group, name="issue")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 from typing import Any
 from urllib.parse import urlencode, quote
@@ -7,6 +8,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
 from chattea.config import ChatTeaConfig, load_config
+from chattea.credentials import resolve_token
 
 
 class GiteaAPIError(RuntimeError):
@@ -17,7 +19,7 @@ class GiteaClient:
     def __init__(self, url: str | None = None, token: str | None = None) -> None:
         config = load_config()
         self.url = (url or config.url).rstrip("/")
-        self.token = token if token is not None else config.token
+        self.token = resolve_token(token, base_url=self.url, config=config)
 
     def request(
         self,
@@ -25,6 +27,7 @@ class GiteaClient:
         path: str,
         data: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> Any:
         query = f"?{urlencode(params)}" if params else ""
         url = f"{self.url}/api/v1{path}{query}"
@@ -34,6 +37,8 @@ class GiteaClient:
             headers["Content-Type"] = "application/json"
         if self.token:
             headers["Authorization"] = f"token {self.token}"
+        if extra_headers:
+            headers.update(extra_headers)
         request = Request(url, data=body, headers=headers, method=method.upper())
         try:
             with urlopen(request, timeout=30) as response:
@@ -61,6 +66,34 @@ class GiteaClient:
 
     def me(self) -> dict[str, Any]:
         return self.request("GET", "/user")
+
+    @staticmethod
+    def basic_auth_header(username: str, password: str) -> dict[str, str]:
+        raw = f"{username}:{password}".encode("utf-8")
+        return {"Authorization": "Basic " + base64.b64encode(raw).decode("ascii")}
+
+    def list_access_tokens(self, username: str, password: str, limit: int = 50) -> list[dict[str, Any]]:
+        return self.request(
+            "GET",
+            f"/users/{quote(username)}/tokens",
+            params={"limit": limit},
+            extra_headers=self.basic_auth_header(username, password),
+        )
+
+    def create_access_token(self, username: str, password: str, name: str, scopes: list[str]) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            f"/users/{quote(username)}/tokens",
+            data={"name": name, "scopes": scopes},
+            extra_headers=self.basic_auth_header(username, password),
+        )
+
+    def delete_access_token(self, username: str, password: str, token_id_or_name: str) -> Any:
+        return self.request(
+            "DELETE",
+            f"/users/{quote(username)}/tokens/{quote(str(token_id_or_name))}",
+            extra_headers=self.basic_auth_header(username, password),
+        )
 
     def list_repos(self, owner: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         if owner:

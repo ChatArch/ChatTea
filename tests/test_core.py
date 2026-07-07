@@ -1,7 +1,14 @@
 from pathlib import Path
+import hashlib
+import lzma
+import subprocess
 
 from chattea import server as server_ops
 from chattea.api import GiteaClient
+from chattea.commands.api import call_api, parse_json_data, parse_query_params
+from chattea.commands.project import add_card, list_cards, move_card, remove_card
+from chattea.commands.server import bootstrap_gitea_server
+from chattea.credentials import configure_token, git_extraheader_key, read_git_token, resolve_token, token_from_extraheader
 from chattea.config import (
     ChatTeaConfig,
     ChatTeaEnvConfig,
@@ -30,6 +37,39 @@ def test_config_round_trip_uses_chatenv(monkeypatch, tmp_path):
     assert "CHATTEA_URL" not in env_text
 
 
+def _init_git_repo(path: Path, remote_url: str) -> None:
+    subprocess.run(["git", "init"], cwd=path, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "remote", "add", "origin", remote_url], cwd=path, check=True, capture_output=True, text=True)
+
+
+def test_configure_token_writes_repo_local_git_auth(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_git_repo(repo, "https://gitea.local/gitea_admin/demo.git")
+
+    result = configure_token("https://gitea.local", "repo-token", cwd=repo, save_env=False)
+
+    assert result["git_configured"] is True
+    assert result["git_key"] == "http.https://gitea.local/gitea_admin/demo.extraHeader"
+    assert read_git_token(cwd=repo) == "repo-token"
+    assert token_from_extraheader(subprocess.run(["git", "config", "--local", "--get", str(result["git_key"])], cwd=repo, check=True, capture_output=True, text=True).stdout) == "repo-token"
+
+
+def test_gitea_client_resolves_token_from_git_config(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_git_repo(repo, "https://gitea.local/gitea_admin/demo.git")
+    configure_token("https://gitea.local", "repo-token", cwd=repo, save_env=False)
+    monkeypatch.chdir(repo)
+
+    client = GiteaClient(url="https://gitea.local")
+
+    assert resolve_token(base_url="https://gitea.local", cwd=repo) == "repo-token"
+    assert client.token == "repo-token"
+
+
 def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_path):
     monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
     path = tmp_path / "config.json"
@@ -39,6 +79,23 @@ def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_p
 
     assert config.url == "http://legacy.local"
     assert config.token == "legacy-token"
+
+
+def test_bootstrap_values_are_read_from_chatenv(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_USER", "root")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_EMAIL", "root@example.invalid")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_PASSWORD", "bootstrap-password")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_TOKEN_NAME", "default")
+    monkeypatch.setenv("CHATTEA_BOOTSTRAP_TOKEN_SCOPES", "all")
+
+    config = load_config()
+
+    assert config.bootstrap_admin_user == "root"
+    assert config.bootstrap_admin_email == "root@example.invalid"
+    assert config.bootstrap_admin_password == "bootstrap-password"
+    assert config.bootstrap_token_name == "default"
+    assert config.bootstrap_token_scopes == "all"
 
 
 def test_legacy_chattea_url_env_is_read_but_not_registered(monkeypatch, tmp_path):
@@ -64,6 +121,7 @@ def test_chatenv_provider_fields_are_registered():
     assert ChatTeaEnvConfig.get_storage_name() == "ChatTea"
     assert ChatTeaEnvConfig._aliases == ["chattea", "gitea", "tea"]
     assert fields["CHATTEA_TOKEN"].is_sensitive is True
+    assert fields["CHATTEA_BOOTSTRAP_ADMIN_PASSWORD"].is_sensitive is True
     assert set(fields) == {
         "CHATTEA_BASE_URL",
         "CHATTEA_TOKEN",
@@ -71,8 +129,15 @@ def test_chatenv_provider_fields_are_registered():
         "CHATTEA_BINARY",
         "CHATTEA_WORK_PATH",
         "CHATTEA_CONFIG",
+        "CHATTEA_BOOTSTRAP_ADMIN_USER",
+        "CHATTEA_BOOTSTRAP_ADMIN_EMAIL",
+        "CHATTEA_BOOTSTRAP_ADMIN_PASSWORD",
+        "CHATTEA_BOOTSTRAP_TOKEN_NAME",
+        "CHATTEA_BOOTSTRAP_TOKEN_SCOPES",
     }
     assert fields["CHATTEA_BASE_URL"].default == DEFAULT_BASE_URL
+    assert fields["CHATTEA_BOOTSTRAP_TOKEN_NAME"].default == "default"
+    assert fields["CHATTEA_BOOTSTRAP_TOKEN_SCOPES"].default == "all"
 
 
 def test_chatenv_config_test_validates_values(monkeypatch, tmp_path, capsys):
@@ -125,6 +190,90 @@ def test_write_user_service(tmp_path, monkeypatch):
     assert "--config" in text
 
 
+def test_internal_gitea_asset_urls_use_chatarch_release():
+    binary_url, checksum_url = server_ops.internal_gitea_asset_urls("v1.0.0", "amd64")
+
+    assert binary_url == "https://github.com/ChatArch/gitea/releases/download/v1.0.0/gitea-1.0.0-linux-amd64.xz"
+    assert checksum_url == f"{binary_url}.sha256"
+
+
+def test_install_binary_defaults_to_latest_internal_release(monkeypatch, tmp_path):
+    compressed = lzma.compress(b"#!/bin/sh\necho chatarch gitea\n")
+    checksum = hashlib.sha256(compressed).hexdigest()
+    downloads = []
+
+    class FakeResponse:
+        def __init__(self, data: bytes):
+            self.data = data
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return self.data
+
+    def fake_urlopen(url, timeout=30):
+        if url == server_ops.CHATARCH_GITEA_RELEASE_API:
+            return FakeResponse(b'{"tag_name":"v1.0.0"}')
+        if url.endswith(".sha256"):
+            return FakeResponse(f"{checksum}  gitea-1.0.0-linux-amd64.xz\n".encode())
+        raise AssertionError(url)
+
+    def fake_urlretrieve(url, filename):
+        downloads.append(url)
+        Path(filename).write_bytes(compressed)
+        return filename, None
+
+    monkeypatch.setattr(server_ops.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(server_ops.urllib.request, "urlretrieve", fake_urlretrieve)
+
+    binary = server_ops.install_binary(prefix=tmp_path, arch="amd64", force=True)
+
+    assert binary == tmp_path / "bin" / "gitea"
+    assert binary.read_bytes() == b"#!/bin/sh\necho chatarch gitea\n"
+    assert downloads == ["https://github.com/ChatArch/gitea/releases/download/v1.0.0/gitea-1.0.0-linux-amd64.xz"]
+
+
+def test_bootstrap_gitea_server_composes_local_admin_and_credentials(monkeypatch, tmp_path):
+    calls = []
+    binary = tmp_path / "bin" / "gitea"
+    config = tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+    work = tmp_path / "gitea"
+
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    monkeypatch.setattr("chattea.commands.server.install_gitea", lambda version=None, prefix=None, force=False: calls.append(("install", version, prefix, force)) or binary)
+    monkeypatch.setattr("chattea.commands.server.init_gitea_server", lambda **kwargs: calls.append(("init", kwargs)) or config)
+    monkeypatch.setattr("chattea.commands.server.create_admin_user", lambda username, password, email, **kwargs: calls.append(("create-user", username, password, email, kwargs)) or {"username": username})
+    monkeypatch.setattr("chattea.commands.server.generate_admin_token", lambda username, **kwargs: calls.append(("generate-token", username, kwargs)) or "generated-token")
+    monkeypatch.setattr("chattea.commands.server.configure_credentials", lambda base_url, token: calls.append(("configure", base_url, token)) or {"base_url": base_url, "env_path": tmp_path / "env"})
+
+    result = bootstrap_gitea_server(
+        base_url="http://gitea.local:3000",
+        admin_user="root",
+        admin_password="pw",
+        admin_email="root@example.invalid",
+        token_name="default",
+        token_scopes="all",
+        version="latest",
+        work_path=work,
+    )
+
+    assert result["binary"] == binary
+    assert result["config"] == config
+    assert result["admin_user"] == "root"
+    assert result["token"] == "generat...token"
+    assert calls == [
+        ("install", "latest", None, False),
+        ("init", {"work_path": work, "config_path": None, "binary": binary, "base_url": "http://gitea.local:3000", "listen_addr": None, "http_port": None, "force": False}),
+        ("create-user", "root", "pw", "root@example.invalid", {"binary": binary, "config_path": config, "work_path": work}),
+        ("generate-token", "root", {"token_name": "default", "token_scopes": "all", "binary": binary, "config_path": config, "work_path": work}),
+        ("configure", "http://gitea.local:3000", "generated-token"),
+    ]
+
+
 def test_create_repo_uses_orgs_endpoint_for_org_owner(monkeypatch):
     calls = []
     client = GiteaClient(url="http://gitea.local", token="token")
@@ -162,6 +311,32 @@ def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
     assert payload["full_name"] == "gitea_admin/demo"
     assert calls[1][0] == "POST"
     assert calls[1][1] == "/user/repos"
+
+
+def test_access_token_api_methods_use_basic_auth(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="")
+
+    def fake_request(method, path, data=None, params=None, extra_headers=None):
+        calls.append((method, path, data, params, extra_headers))
+        if method == "POST":
+            return {"name": data["name"], "token": "generated-token", "scopes": data["scopes"]}
+        if method == "GET":
+            return [{"id": 1, "name": "chattea"}]
+        return None
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    assert client.create_access_token("gitea_admin", "pw", "chattea", ["all"])["token"] == "generated-token"
+    assert client.list_access_tokens("gitea_admin", "pw") == [{"id": 1, "name": "chattea"}]
+    assert client.delete_access_token("gitea_admin", "pw", "1") is None
+
+    assert calls[0][0:4] == ("POST", "/users/gitea_admin/tokens", {"name": "chattea", "scopes": ["all"]}, None)
+    assert calls[1][0:4] == ("GET", "/users/gitea_admin/tokens", None, {"limit": 50})
+    assert calls[2][0:4] == ("DELETE", "/users/gitea_admin/tokens/1", None, None)
+    for call in calls:
+        assert call[4]["Authorization"].startswith("Basic ")
+
 
 def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
     calls = []
@@ -202,6 +377,69 @@ def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
         ("DELETE", "/repos/gitea_admin/demo/projects/1/columns/2/issues/42", None, None),
         ("POST", "/repos/gitea_admin/demo/projects/1/issues/42/move", {"column_id": 3, "sorting": 0}, None),
     ]
+
+
+def test_project_card_functions_are_importable_aliases(monkeypatch):
+    calls = []
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def list_project_column_issues(self, owner, repo, project_id, column_id, limit=50):
+            calls.append(("list", owner, repo, project_id, column_id, limit))
+            return []
+
+        def add_issue_to_project_column(self, owner, repo, project_id, column_id, issue_id):
+            calls.append(("add", owner, repo, project_id, column_id, issue_id))
+            return {"ok": True}
+
+        def remove_issue_from_project_column(self, owner, repo, project_id, column_id, issue_id):
+            calls.append(("remove", owner, repo, project_id, column_id, issue_id))
+
+        def move_project_issue(self, owner, repo, project_id, issue_id, column_id, sorting=None):
+            calls.append(("move", owner, repo, project_id, issue_id, column_id, sorting))
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    list_cards("gitea_admin/demo", 1, 2, limit=10)
+    add_card("gitea_admin/demo", 1, 2, 42)
+    remove_card("gitea_admin/demo", 1, 2, 42)
+    move_card("gitea_admin/demo", 1, 42, 3, sorting=0)
+
+    assert calls == [
+        ("list", "gitea_admin", "demo", 1, 2, 10),
+        ("add", "gitea_admin", "demo", 1, 2, 42),
+        ("remove", "gitea_admin", "demo", 1, 2, 42),
+        ("move", "gitea_admin", "demo", 1, 42, 3, 0),
+    ]
+
+
+def test_raw_api_helpers(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def request(self, method, path, data=None, params=None):
+            captured.update({"method": method, "path": path, "data": data, "params": params})
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.api.GiteaClient", FakeClient)
+
+    assert parse_query_params(("state=open", "limit=5")) == {"state": "open", "limit": "5"}
+    assert parse_json_data('{"title":"Roadmap"}') == {"title": "Roadmap"}
+    assert call_api("post", "repos/gitea_admin/demo/issues", {"title": "Roadmap"}, {"draft": False}, url="http://gitea", token="token") == {"ok": True}
+    assert captured == {
+        "init": {"url": "http://gitea", "token": "token"},
+        "method": "POST",
+        "path": "/repos/gitea_admin/demo/issues",
+        "data": {"title": "Roadmap"},
+        "params": {"draft": False},
+    }
+
 
 def test_runtime_dependency_bounds_are_release_reviewed():
     try:

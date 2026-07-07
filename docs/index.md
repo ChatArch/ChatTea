@@ -13,12 +13,25 @@ chattea repo --help
 
 命令树：
 
+完整对齐目标见 `cli-alignment.md`。
+
 ```text
 chattea
 ├── set-token
+├── api
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
 ├── server
 │   ├── install
 │   ├── init
+│   ├── bootstrap
 │   ├── serve
 │   ├── start
 │   ├── stop
@@ -49,12 +62,19 @@ chattea
     │   ├── create
     │   ├── edit
     │   └── delete
+    ├── card
+    │   ├── list
+    │   ├── add
+    │   ├── remove
+    │   └── move
     └── issue
         ├── list
         ├── add
         ├── remove
         └── move
 ```
+
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The evidence-bound CLI direction is documented in `docs/cli-alignment.md`.
 
 ## 新机器配置清单
 
@@ -114,21 +134,21 @@ python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 本机访问：
 
 ```bash
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
 ```
 
 局域网访问：
 
 ```bash
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url http://172.25.52.106:3000 --listen-addr 0.0.0.0 --http-port 3000
 ```
 
 反向代理访问：
 
 ```bash
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url https://git.example.com --listen-addr 127.0.0.1 --http-port 3000
 ```
 
@@ -181,7 +201,7 @@ python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 ### 3. 下载并初始化 Gitea
 
 ```bash
-chattea server install --version 1.26.4
+chattea server install
 chattea server init
 ```
 
@@ -323,7 +343,7 @@ chattea --version
 
 ```bash
 chattea server stop
-chattea server install --version 1.26.5 --force
+chattea server install --force
 chattea server start
 chattea server version
 chattea server health
