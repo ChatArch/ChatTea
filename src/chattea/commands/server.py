@@ -10,7 +10,7 @@ from chatstyle import CommandField, CommandSchema, add_interactive_option, resol
 
 from chattea import server as server_ops
 from chattea.api import GiteaAPIError, GiteaClient
-from chattea.config import DEFAULT_BASE_URL, DEFAULT_HTTP_PORT, DEFAULT_LISTEN_ADDR, load_config, mask_token
+from chattea.config import ChatTeaConfig, DEFAULT_BASE_URL, DEFAULT_HTTP_PORT, DEFAULT_LISTEN_ADDR, load_config, mask_token, save_server_config
 from chattea.credentials import configure_token as configure_credentials
 from chattea.commands.token import DEFAULT_TOKEN_NAME, DEFAULT_TOKEN_SCOPES
 
@@ -340,6 +340,24 @@ def bootstrap_gitea_server(
             ) from exc
         token_source = "reused"
     credentials = configure_credentials(base_url, token)
+    resolved_home = prefix or installed_binary.expanduser().parent.parent
+    env_path = save_server_config(
+        ChatTeaConfig(
+            url=base_url,
+            token=token,
+            home=resolved_home,
+            gitea_binary=installed_binary,
+            gitea_work_path=resolved_work,
+            gitea_config=resolved_config,
+            bootstrap_admin_user=admin_user,
+            bootstrap_admin_email=admin_email,
+            bootstrap_admin_password=admin_password,
+            bootstrap_token_name=token_name,
+            bootstrap_token_scopes=token_scopes,
+        )
+    )
+    if isinstance(credentials, dict):
+        credentials["env_path"] = env_path
     service = start_gitea_service(binary=installed_binary, config_path=resolved_config, work_path=resolved_work) if start_service else None
     return {
         "binary": installed_binary,

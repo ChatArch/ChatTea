@@ -92,19 +92,31 @@ Out of scope for now:
 
 ## A. Blank Machine To Local Gitea
 
-Target one-command entry:
+Standard ChatArch flow is ChatEnv first, bootstrap second. Configure the active ChatTea profile once, then run `server bootstrap` without repeating runtime paths on the command line.
 
 ```bash
-export GITEA_ADMIN_PASSWORD='[REDACTED]'
+chatenv init -t ChatTea -I
+chatenv set CHATTEA_HOME=$HOME/.chatarch/chattea -I
+chatenv set CHATTEA_BINARY=$HOME/.chatarch/chattea/bin/gitea -I
+chatenv set CHATTEA_WORK_PATH=$HOME/.chatarch/chattea/gitea -I
+chatenv set CHATTEA_CONFIG=$HOME/.chatarch/chattea/gitea/custom/conf/app.ini -I
+chatenv set CHATTEA_BASE_URL=http://127.0.0.1:3000 -I
+chatenv set CHATTEA_BOOTSTRAP_ADMIN_USER=gitea_admin -I
+chatenv set CHATTEA_BOOTSTRAP_ADMIN_EMAIL=gitea_admin@example.invalid -I
+chatenv set CHATTEA_BOOTSTRAP_ADMIN_PASSWORD='[REDACTED]' -I
 
-chattea server bootstrap \
-  --base-url http://127.0.0.1:3000 \
-  --admin-user gitea_admin \
-  --admin-email admin@example.com \
-  --admin-password-env GITEA_ADMIN_PASSWORD
+chattea server bootstrap -I
 ```
 
-`server bootstrap` should compose these steps.
+After bootstrap, inspect the active profile instead of looking for ad-hoc env files:
+
+```bash
+chatenv cat -t ChatTea
+chattea server config path
+chattea server health
+```
+
+`server bootstrap` composes these steps and persists the resolved binary, app.ini, work path, base URL, admin bootstrap fields, and generated token back into ChatEnv.
 
 ### A1. Install ChatArch Gitea
 

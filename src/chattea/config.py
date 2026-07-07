@@ -290,6 +290,30 @@ def save_config(config: ChatTeaConfig, path: Path | None = None) -> Path:
     return store.save_active(ChatTeaEnvConfig, values)
 
 
+def save_server_config(config: ChatTeaConfig) -> Path:
+    """Persist the managed server runtime into the active ChatEnv profile."""
+    store = EnvStore(get_paths().envs_dir)
+    values = store.load_active(ChatTeaEnvConfig)
+    values["CHATTEA_BASE_URL"] = normalize_base_url(config.url)
+    if config.token:
+        values["CHATTEA_TOKEN"] = config.token
+    if config.home:
+        values["CHATTEA_HOME"] = str(config.home.expanduser())
+    if config.gitea_binary:
+        values["CHATTEA_BINARY"] = str(config.gitea_binary.expanduser())
+    if config.gitea_work_path:
+        values["CHATTEA_WORK_PATH"] = str(config.gitea_work_path.expanduser())
+    if config.gitea_config:
+        values["CHATTEA_CONFIG"] = str(config.gitea_config.expanduser())
+    values["CHATTEA_BOOTSTRAP_ADMIN_USER"] = config.bootstrap_admin_user
+    values["CHATTEA_BOOTSTRAP_ADMIN_EMAIL"] = config.bootstrap_admin_email
+    if config.bootstrap_admin_password:
+        values["CHATTEA_BOOTSTRAP_ADMIN_PASSWORD"] = config.bootstrap_admin_password
+    values["CHATTEA_BOOTSTRAP_TOKEN_NAME"] = config.bootstrap_token_name
+    values["CHATTEA_BOOTSTRAP_TOKEN_SCOPES"] = config.bootstrap_token_scopes
+    return store.save_active(ChatTeaEnvConfig, values)
+
+
 def set_token(url: str, token: str, path: Path | None = None) -> Path:
     config = load_config(path)
     config.url = normalize_base_url(url)
@@ -323,6 +347,7 @@ __all__ = [
     "mask_token",
     "normalize_base_url",
     "save_config",
+    "save_server_config",
     "set_token",
     "validate_http_port",
     "validate_listen_addr",

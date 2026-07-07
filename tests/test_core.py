@@ -19,6 +19,7 @@ from chattea.config import (
     default_chattea_home,
     load_config,
     save_config,
+    save_server_config,
 )
 
 
@@ -36,6 +37,39 @@ def test_config_round_trip_uses_chatenv(monkeypatch, tmp_path):
     env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text(encoding="utf-8")
     assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
     assert "CHATTEA_URL" not in env_text
+
+
+def test_server_config_round_trip_persists_runtime_to_chatenv(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    save_server_config(
+        ChatTeaConfig(
+            url="http://gitea.local:13017",
+            token="server-token",
+            home=tmp_path / "managed",
+            gitea_binary=tmp_path / "managed" / "bin" / "gitea",
+            gitea_work_path=tmp_path / "managed" / "work",
+            gitea_config=tmp_path / "managed" / "work" / "custom" / "conf" / "app.ini",
+            bootstrap_admin_user="gitea_admin",
+            bootstrap_admin_email="gitea_admin@example.invalid",
+            bootstrap_admin_password="bootstrap-password",
+            bootstrap_token_name="default",
+            bootstrap_token_scopes="all",
+        )
+    )
+
+    config = load_config()
+
+    assert config.url == "http://gitea.local:13017"
+    assert config.token == "server-token"
+    assert config.home == tmp_path / "managed"
+    assert config.gitea_binary == tmp_path / "managed" / "bin" / "gitea"
+    assert config.gitea_work_path == tmp_path / "managed" / "work"
+    assert config.gitea_config == tmp_path / "managed" / "work" / "custom" / "conf" / "app.ini"
+    assert config.bootstrap_admin_user == "gitea_admin"
+    assert config.bootstrap_admin_email == "gitea_admin@example.invalid"
+    assert config.bootstrap_admin_password == "bootstrap-password"
+    assert config.bootstrap_token_name == "default"
+    assert config.bootstrap_token_scopes == "all"
 
 
 def _init_git_repo(path: Path, remote_url: str) -> None:
@@ -274,6 +308,16 @@ def test_bootstrap_gitea_server_composes_local_admin_and_credentials(monkeypatch
         ("generate-token", "root", {"token_name": "default", "token_scopes": "all", "binary": binary, "config_path": config, "work_path": work}),
         ("configure", "http://gitea.local:3000", "generated-token"),
     ]
+    persisted = load_config()
+    assert persisted.url == "http://gitea.local:3000"
+    assert persisted.token == "generated-token"
+    assert persisted.home == tmp_path
+    assert persisted.gitea_binary == binary
+    assert persisted.gitea_work_path == work
+    assert persisted.gitea_config == config
+    assert persisted.bootstrap_admin_user == "root"
+    assert persisted.bootstrap_admin_email == "root@example.invalid"
+    assert persisted.bootstrap_admin_password == "pw"
 
 
 def test_create_repo_uses_orgs_endpoint_for_org_owner(monkeypatch):
