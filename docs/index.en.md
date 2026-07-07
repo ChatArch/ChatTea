@@ -34,7 +34,7 @@ python -m chatenv.cli init -t chattea -I
 python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
 python -m chatenv.cli test -t chattea
 
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
 chattea server start
 chattea server health
@@ -94,7 +94,7 @@ Update the managed Gitea binary:
 
 ```bash
 chattea server stop
-chattea server install --version 1.26.5 --force
+chattea server install --force
 chattea server start
 chattea server health
 ```

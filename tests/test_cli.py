@@ -8,6 +8,8 @@ def test_help_lists_first_version_surface():
 
     assert result.exit_code == 0
     assert "set-token" in result.output
+    assert "auth" in result.output
+    assert "api" in result.output
     assert "server" in result.output
     assert "repo" in result.output
 
@@ -75,11 +77,36 @@ def test_set_token_no_interactive_fails_fast_when_token_missing():
     assert "token" in result.output.lower()
 
 
-def test_server_install_no_interactive_fails_fast_when_version_missing():
+def test_auth_login_writes_config_like_set_token(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+
+    result = CliRunner().invoke(
+        main,
+        ["auth", "login", "--base-url", "http://gitea.local:3000", "--token", "secret-token"],
+    )
+
+    assert result.exit_code == 0
+    assert "configured: http://gitea.local:3000" in result.output
+    assert "secret-token" not in result.output
+    env_text = (tmp_path / "arch" / "envs" / "ChatTea" / ".env").read_text()
+    assert "CHATTEA_BASE_URL='http://gitea.local:3000'" in env_text
+    assert "CHATTEA_TOKEN='secret-token'" in env_text
+
+
+def test_server_install_defaults_to_latest_internal_gitea(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_install_gitea(version=None, prefix=None, arch=None, force=False):
+        captured.update({"version": version, "prefix": prefix, "arch": arch, "force": force})
+        return tmp_path / "bin" / "gitea"
+
+    monkeypatch.setattr("chattea.commands.server.install_gitea", fake_install_gitea)
+
     result = CliRunner().invoke(main, ["server", "install", "-I"])
 
-    assert result.exit_code != 0
-    assert "version" in result.output.lower()
+    assert result.exit_code == 0, result.output
+    assert captured["version"] == "latest"
+    assert "installed:" in result.output
 
 
 def test_repo_create_no_interactive_fails_fast_when_name_missing():
@@ -183,13 +210,18 @@ def test_project_help_lists_single_repo_project_commands():
 
     project = CliRunner().invoke(main, ["project", "--help"])
     assert project.exit_code == 0
-    for command in ["list", "view", "create", "edit", "delete", "column", "issue"]:
+    for command in ["list", "view", "create", "edit", "delete", "column", "card", "issue"]:
         assert command in project.output
 
     column = CliRunner().invoke(main, ["project", "column", "--help"])
     assert column.exit_code == 0
     for command in ["list", "create", "edit", "delete"]:
         assert command in column.output
+
+    card = CliRunner().invoke(main, ["project", "card", "--help"])
+    assert card.exit_code == 0
+    for command in ["list", "add", "remove", "move"]:
+        assert command in card.output
 
     issue = CliRunner().invoke(main, ["project", "issue", "--help"])
     assert issue.exit_code == 0
@@ -289,3 +321,54 @@ def test_project_list_no_interactive_fails_fast_when_repo_missing():
 
     assert result.exit_code != 0
     assert "repo" in result.output.lower()
+
+
+def test_project_card_move_is_primary_alias(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def move_project_issue(self, owner, repo, project_id, issue_id, column_id, sorting=None):
+            captured.update({"owner": owner, "repo": repo, "project_id": project_id, "issue_id": issue_id, "column_id": column_id, "sorting": sorting})
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["project", "card", "move", "--repo", "gitea_admin/demo", "1", "42", "--column", "2", "--sorting", "0"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured == {"owner": "gitea_admin", "repo": "demo", "project_id": 1, "issue_id": 42, "column_id": 2, "sorting": 0}
+
+
+def test_api_command_calls_raw_route(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def request(self, method, path, data=None, params=None):
+            captured.update({"method": method, "path": path, "data": data, "params": params})
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.api.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        ["api", "/repos/gitea_admin/demo/issues", "--method", "POST", "--data", '{"title":"Bug"}', "--param", "state=open"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert '"ok": true' in result.output
+    assert captured == {
+        "init": {"url": None, "token": None},
+        "method": "POST",
+        "path": "/repos/gitea_admin/demo/issues",
+        "data": {"title": "Bug"},
+        "params": {"state": "open"},
+    }

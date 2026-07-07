@@ -3,6 +3,9 @@ from __future__ import annotations
 import os
 import platform
 import secrets
+import hashlib
+import json
+import lzma
 import shutil
 import subprocess
 import urllib.request
@@ -23,6 +26,9 @@ from chattea.config import (
 
 DEFAULT_PREFIX = default_chattea_home()
 DEFAULT_WORK_PATH = default_gitea_work_path(DEFAULT_PREFIX)
+CHATARCH_GITEA_REPO = "ChatArch/gitea"
+CHATARCH_GITEA_RELEASE_API = f"https://api.github.com/repos/{CHATARCH_GITEA_REPO}/releases/latest"
+CHATARCH_GITEA_RELEASE_BASE = f"https://github.com/{CHATARCH_GITEA_REPO}/releases/download"
 
 
 def detect_asset_arch() -> str:
@@ -34,16 +40,57 @@ def detect_asset_arch() -> str:
     raise ValueError(f"Unsupported architecture: {platform.machine()}")
 
 
-def install_binary(version: str, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
+def normalize_release_version(version: str) -> str:
+    """Return a release asset version without a leading v prefix."""
+    return version[1:] if version.startswith("v") else version
+
+
+def resolve_latest_internal_gitea_version() -> str:
+    """Resolve the latest ChatArch Gitea release version from GitHub."""
+    with urllib.request.urlopen(CHATARCH_GITEA_RELEASE_API, timeout=30) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    tag = payload.get("tag_name")
+    if not isinstance(tag, str) or not tag:
+        raise RuntimeError("Could not resolve latest ChatArch Gitea release tag")
+    return normalize_release_version(tag)
+
+
+def internal_gitea_asset_urls(version: str, arch: str) -> tuple[str, str]:
+    """Return ChatArch Gitea binary and checksum asset URLs."""
+    asset_version = normalize_release_version(version)
+    tag = f"v{asset_version}"
+    asset = f"gitea-{asset_version}-linux-{arch}.xz"
+    base = f"{CHATARCH_GITEA_RELEASE_BASE}/{tag}"
+    return f"{base}/{asset}", f"{base}/{asset}.sha256"
+
+
+def _expected_sha256(text: str) -> str:
+    first = text.strip().split()[0]
+    if len(first) != 64:
+        raise RuntimeError("Invalid sha256 file for ChatArch Gitea asset")
+    return first
+
+
+def install_binary(version: str | None = None, prefix: Path = DEFAULT_PREFIX, force: bool = False, arch: str | None = None) -> Path:
     arch = arch or detect_asset_arch()
+    resolved_version = resolve_latest_internal_gitea_version() if version is None or version in {"", "latest"} else normalize_release_version(version)
     bin_dir = prefix.expanduser() / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
     binary = bin_dir / "gitea"
     if binary.exists() and not force:
         return binary
-    url = f"https://dl.gitea.com/gitea/{version}/gitea-{version}-linux-{arch}"
+    url, checksum_url = internal_gitea_asset_urls(resolved_version, arch)
+    temp_xz = binary.with_suffix(".download.xz")
     temp = binary.with_suffix(".download")
-    urllib.request.urlretrieve(url, temp)
+    urllib.request.urlretrieve(url, temp_xz)
+    checksum_text = urllib.request.urlopen(checksum_url, timeout=30).read().decode("utf-8")
+    expected = _expected_sha256(checksum_text)
+    actual = hashlib.sha256(temp_xz.read_bytes()).hexdigest()
+    if actual != expected:
+        temp_xz.unlink(missing_ok=True)
+        raise RuntimeError(f"Checksum mismatch for {url}")
+    temp.write_bytes(lzma.decompress(temp_xz.read_bytes()))
+    temp_xz.unlink(missing_ok=True)
     temp.chmod(0o755)
     temp.replace(binary)
     return binary

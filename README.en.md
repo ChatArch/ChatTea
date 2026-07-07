@@ -17,7 +17,7 @@
 
 # ChatTea
 
-ChatTea is ChatArch's Gitea management CLI/API package for local Gitea installation, initialization, service management, app.ini inspection/editing, token configuration, and basic repository operations. Since `0.2.1`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
+ChatTea is ChatArch's Gitea management CLI/API package for internal Gitea installation, initialization, service management, app.ini inspection/editing, token configuration, and basic repository operations. `server install` defaults to the latest ChatArch internal Gitea release. Since `0.2.1`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
 
 ## Quick Start
 
@@ -43,7 +43,7 @@ python -m chatenv.cli init -t chattea -I
 python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
 python -m chatenv.cli test -t chattea -I
 
-chattea server install --version 1.26.4
+chattea server install
 chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
 chattea server start
 chattea server health
@@ -71,7 +71,7 @@ Update the managed Gitea binary:
 
 ```bash
 chattea server stop
-chattea server install --version 1.26.5 --force
+chattea server install --force
 chattea server start
 chattea server health
 ```
@@ -118,6 +118,11 @@ chattea server restart
 ```text
 chattea
 ├── set-token
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── api
 ├── server
 │   ├── install
 │   ├── init
@@ -151,12 +156,19 @@ chattea
     │   ├── create
     │   ├── edit
     │   └── delete
+    ├── card
+    │   ├── list
+    │   ├── add
+    │   ├── remove
+    │   └── move
     └── issue
         ├── list
         ├── add
         ├── remove
         └── move
 ```
+
+`project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`. The full GitHub-aligned target tree is documented in `docs/cli-alignment.md`.
 
 ## Development Notes
 

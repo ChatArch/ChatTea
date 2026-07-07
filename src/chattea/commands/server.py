@@ -13,7 +13,7 @@ from chattea.config import DEFAULT_BASE_URL, DEFAULT_HTTP_PORT, DEFAULT_LISTEN_A
 
 INSTALL_SCHEMA = CommandSchema(
     name="server install",
-    fields=(CommandField("version", prompt="Gitea version", required=True),),
+    fields=(CommandField("version", prompt="ChatArch Gitea version", required=False, default="latest", prompt_if_missing=True),),
 )
 
 INIT_SCHEMA = CommandSchema(
@@ -131,8 +131,8 @@ def set_gitea_config_value(section: str, key: str, value: str, config_path: Path
     return path
 
 
-def install_gitea(version: str, prefix: Path | None = None, arch: str | None = None, force: bool = False) -> Path:
-    """Download or reuse the managed Gitea binary."""
+def install_gitea(version: str | None = None, prefix: Path | None = None, arch: str | None = None, force: bool = False) -> Path:
+    """Download or reuse the managed ChatArch Gitea binary."""
     config = load_config()
     resolved_prefix = prefix or config.home or server_ops.DEFAULT_PREFIX
     return server_ops.install_binary(version, prefix=resolved_prefix, arch=arch, force=force)
@@ -300,20 +300,21 @@ def config_set(section: str | None, key: str | None, value: str | None, config_p
 
 
 @server_group.command(name="install")
-@click.option("--version", default=None, help="Gitea version, for example 1.26.4.")
+@click.option("--version", default=None, help="ChatArch Gitea version, for example 1.0.0. Defaults to latest.")
 @click.option("--prefix", type=click.Path(file_okay=False, path_type=Path), default=None, help="Install prefix. Defaults to CHATTEA_HOME.")
 @click.option("--arch", default=None, help="Asset architecture override, for example amd64 or arm64.")
 @click.option("--force", is_flag=True, help="Overwrite an existing binary.")
 @add_interactive_option
 def install(version: str | None, prefix: Path | None, arch: str | None, force: bool, interactive: bool | None) -> None:
-    """Download the Gitea binary."""
+    """Download the ChatArch Gitea binary."""
+    provided = {"version": version if interactive is True else version or "latest"}
     values = resolve_command_inputs(
         schema=INSTALL_SCHEMA,
-        provided={"version": version},
+        provided=provided,
         interactive=interactive,
-        usage="Usage: chattea server install --version VERSION [-i|-I]",
+        usage="Usage: chattea server install [--version VERSION] [-i|-I]",
     )
-    binary = install_gitea(values["version"], prefix=prefix, arch=arch, force=force)
+    binary = install_gitea(values.get("version") or "latest", prefix=prefix, arch=arch, force=force)
     click.echo(f"installed: {binary}")
 
 

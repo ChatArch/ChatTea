@@ -1,12 +1,17 @@
 # ChatTea Interface Tree
 
-ChatTea targets the practical Gitea lifecycle: install a local Gitea binary, initialize a minimal instance, run/manage the service, inspect/edit the managed Gitea `app.ini`, configure an API token, and perform basic repository operations.
+ChatTea follows a GitHub-familiar resource model for Gitea APIs, plus ChatTea-specific commands for self-hosted/internal Gitea service management.
 
-## P0 CLI Surface
+## Current CLI Surface
 
 ```text
 chattea
 ├── set-token
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── api
 ├── server
 │   ├── install
 │   ├── init
@@ -40,6 +45,11 @@ chattea
     │   ├── create
     │   ├── edit
     │   └── delete
+    ├── card
+    │   ├── list
+    │   ├── add
+    │   ├── remove
+    │   └── move
     └── issue
         ├── list
         ├── add
@@ -47,10 +57,39 @@ chattea
         └── move
 ```
 
+`project issue` is a compatibility alias for `project card`. Use `project card` in new docs and automation.
+
+## Target CLI Direction
+
+See `docs/cli-alignment.md` for the annotated target tree. In short, future API work should grow along these GitHub/Gitea resource groups:
+
+- `repo`
+- `issue`
+- `label`
+- `milestone`
+- `pr`
+- `release`
+- `project`
+- `workflow`
+- `run`
+- `job`
+- `artifact`
+- `runner`
+- `secret`
+- `variable`
+- `status`
+
+ChatTea-specific custom commands stay:
+
+- `set-token`: quick ChatEnv token setup.
+- `server`: internal/self-hosted Gitea install, app.ini, process, and health management.
+
 ## Responsibilities
 
 - `set-token`: store the default Gitea base URL and API token in the ChatEnv `ChatTea` active profile.
-- `server install`: download a Gitea Linux binary into a local prefix.
+- `auth login/status/token`: GitHub-familiar namespace for the same authentication state.
+- `api`: raw Gitea API passthrough for routes not yet wrapped by first-class commands.
+- `server install`: install latest ChatArch internal Gitea by default; `--version` can pin a release.
 - `server init`: create a minimal `app.ini` for a local SQLite-backed Gitea instance; listen address and HTTP port are CLI init parameters, not Env fields.
 - `server serve`: run Gitea in the foreground for debugging or one-off sessions.
 - `server start/stop/restart/status/logs`: manage the fixed user-level systemd service `chattea-gitea.service`.
@@ -61,14 +100,18 @@ chattea
 - `repo migrate`: create a Gitea migration from an existing Git clone URL.
 - `project list/view/create/edit/delete`: manage repository-scoped Gitea Projects.
 - `project column list/create/edit/delete`: manage columns in a repository Project board.
-- `project issue list/add/remove/move`: manage issue/PR cards in Project columns.
+- `project card list/add/remove/move`: manage issue/PR cards in Project columns.
 
 ## CLI to Python Function Mapping
 
 Every CLI command has an importable Python function behind it so integrations do not need to shell out.
 
 ```text
-chattea set-token             -> chattea.cli.configure_token
+chattea set-token             -> chattea.commands.auth.configure_token
+chattea auth login            -> chattea.commands.auth.configure_token
+chattea auth status           -> chattea.config.load_config
+chattea auth token            -> chattea.config.load_config
+chattea api                   -> chattea.commands.api.call_api
 chattea server install        -> chattea.commands.server.install_gitea
 chattea server init           -> chattea.commands.server.init_gitea_server
 chattea server serve          -> chattea.commands.server.serve_gitea
@@ -97,10 +140,10 @@ chattea project column list   -> chattea.commands.project.list_columns
 chattea project column create -> chattea.commands.project.create_column
 chattea project column edit   -> chattea.commands.project.edit_column
 chattea project column delete -> chattea.commands.project.delete_column
-chattea project issue list    -> chattea.commands.project.list_column_issues
-chattea project issue add     -> chattea.commands.project.add_issue
-chattea project issue remove  -> chattea.commands.project.remove_issue
-chattea project issue move    -> chattea.commands.project.move_issue
+chattea project card list     -> chattea.commands.project.list_cards
+chattea project card add      -> chattea.commands.project.add_card
+chattea project card remove   -> chattea.commands.project.remove_card
+chattea project card move     -> chattea.commands.project.move_card
 ```
 
 Lower-level reusable modules stay available:
@@ -127,21 +170,7 @@ CHATTEA_WORK_PATH
 CHATTEA_CONFIG
 ```
 
-`CHATTEA_URL` and old `CHATTEA_GITEA_*` names are legacy read-only fallbacks. Listen address, HTTP port, domain, service name, and install version are intentionally not official Env fields.
-
-## Gitea app.ini Boundary
-
-Gitea service configuration lives in the `app.ini` pointed to by `CHATTEA_CONFIG`. `chattea server init` writes values like:
-
-```ini
-[server]
-HTTP_ADDR = 127.0.0.1
-HTTP_PORT = 3000
-DOMAIN = 127.0.0.1
-ROOT_URL = http://127.0.0.1:3000/
-```
-
-Use `chattea server config show/get/set` to inspect or edit this file. `show` masks known secret keys unless `--no-mask` is passed.
+`CHATTEA_URL` and old `CHATTEA_GITEA_*` names are legacy read-only fallbacks. Listen address, HTTP port, domain, service name, install version, repo names, project IDs, issue IDs, and runner IDs are intentionally not official Env fields.
 
 ## Interaction Boundary
 
@@ -150,7 +179,3 @@ Commands with recoverable missing input use ChatStyle `CommandSchema`, `CommandF
 - `-i` / `--interactive`: force prompts.
 - `-I` / `--no-interactive`: disable prompts and fail fast.
 - default `interactive=None`: auto-prompt only when missing input is recoverable.
-
-## Deferred Surface
-
-PR, Actions, releases, hooks, org membership, and admin CRUD are intentionally deferred until the local install/start/repo/project workflow is stable.

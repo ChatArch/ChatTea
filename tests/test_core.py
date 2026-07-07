@@ -1,7 +1,11 @@
 from pathlib import Path
+import hashlib
+import lzma
 
 from chattea import server as server_ops
 from chattea.api import GiteaClient
+from chattea.commands.api import call_api, parse_json_data, parse_query_params
+from chattea.commands.project import add_card, list_cards, move_card, remove_card
 from chattea.config import (
     ChatTeaConfig,
     ChatTeaEnvConfig,
@@ -125,6 +129,53 @@ def test_write_user_service(tmp_path, monkeypatch):
     assert "--config" in text
 
 
+def test_internal_gitea_asset_urls_use_chatarch_release():
+    binary_url, checksum_url = server_ops.internal_gitea_asset_urls("v1.0.0", "amd64")
+
+    assert binary_url == "https://github.com/ChatArch/gitea/releases/download/v1.0.0/gitea-1.0.0-linux-amd64.xz"
+    assert checksum_url == f"{binary_url}.sha256"
+
+
+def test_install_binary_defaults_to_latest_internal_release(monkeypatch, tmp_path):
+    compressed = lzma.compress(b"#!/bin/sh\necho chatarch gitea\n")
+    checksum = hashlib.sha256(compressed).hexdigest()
+    downloads = []
+
+    class FakeResponse:
+        def __init__(self, data: bytes):
+            self.data = data
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return self.data
+
+    def fake_urlopen(url, timeout=30):
+        if url == server_ops.CHATARCH_GITEA_RELEASE_API:
+            return FakeResponse(b'{"tag_name":"v1.0.0"}')
+        if url.endswith(".sha256"):
+            return FakeResponse(f"{checksum}  gitea-1.0.0-linux-amd64.xz\n".encode())
+        raise AssertionError(url)
+
+    def fake_urlretrieve(url, filename):
+        downloads.append(url)
+        Path(filename).write_bytes(compressed)
+        return filename, None
+
+    monkeypatch.setattr(server_ops.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(server_ops.urllib.request, "urlretrieve", fake_urlretrieve)
+
+    binary = server_ops.install_binary(prefix=tmp_path, arch="amd64", force=True)
+
+    assert binary == tmp_path / "bin" / "gitea"
+    assert binary.read_bytes() == b"#!/bin/sh\necho chatarch gitea\n"
+    assert downloads == ["https://github.com/ChatArch/gitea/releases/download/v1.0.0/gitea-1.0.0-linux-amd64.xz"]
+
+
 def test_create_repo_uses_orgs_endpoint_for_org_owner(monkeypatch):
     calls = []
     client = GiteaClient(url="http://gitea.local", token="token")
@@ -162,6 +213,7 @@ def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
     assert payload["full_name"] == "gitea_admin/demo"
     assert calls[1][0] == "POST"
     assert calls[1][1] == "/user/repos"
+
 
 def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
     calls = []
@@ -202,6 +254,69 @@ def test_project_api_methods_use_repo_scoped_endpoints(monkeypatch):
         ("DELETE", "/repos/gitea_admin/demo/projects/1/columns/2/issues/42", None, None),
         ("POST", "/repos/gitea_admin/demo/projects/1/issues/42/move", {"column_id": 3, "sorting": 0}, None),
     ]
+
+
+def test_project_card_functions_are_importable_aliases(monkeypatch):
+    calls = []
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def list_project_column_issues(self, owner, repo, project_id, column_id, limit=50):
+            calls.append(("list", owner, repo, project_id, column_id, limit))
+            return []
+
+        def add_issue_to_project_column(self, owner, repo, project_id, column_id, issue_id):
+            calls.append(("add", owner, repo, project_id, column_id, issue_id))
+            return {"ok": True}
+
+        def remove_issue_from_project_column(self, owner, repo, project_id, column_id, issue_id):
+            calls.append(("remove", owner, repo, project_id, column_id, issue_id))
+
+        def move_project_issue(self, owner, repo, project_id, issue_id, column_id, sorting=None):
+            calls.append(("move", owner, repo, project_id, issue_id, column_id, sorting))
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.project.GiteaClient", FakeClient)
+
+    list_cards("gitea_admin/demo", 1, 2, limit=10)
+    add_card("gitea_admin/demo", 1, 2, 42)
+    remove_card("gitea_admin/demo", 1, 2, 42)
+    move_card("gitea_admin/demo", 1, 42, 3, sorting=0)
+
+    assert calls == [
+        ("list", "gitea_admin", "demo", 1, 2, 10),
+        ("add", "gitea_admin", "demo", 1, 2, 42),
+        ("remove", "gitea_admin", "demo", 1, 2, 42),
+        ("move", "gitea_admin", "demo", 1, 42, 3, 0),
+    ]
+
+
+def test_raw_api_helpers(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            captured["init"] = {"url": url, "token": token}
+
+        def request(self, method, path, data=None, params=None):
+            captured.update({"method": method, "path": path, "data": data, "params": params})
+            return {"ok": True}
+
+    monkeypatch.setattr("chattea.commands.api.GiteaClient", FakeClient)
+
+    assert parse_query_params(("state=open", "limit=5")) == {"state": "open", "limit": "5"}
+    assert parse_json_data('{"title":"Roadmap"}') == {"title": "Roadmap"}
+    assert call_api("post", "repos/gitea_admin/demo/issues", {"title": "Roadmap"}, {"draft": False}, url="http://gitea", token="token") == {"ok": True}
+    assert captured == {
+        "init": {"url": "http://gitea", "token": "token"},
+        "method": "POST",
+        "path": "/repos/gitea_admin/demo/issues",
+        "data": {"title": "Roadmap"},
+        "params": {"draft": False},
+    }
+
 
 def test_runtime_dependency_bounds_are_release_reviewed():
     try:
