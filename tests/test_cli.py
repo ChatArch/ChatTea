@@ -12,6 +12,11 @@ def test_help_lists_first_version_surface():
     assert "auth" in result.output
     assert "token" in result.output
     assert "api" in result.output
+    assert "issue" in result.output
+    assert "label" in result.output
+    assert "milestone" in result.output
+    assert "pr" in result.output
+    assert "release" in result.output
     assert "server" in result.output
     assert "repo" in result.output
 
@@ -493,3 +498,53 @@ def test_token_bootstrap_creates_token_and_configures_credentials(monkeypatch, t
     assert "CHATTEA_BASE_URL='http://gitea.local'" in env_text
     assert "CHATTEA_TOKEN='generated-token'" in env_text
     assert captured["scopes"] == ["write:repository", "write:issue"]
+
+
+def test_repo_collaboration_help_lists_new_command_groups():
+    for group, commands in {
+        "issue": ["list", "view", "create", "comment", "label", "assign"],
+        "label": ["list", "view", "create", "edit", "delete"],
+        "milestone": ["list", "view", "create", "edit", "close", "delete"],
+        "pr": ["list", "view", "create", "merge", "diff", "patch", "review"],
+        "release": ["list", "view", "latest", "create", "asset"],
+    }.items():
+        result = CliRunner().invoke(main, [group, "--help"])
+        assert result.exit_code == 0, result.output
+        for command in commands:
+            assert command in result.output
+
+
+def test_repo_collaboration_cli_calls_importable_client(monkeypatch):
+    calls = []
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            calls.append(("init", url, token))
+
+        def create_issue(self, owner, repo, title, body=None, **kwargs):
+            calls.append(("create_issue", owner, repo, title, body, kwargs))
+            return {"number": 7, "title": title}
+
+        def get_pull_diff(self, owner, repo, index, diff_type="diff"):
+            calls.append(("get_pull_diff", owner, repo, index, diff_type))
+            return "diff --git a/demo b/demo"
+
+        def create_release(self, owner, repo, tag_name, **kwargs):
+            calls.append(("create_release", owner, repo, tag_name, kwargs))
+            return {"id": 3, "tag_name": tag_name}
+
+    monkeypatch.setattr("chattea.commands._shared.GiteaClient", FakeClient)
+
+    issue_result = CliRunner().invoke(main, ["issue", "create", "--repo", "gitea_admin/demo", "--title", "Bug", "--label", "1,2", "--assignee", "root"])
+    pr_result = CliRunner().invoke(main, ["pr", "diff", "--repo", "gitea_admin/demo", "5"])
+    release_result = CliRunner().invoke(main, ["release", "create", "--repo", "gitea_admin/demo", "--tag", "v1.0.0", "--draft"])
+
+    assert issue_result.exit_code == 0, issue_result.output
+    assert pr_result.exit_code == 0, pr_result.output
+    assert release_result.exit_code == 0, release_result.output
+    assert "created: #7 Bug" in issue_result.output
+    assert "diff --git" in pr_result.output
+    assert "created: 3 v1.0.0" in release_result.output
+    assert ("create_issue", "gitea_admin", "demo", "Bug", None, {"labels": [1, 2], "milestone": None, "assignees": ["root"], "closed": None}) in calls
+    assert ("get_pull_diff", "gitea_admin", "demo", 5, "diff") in calls
+    assert ("create_release", "gitea_admin", "demo", "v1.0.0", {"name": None, "body": None, "target_commitish": None, "draft": True, "prerelease": None}) in calls

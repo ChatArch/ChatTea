@@ -8,7 +8,12 @@ from chatstyle import add_interactive_option
 from chattea import __version__
 from chattea.commands.api import api_command
 from chattea.commands.auth import auth_group, render_token_config, resolve_login_values
+from chattea.commands.issue import issue_group
+from chattea.commands.label import label_group
+from chattea.commands.milestone import milestone_group
+from chattea.commands.pr import pr_group
 from chattea.commands.project import project_group
+from chattea.commands.release import release_group
 from chattea.commands.repo import repo_group
 from chattea.commands.server import server_group
 from chattea.commands.token import token_group
@@ -34,6 +39,11 @@ def set_token(base_url: str | None, legacy_url: str | None, token: str | None, i
 
 main.add_command(server_group)
 main.add_command(repo_group)
+main.add_command(issue_group)
+main.add_command(label_group)
+main.add_command(milestone_group)
+main.add_command(pr_group)
+main.add_command(release_group)
 main.add_command(project_group)
 main.add_command(auth_group)
 main.add_command(token_group)
