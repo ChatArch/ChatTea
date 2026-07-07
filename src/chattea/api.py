@@ -12,7 +12,10 @@ from chattea.credentials import resolve_token
 
 
 class GiteaAPIError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, status_code: int | None = None, path: str | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.path = path
 
 
 class GiteaClient:
@@ -51,7 +54,7 @@ class GiteaClient:
                     detail = str(payload["message"])
             except json.JSONDecodeError:
                 pass
-            raise GiteaAPIError(f"Gitea API error ({exc.code}) for {path}: {detail}") from exc
+            raise GiteaAPIError(f"Gitea API error ({exc.code}) for {path}: {detail}", status_code=exc.code, path=path) from exc
         except URLError as exc:
             raise GiteaAPIError(f"Gitea API request failed for {path}: {exc.reason}") from exc
         if not raw:

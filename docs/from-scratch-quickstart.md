@@ -36,6 +36,7 @@ Implemented in PR #5:
 First-phase server bootstrap status:
   local install/init/admin/token/credential chain implemented
   service start is optional with --start-service
+  rerun hardening reuses an existing configured token when the local admin token name already exists
 ```
 
 ## Server vs Client Boundary
@@ -232,6 +233,8 @@ default
 
 After the full chain is stable, scopes can be tightened.
 
+If a rerun sees the same local admin token name already exists, `server bootstrap` reuses the currently configured `CHATTEA_TOKEN` for the same base URL instead of printing or requiring the raw token again. If no matching configured token exists, it fails with a clear instruction to use a different `--token-name` or run `chattea set-token` with the existing token.
+
 ### A6. Configure ChatTea Credentials
 
 This is the `set-token` step.
@@ -356,6 +359,8 @@ chattea token bootstrap \
   --username gitea_admin \
   --password-env GITEA_PASSWORD
 ```
+
+By default, `token bootstrap` is rerunnable for the managed token name. If `default` already exists, it deletes that named token and creates a new one before calling `set-token`. Use `--if-exists error` when rotation should be blocked.
 
 This uses Gitea REST API:
 
