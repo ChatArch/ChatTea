@@ -24,16 +24,17 @@ chattea set-token
   Existing token path. Given an already-created token, save it into ChatTea/ChatEnv and optionally repo-local git config.
 ```
 
-Current implementation status:
+Current implementation status in `0.2.3`:
 
 ```text
-Implemented in PR #5:
+Implemented:
   chattea set-token
   chattea token create/list/delete/bootstrap
   chattea server bootstrap
   centralized token resolution
+  runner/run/job/artifact Actions surface
 
-First-phase server bootstrap status:
+Server bootstrap status:
   local install/init/admin/token/credential chain implemented
   service start is optional with --start-service
   rerun hardening reuses an existing configured token when the local admin token name already exists
@@ -203,7 +204,7 @@ In ChatTea, the password should come from:
 --admin-password-env GITEA_ADMIN_PASSWORD
 ```
 
-The password must not be saved into ChatEnv and must not be printed.
+The password can come from `--admin-password-env` or the sensitive `CHATTEA_BOOTSTRAP_ADMIN_PASSWORD` ChatEnv field. It must not be printed in CLI output.
 
 ### A5. Generate Initial Access Token
 

@@ -102,34 +102,65 @@ chattea
 │   └── asset
 │       ├── list
 │       └── delete
-└── project
+├── project
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── delete
+│   ├── column
+│   │   ├── list
+│   │   ├── create
+│   │   ├── edit
+│   │   └── delete
+│   ├── card
+│   │   ├── list
+│   │   ├── add
+│   │   ├── remove
+│   │   └── move
+│   └── issue
+│       ├── list
+│       ├── add
+│       ├── remove
+│       └── move
+├── runner
+│   ├── token
+│   ├── list
+│   ├── view
+│   ├── edit
+│   ├── delete
+│   └── setup
+│       ├── install
+│       ├── register
+│       ├── start
+│       ├── stop
+│       ├── status
+│       ├── logs
+│       └── doctor
+├── run
+│   ├── list
+│   ├── view
+│   ├── jobs
+│   ├── logs
+│   ├── rerun
+│   ├── rerun-failed
+│   └── delete
+├── job
+│   ├── view
+│   ├── logs
+│   └── rerun
+└── artifact
     ├── list
     ├── view
-    ├── create
-    ├── edit
-    ├── delete
-    ├── column
-    │   ├── list
-    │   ├── create
-    │   ├── edit
-    │   └── delete
-    ├── card
-    │   ├── list
-    │   ├── add
-    │   ├── remove
-    │   └── move
-    └── issue
-        ├── list
-        ├── add
-        ├── remove
-        └── move
+    ├── download
+    └── delete
 ```
 
 `project issue` is a compatibility alias for `project card`. Use `project card` in new docs and automation.
 
 ## Target CLI Direction
 
-See `docs/cli-alignment.md` for the annotated target tree. In short, future API work should grow along these GitHub/Gitea resource groups:
+See `docs/cli-alignment.md` for the annotated target tree. The current implemented surface already covers the core Gitea resource groups:
 
 - `repo`
 - `issue`
@@ -138,11 +169,14 @@ See `docs/cli-alignment.md` for the annotated target tree. In short, future API 
 - `pr`
 - `release`
 - `project`
-- `workflow`
+- `runner`
 - `run`
 - `job`
 - `artifact`
-- `runner`
+
+Future API work should grow only when there is a real Gitea route or a concrete local implementation contract. Candidate future groups include:
+
+- `workflow`
 - `secret`
 - `variable`
 - `status`
@@ -179,6 +213,11 @@ ChatTea-specific custom commands stay:
 - `project list/view/create/edit/delete`: manage repository-scoped Gitea Projects.
 - `project column list/create/edit/delete`: manage columns in a repository Project board.
 - `project card list/add/remove/move`: manage issue/PR cards in Project columns.
+- `runner token/list/view/edit/delete`: manage Gitea Actions runners through repo/org/user/admin runner APIs.
+- `runner setup install/register/start/stop/status/logs/doctor`: install and operate the local `gitea-runner` service for development and self-hosted runners.
+- `run list/view/jobs/logs/rerun/rerun-failed/delete`: inspect and control Gitea Actions workflow runs.
+- `job view/logs/rerun`: inspect job metadata, fetch logs, and rerun a job through its parent run.
+- `artifact list/view/download/delete`: inspect, download, and delete Actions artifacts.
 
 ## CLI to Python Function Mapping
 

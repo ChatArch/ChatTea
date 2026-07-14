@@ -14,7 +14,7 @@ chattea issue create/comment/close/list
 chattea release create error handling on an empty repository
 ```
 
-The current PR also adds `pr` and `release` command groups backed by confirmed Gitea REST routes. `pr checkout`, Workflow, Runner, Actions secrets, and Actions variables are intentionally deferred.
+ChatTea `0.2.3` also includes `pr`, `release`, `runner`, `run`, `job`, and `artifact` command groups. This page stays focused on repository collaboration; see [Actions / Flow Quick Start](actions-flow-quickstart.md) for runner registration, PR-triggered workflow runs, jobs, logs, and artifacts.
 
 ## 1. Bootstrap An Isolated Local Gitea
 
@@ -130,16 +130,20 @@ chattea release create \
 
 ## Reviewed But Not In The Screenshot Flow
 
-The PR also adds these API-backed surfaces, with unit/CLI coverage and route evidence in `docs/interface-tree.md` and `docs/cli-alignment.md`:
+ChatTea also includes these API-backed surfaces, with unit/CLI coverage and route evidence in `docs/interface-tree.md`, `docs/cli-alignment.md`, and `docs/actions-flow-quickstart.md`:
 
 - `chattea pr list/view/create/edit/close/reopen/merge/diff/patch/commits/files`
 - `chattea pr comment list/create`
 - `chattea pr review list/create/submit`
 - `chattea release list/view/latest/by-tag/create/edit/delete`
 - `chattea release asset list/delete`
+- `chattea runner token/list/view/edit/delete`
+- `chattea runner setup install/register/start/stop/status/logs/doctor`
+- `chattea run list/view/jobs/logs/rerun/rerun-failed/delete`
+- `chattea job view/logs/rerun`
+- `chattea artifact list/view/download/delete`
 
-Deferred surfaces:
+Still intentionally out of this surface:
 
 - `chattea pr checkout`: local git workflow, not part of the current REST-backed surface.
-- Workflow/Runner/Actions commands: deferred until they can be designed and tested on the appropriate machines.
 - Release asset upload: deferred until the HTTP client grows multipart upload support.
