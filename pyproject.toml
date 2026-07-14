@@ -20,7 +20,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/ChatArch/ChatTea"
 Repository = "https://github.com/ChatArch/ChatTea"
-Documentation = "https://ChatArch.github.io/ChatTea"
+Documentation = "https://arch.gh.wzhecnu.cn/ChatTea/"
 
 [project.scripts]
 chattea = "chattea.cli:main"

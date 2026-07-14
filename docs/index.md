@@ -2,6 +2,18 @@
 
 ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责下载安装到启动本地 Gitea，也提供 token 配置、仓库创建、仓库查看、clone、迁移，以及 Gitea `app.ini` 的查看和小范围编辑。`0.2.1` 起，ChatTea 配置接入 ChatEnv，正式 Env 只保留长期、常用、跨命令共享的配置。
 
+站点入口：<https://arch.gh.wzhecnu.cn/ChatTea/>
+
+## 按场景选择文档
+
+| 场景 | 文档 |
+| --- | --- |
+| 从空机器启动本地 Gitea | [从零开始 Quick Start](from-scratch-quickstart.md) |
+| 仓库、Issue、Project、PR、Release 协作 | [Repo Collaboration Quick Start](repo-collaboration-quickstart.md) |
+| Runner、Actions run/job/log/artifact | [Actions / Flow Quick Start](actions-flow-quickstart.md) |
+| 完整 CLI 树、截图和 route 映射 | [CLI 实战指南](cli-guide.md) |
+| 当前接口树与 Python 函数映射 | [接口树](interface-tree.md) |
+
 ## CLI
 
 ```bash
@@ -263,18 +275,22 @@ python -m chatenv.cli set CHATTEA_WORK_PATH=/srv/gitea
 python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 ```
 
-### 3. 下载并初始化 Gitea
+### 3. 一步启动本地 Gitea
+
+从空机器开始，优先使用 `server bootstrap`，它会串起安装、初始化 `app.ini`、创建初始 admin、生成 token、写入 ChatTea/ChatEnv 凭据和健康检查：
 
 ```bash
-chattea server install
-chattea server init
+export GITEA_ADMIN_PASSWORD='***'
+chattea server bootstrap \
+  --base-url http://127.0.0.1:3000 \
+  --admin-user gitea_admin \
+  --admin-email admin@example.com \
+  --admin-password-env GITEA_ADMIN_PASSWORD \
+  -I
+chattea server health
 ```
 
-`server init` 会生成 Gitea `app.ini`，默认位置来自 `CHATTEA_CONFIG`：
-
-```text
-$CHATARCH_HOME/chattea/gitea/custom/conf/app.ini
-```
+`server bootstrap` 适合 first-run happy path。需要只改底层 Gitea `app.ini` 时，再使用 `server init` 或 `server config set`。
 
 `listen address` 和 `HTTP port` 是 Gitea app.ini 的内容，不是 ChatEnv。需要改变监听 IP/端口时，作为初始化参数传给 CLI：
 
@@ -317,19 +333,19 @@ ROOT_URL = https://git.example.com/
 
 ### 4. 启动和检查服务
 
-开发调试时可以前台启动：
-
-```bash
-chattea server serve
-```
-
-常驻运行时使用 user systemd：
+`server bootstrap` 已经可以完成首次启动和健康检查。后续运行维护使用 user systemd：
 
 ```bash
 chattea server start
 chattea server status
 chattea server logs --lines 100
 chattea server health
+```
+
+开发调试时也可以前台启动：
+
+```bash
+chattea server serve
 ```
 
 停止或重启：

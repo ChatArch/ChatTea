@@ -5,7 +5,7 @@
     <a href="https://github.com/ChatArch/ChatTea/actions/workflows/ci.yml">
         <img src="https://github.com/ChatArch/ChatTea/actions/workflows/ci.yml/badge.svg" alt="Tests" />
     </a>
-    <a href="https://ChatArch.github.io/ChatTea">
+    <a href="https://arch.gh.wzhecnu.cn/ChatTea/">
         <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
     </a>
 </div>
@@ -17,7 +17,18 @@
 
 # ChatTea
 
-ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦内部 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和基础仓库操作。`server install` 默认安装最新 ChatArch 内部 Gitea release；`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
+ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦内部 Gitea 的安装、初始化、启动、token 配置、Gitea `app.ini` 查看/编辑和仓库协作自动化。`server install` 默认安装最新 ChatArch 内部 Gitea release；`0.2.1` 起配置接入 ChatEnv，默认运行目录收敛到 `~/.chatarch/chattea`。
+
+文档入口：<https://arch.gh.wzhecnu.cn/ChatTea/>
+
+按场景选择文档：
+
+| 场景 | 文档 |
+| --- | --- |
+| 从空机器启动本地 Gitea | `docs/from-scratch-quickstart.md` |
+| 仓库、Issue、Project、PR、Release 协作 | `docs/repo-collaboration-quickstart.md` |
+| Runner、Actions run/job/log/artifact | `docs/actions-flow-quickstart.md` |
+| 完整 CLI 树和截图示例 | `docs/cli-guide.md` |
 
 ## 快速开始
 
@@ -72,16 +83,22 @@ python -m chatenv.cli set CHATTEA_WORK_PATH=/srv/gitea
 python -m chatenv.cli set CHATTEA_CONFIG=/srv/gitea/custom/conf/app.ini
 ```
 
-### 3. 安装并初始化 Gitea
+### 3. 一步启动本地 Gitea
 
 ```bash
-chattea server install
-chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
-chattea server start
+export GITEA_ADMIN_PASSWORD='[REDACTED]'
+chattea server bootstrap \
+  --base-url http://127.0.0.1:3000 \
+  --admin-user gitea_admin \
+  --admin-email admin@example.com \
+  --admin-password-env GITEA_ADMIN_PASSWORD \
+  -I
 chattea server health
 ```
 
-`--listen-addr` 和 `--http-port` 会写进 Gitea `app.ini`，不是 ChatEnv 字段。局域网访问可以这样初始化：
+`server bootstrap` 会串起安装、初始化 `app.ini`、创建初始 admin、生成 token、写入 ChatTea/ChatEnv 凭据和健康检查。需要定制监听地址或端口时，再使用 `server init` 或 `server config set` 修改 Gitea `app.ini`；`--listen-addr` 和 `--http-port` 不属于 ChatEnv 字段。
+
+局域网访问可以这样初始化底层 `app.ini`：
 
 ```bash
 chattea server init --base-url http://172.25.52.106:3000 --listen-addr 0.0.0.0 --http-port 3000

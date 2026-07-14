@@ -5,7 +5,7 @@
     <a href="https://github.com/ChatArch/ChatTea/actions/workflows/ci.yml">
         <img src="https://github.com/ChatArch/ChatTea/actions/workflows/ci.yml/badge.svg" alt="Tests" />
     </a>
-    <a href="https://ChatArch.github.io/ChatTea">
+    <a href="https://arch.gh.wzhecnu.cn/ChatTea/">
         <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
     </a>
 </div>
@@ -17,7 +17,18 @@
 
 # ChatTea
 
-ChatTea is ChatArch's Gitea management CLI/API package for internal Gitea installation, initialization, service management, app.ini inspection/editing, token configuration, and basic repository operations. `server install` defaults to the latest ChatArch internal Gitea release. Since `0.2.1`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
+ChatTea is ChatArch's Gitea management CLI/API package for internal Gitea installation, initialization, service management, app.ini inspection/editing, token configuration, and repository collaboration automation. `server install` defaults to the latest ChatArch internal Gitea release. Since `0.2.1`, ChatTea uses ChatEnv and stores runtime files under `$CHATARCH_HOME/chattea` by default.
+
+Documentation: <https://arch.gh.wzhecnu.cn/ChatTea/>
+
+Choose a guide by scenario:
+
+| Scenario | Guide |
+| --- | --- |
+| Bootstrap local Gitea from a blank machine | `docs/from-scratch-quickstart.md` |
+| Repository, issue, project, PR, and release collaboration | `docs/repo-collaboration-quickstart.md` |
+| Runner, Actions run/job/log/artifact flow | `docs/actions-flow-quickstart.md` |
+| Full CLI tree and screenshots | `docs/cli-guide.md` |
 
 ## Quick Start
 
@@ -43,19 +54,23 @@ python -m chatenv.cli init -t chattea -I
 python -m chatenv.cli set CHATTEA_BASE_URL=http://127.0.0.1:3000
 python -m chatenv.cli test -t chattea -I
 
-chattea server install
-chattea server init --base-url http://127.0.0.1:3000 --listen-addr 127.0.0.1 --http-port 3000
-chattea server start
+export GITEA_ADMIN_PASSWORD='[REDACTED]'
+chattea server bootstrap \
+  --base-url http://127.0.0.1:3000 \
+  --admin-user gitea_admin \
+  --admin-email admin@example.com \
+  --admin-password-env GITEA_ADMIN_PASSWORD \
+  -I
 chattea server health
 ```
 
-For LAN access:
+For LAN access, initialize the underlying Gitea `app.ini` with an explicit listen address:
 
 ```bash
 chattea server init --base-url http://172.25.52.106:3000 --listen-addr 0.0.0.0 --http-port 3000
 ```
 
-`--listen-addr` and `--http-port` are written to Gitea `app.ini`; they are not ChatEnv fields.
+`server bootstrap` composes install, `app.ini` initialization, initial admin creation, token generation, ChatTea/ChatEnv credential setup, and health check. `--listen-addr` and `--http-port` are written to Gitea `app.ini`; they are not ChatEnv fields.
 
 ## Update and Autostart
 
