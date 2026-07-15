@@ -22,7 +22,7 @@
 1. 可复用 Python 函数或 method，不需要调用 CLI 也能使用；
 2. CLI 包装层，只负责解析参数、解析交互输入、调用 Python 函数并渲染输出；
 3. 可复用 Python 函数或 API method 的测试；
-4. CLI 冒烟验证 / behavior 测试，覆盖命令注册、参数解析、输出和失败模式；
+4. CLI 行为测试，覆盖命令注册、参数解析、输出和失败模式；
 5. 文档，把命令映射到 Gitea REST 路由 或 ChatTea 本地函数。
 
 CLI 不能是唯一稳定集成面。Python 集成、MCP 工具和未来 网关适配层 应直接调用 Python 函数，而不是 通过 shell 调用 到 `chattea ...`。
@@ -200,7 +200,7 @@ chattea
 
 ## 引导流程方向
 
-初始配置应实现为真实工作流组合，不应只是 placeholder 命令。
+初始配置应实现为真实工作流组合，不应只是 占位命令。
 
 - `server bootstrap` 或 顶层 `bootstrap` 是本地托管 Gitea 流程：install、init、start、创建默认用户、生成 / 创建 令牌、运行 set-token，并验证 `/user`。
 - `token bootstrap` 是远程 / 已有 Gitea 流程：BasicAuth 创建 令牌、运行 set-token，并验证 `/user`。
@@ -222,6 +222,6 @@ chattea
 
 1. 覆盖 API path、method、payload、令牌 resolution 和错误处理的单元测试；
 2. 覆盖非平凡命令行为的直接 Python function 测试；
-3. 覆盖 help、成功路径和预期失败的 CLI 冒烟验证 测试；
-4. 可行时，在本地 ChatArch Gitea 实例上运行 integration 冒烟验证，使用任务本地状态和临时 仓库/project/问题；
+3. 覆盖 help、成功路径和预期失败的 CLI 行为测试；
+4. 可行时，在本地 ChatArch Gitea 实例上运行 真实集成实践，使用任务本地状态和临时 仓库/project/问题；
 5. PR ready 前运行 `pytest`、package build、`twine check`、`mkdocs build --strict` 和 `git diff --check`。

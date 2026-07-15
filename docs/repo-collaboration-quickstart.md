@@ -1,6 +1,6 @@
 # 仓库协作快速开始
 
-这篇文档记录一次在隔离 ChatArch Gitea 实例上运行的本地 ChatTea CLI 端到端流程。它是一个代表性的 冒烟验证路径，不是每个 仓库 级命令的完整测试。
+这篇文档记录一次在隔离 ChatArch Gitea 实例上运行的本地 ChatTea CLI 端到端流程。它是一个代表性的 实践验证路径，不是每个 仓库 级命令的完整测试。
 
 该流程覆盖这些命令：
 
@@ -18,25 +18,25 @@ ChatTea `0.2.3` 还包括 `pr`、`release`、`runner`、`run`、`job` 和 `artif
 
 ## 1. 启动隔离的本地 Gitea
 
-这次 冒烟验证使用任务本地的 `CHATARCH_HOME`、任务本地的 Gitea work path，以及本地 ChatArch Gitea 二进制文件。管理员密码通过环境变量传入，CLI 不打印密码。
+这次实践验证使用任务本地的 `CHATARCH_HOME`、任务本地的 Gitea work path，以及本地 ChatArch Gitea 二进制文件。管理员密码通过环境变量传入，CLI 不打印密码。
 
 ![ChatTea 本地引导和健康检查](assets/repo-collaboration/bootstrap-health.svg)
 
 等价命令形态：
 
 ```bash
-export CHATARCH_HOME=/path/to/local-smoke/chatarch-home
+export CHATARCH_HOME=/path/to/local-practice/chatarch-home
 export GITEA_ADMIN_PASSWORD='[REDACTED]'
 
 chattea server bootstrap \
   --binary ~/.local/bin/gitea \
-  --work-path /path/to/local-smoke/gitea-work \
-  --config /path/to/local-smoke/gitea-work/custom/conf/app.ini \
+  --work-path /path/to/local-practice/gitea-work \
+  --config /path/to/local-practice/gitea-work/custom/conf/app.ini \
   --base-url http://127.0.0.1:13017 \
   --listen-addr 127.0.0.1 \
   --http-port 13017 \
-  --admin-user smoke \
-  --admin-email smoke@example.invalid \
+  --admin-user practice \
+  --admin-email practice@example.invalid \
   --admin-password-env GITEA_ADMIN_PASSWORD \
   --token-name default \
   --token-scopes all \
@@ -62,41 +62,41 @@ chattea server health --url http://127.0.0.1:13017
 
 ```bash
 chattea repo create \
-  --owner smoke \
+  --owner practice \
   --name cli-demo \
-  --description 'ChatTea CLI smoke repository' \
+  --description 'ChatTea CLI practice repository' \
   -I
 
 chattea label create \
-  --repo smoke/cli-demo \
+  --repo practice/cli-demo \
   --name docs \
   --color 00aaee \
   --description 'Documentation work'
 
-chattea label list --repo smoke/cli-demo
+chattea label list --repo practice/cli-demo
 
 chattea milestone create \
-  --repo smoke/cli-demo \
+  --repo practice/cli-demo \
   --title v1.0 \
   --description 'First documentation milestone'
 
-chattea milestone list --repo smoke/cli-demo
+chattea milestone list --repo practice/cli-demo
 
 chattea issue create \
-  --repo smoke/cli-demo \
+  --repo practice/cli-demo \
   --title 'Document ChatTea CLI flow' \
-  --body 'Smoke test issue created by ChatTea.' \
+  --body 'Practice issue created by ChatTea.' \
   --label 1 \
   --milestone 1 \
-  --assignee smoke
+  --assignee practice
 
 chattea issue comment create \
-  --repo smoke/cli-demo \
+  --repo practice/cli-demo \
   1 \
   --body 'Comment created through chattea issue comment create.'
 
-chattea issue close --repo smoke/cli-demo 1
-chattea issue list --repo smoke/cli-demo --state all
+chattea issue close --repo practice/cli-demo 1
+chattea issue list --repo practice/cli-demo --state all
 ```
 
 这个步骤证明：
@@ -115,17 +115,17 @@ chattea issue list --repo smoke/cli-demo --state all
 
 ## 3. Release 命令错误处理
 
-Release 路由底层是 `POST /api/v1/repos/{owner}/{repo}/releases`，但空仓库无法创建 release。冒烟验证流程故意在空的 `cli-demo` 仓库上尝试创建 release，用来验证 CLI 会输出干净的 Gitea API 错误，而不是 Python 回溯。
+Release 路由底层是 `POST /api/v1/repos/{owner}/{repo}/releases`，但空仓库无法创建 release。实践验证流程故意在空的 `cli-demo` 仓库上尝试创建 release，用来验证 CLI 会输出干净的 Gitea API 错误，而不是 Python 回溯。
 
 ![空仓库上 release create 的干净错误](assets/repo-collaboration/release-empty-repo-error.svg)
 
-真正的 release create 冒烟验证 应该在至少有一个 commit/tag 的仓库上运行：
+真正的 release create 实践验证 应该在至少有一个 commit/tag 的仓库上运行：
 
 ```bash
 chattea release create \
-  --repo smoke/cli-demo \
+  --repo practice/cli-demo \
   --tag v0.1.0 \
-  --name 'Local smoke release'
+  --name 'Local practice release'
 ```
 
 ## 已复核但未放进截图流程的能力

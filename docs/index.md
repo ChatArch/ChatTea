@@ -153,9 +153,9 @@ chattea
 
 完整 CLI 树、Gitea Web 截图和端到端示例见 [CLI 指南](cli-guide.md)。
 
-本地端到端仓库协作冒烟流程和终端截图见 [仓库协作快速开始](repo-collaboration-quickstart.md)。
+本地端到端仓库协作实践流程和终端截图见 [仓库协作快速开始](repo-collaboration-quickstart.md)。
 
-Actions / Flow 中的运行器注册、PR 触发 run、job 和 logs 冒烟流程见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
+Actions / Flow 中的运行器注册、PR 触发 run、job 和 logs 实践流程见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
 
 ## 新机器配置清单
 

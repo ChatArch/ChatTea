@@ -353,7 +353,7 @@ $CHATTEA pr patch "$PR" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 - `chattea set-token` + `git push`：确认 git transport 鉴权；
 - `chattea issue create/view/comment/list/edit/close/reopen`：确认 问题 流程；
 - `chattea pr create/view/files/commits/comment/review/close/reopen/merge`：确认 PR 流程；
-- 浏览器访问 mock 或已脱敏的 仓库/问题/PR 页面：确认 UI 渲染。
+- 浏览器访问已脱敏的仓库、问题和 PR 页面：确认 UI 渲染。
 
 不要提交真实 `GITEA_TOKEN`、`CHATTEA_TOKEN`、用户密码、证书私钥、git extraHeader 或实践环境 URL。
 

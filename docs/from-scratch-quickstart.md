@@ -256,7 +256,7 @@ chattea set-token \
 
 ```text
 Linux 上使用 user-level systemd 的 server start
-或本地 smoke test 使用 server serve / 托管前台进程
+或本地真实验证使用 server serve / 托管前台进程
 ```
 
 然后验证：

@@ -140,10 +140,10 @@ CLI 命令：
 ```bash
 chattea pr create \
   --repo gitea_admin/demo \
-  --title "Trigger Actions smoke" \
-  --head feature/pr-smoke \
+  --title "Trigger Actions practice" \
+  --head feature/practice \
   --base main \
-  --body "Created by ChatTea smoke"
+  --body "Created by ChatTea practice"
 
 chattea pr list --repo gitea_admin/demo --state all
 chattea pr view --repo gitea_admin/demo 1
@@ -160,7 +160,7 @@ chattea pr diff/patch  -> GET /repos/{owner}/{repo}/pulls/{index}.diff/.patch
 chattea pr merge       -> POST /repos/{owner}/{repo}/pulls/{index}/merge
 ```
 
-实践注意：推送新分支后立刻创建 PR，可能和 Gitea 分支可见性刷新产生竞态。如果刚 push 后 Gitea 返回 `404`，短暂等待后用同一个 `head=feature/pr-smoke` payload 重试即可。
+实践注意：推送新分支后立刻创建 PR，可能和 Gitea 分支可见性刷新产生竞态。如果刚 push 后 Gitea 返回 `404`，短暂等待后用同一个 `head=feature/practice` payload 重试即可。
 
 ## 运行器和 Actions 流程
 
@@ -182,7 +182,7 @@ chattea pr merge       -> POST /repos/{owner}/{repo}/pulls/{index}/merge
 ubuntu-latest:host
 ```
 
-这样开发 冒烟验证 不依赖 Docker 镜像拉取。
+这样真实实践不依赖 Docker 镜像拉取。
 
 下面的 Actions run 和 job 页面展示 工作流 被注册 运行器 接收并成功完成。
 
@@ -226,15 +226,15 @@ chattea job logs           -> GET /repos/{owner}/{repo}/actions/jobs/{job_id}/lo
 chattea job rerun          -> POST /repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun
 ```
 
-已验证的本地 冒烟验证：
+已验证的本地实践结果：
 
 ```text
-repo: gitea_admin/web-docs-smoke-20260708033919
-runner: chattea-runner-web-docs-smoke-20260708033919
+repository: gitea_admin/<actions-practice-repo>
+runner: <chattea-runner-name>
 pull_request run: 9
 job: 9
 result: success
-log marker: chattea web screenshot smoke
+log marker: workflow output marker appears in job logs
 ```
 
 ## 产物命令
