@@ -53,8 +53,13 @@ def test_configure_token_writes_repo_local_git_auth(monkeypatch, tmp_path):
 
     assert result["git_configured"] is True
     assert result["git_key"] == "http.https://gitea.local/gitea_admin/demo.extraHeader"
+    assert result["git_keys"] == [
+        "http.https://gitea.local/gitea_admin/demo.extraHeader",
+        "http.https://gitea.local/gitea_admin/demo.git.extraHeader",
+    ]
     assert read_git_token(cwd=repo) == "repo-token"
     assert token_from_extraheader(subprocess.run(["git", "config", "--local", "--get", str(result["git_key"])], cwd=repo, check=True, capture_output=True, text=True).stdout) == "repo-token"
+    assert token_from_extraheader(subprocess.run(["git", "config", "--local", "--get", "http.https://gitea.local/gitea_admin/demo.git.extraHeader"], cwd=repo, check=True, capture_output=True, text=True).stdout) == "repo-token"
 
 
 def test_gitea_client_resolves_token_from_git_config(monkeypatch, tmp_path):

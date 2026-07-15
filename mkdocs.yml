@@ -13,7 +13,7 @@ nav:
   - CLI 能力地图: chattea-cli-tree.md
   - 从零开始 Quick Start: from-scratch-quickstart.md
   - Repo Collaboration Quick Start: repo-collaboration-quickstart.md
-  - Gitea End-to-End Quick Start: gitea-quickstart.md
+  - Gitea 端到端快速开始: gitea-quickstart.md
   - Gitea 服务运维: gitea-service-operations.md
   - Gitea 权限与可见性: gitea-permissions-and-visibility.md
   - Actions / Flow Quick Start: actions-flow-quickstart.md

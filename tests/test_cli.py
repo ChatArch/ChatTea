@@ -82,6 +82,7 @@ def test_set_token_configures_repo_local_git_auth(monkeypatch, tmp_path):
 
     assert result.exit_code == 0
     assert "git_config: http.https://gitea.local/gitea_admin/demo.extraHeader" in result.output
+    assert "secret-token" not in result.output
     header = subprocess.run(
         ["git", "config", "--local", "--get", "http.https://gitea.local/gitea_admin/demo.extraHeader"],
         cwd=repo,
@@ -90,6 +91,14 @@ def test_set_token_configures_repo_local_git_auth(monkeypatch, tmp_path):
         text=True,
     ).stdout
     assert "Authorization: Basic " in header
+    git_suffix_header = subprocess.run(
+        ["git", "config", "--local", "--get", "http.https://gitea.local/gitea_admin/demo.git.extraHeader"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "Authorization: Basic " in git_suffix_header
 
 
 def test_set_token_accepts_legacy_url_option(monkeypatch, tmp_path):
@@ -251,6 +260,33 @@ def test_repo_create_calls_api(monkeypatch):
     assert captured["owner"] == "gitea_admin"
     assert captured["name"] == "demo"
     assert captured["private"] is True
+
+
+def test_repo_create_accepts_explicit_private(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def create_repo(self, **kwargs):
+            captured.update(kwargs)
+            return {"full_name": "gitea_admin/demo", "private": kwargs["private"]}
+
+    monkeypatch.setattr("chattea.commands.repo.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(main, ["repo", "create", "--owner", "gitea_admin", "--name", "demo", "--private"])
+
+    assert result.exit_code == 0, result.output
+    assert "created: gitea_admin/demo (private)" in result.output
+    assert captured["private"] is True
+
+
+def test_repo_create_rejects_public_and_private_together():
+    result = CliRunner().invoke(main, ["repo", "create", "--name", "demo", "--public", "--private"])
+
+    assert result.exit_code != 0
+    assert "--public or --private" in result.output
 
 
 def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp_path):

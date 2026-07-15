@@ -1,32 +1,32 @@
-# ChatTea CLI Capability Map
+# ChatTea CLI 能力地图
 
-This page is a compact capability map for the current ChatTea CLI. Use it to review which Gitea flows are already first-class ChatTea commands and which still require `chattea api`.
+这篇文档是当前 ChatTea CLI 的简明能力地图，用来校对哪些 Gitea 流程已经有一等 ChatTea 命令，哪些流程还需要 `chattea api`。
 
-For the importable Python function mapping, see [Interface Tree](interface-tree.md). For longer screenshots and route evidence, see [ChatTea CLI Guide](cli-guide.md).
+可导入 Python 函数映射见 [接口树](interface-tree.md)。更完整的 route mapping 和实践截图见 [CLI 实战指南](cli-guide.md)。
 
-## Top-Level Commands
+## 顶层命令
 
 ```text
 chattea
-├── api                 # call raw Gitea API paths not yet wrapped by ChatTea
-├── artifact            # inspect, download, and delete Gitea Actions artifacts
-├── auth                # configure and inspect ChatTea base URL / token state
-├── issue               # manage repository issues, issue comments, labels, assignees
-├── job                 # inspect or rerun Gitea Actions jobs
-├── label               # manage repository labels
-├── milestone           # manage repository milestones
-├── pr                  # manage pull requests, PR comments, reviews, diff/patch, merge
-├── project             # manage Gitea repo project boards, columns, and issue/PR cards
-├── release             # manage repository releases and release assets
-├── repo                # create, view, list, clone, and migrate repositories
-├── run                 # inspect or control Gitea Actions workflow runs
-├── runner              # manage Gitea Actions runners and runner registration tokens
-├── server              # install, initialize, start, and inspect the managed Gitea service
-├── set-token           # configure ChatTea API token and repo-local git auth
-└── token               # create, list, delete, and bootstrap Gitea access tokens
+├── api                 # 调用尚未被 ChatTea 封装的原始 Gitea API
+├── artifact            # 查看、下载、删除 Gitea Actions artifact
+├── auth                # 配置和检查 ChatTea base URL / token
+├── issue               # 管理仓库 issue、评论、label、assignee
+├── job                 # 查看或重跑 Gitea Actions job
+├── label               # 管理仓库 label
+├── milestone           # 管理仓库 milestone
+├── pr                  # 管理 PR、PR 评论、review、diff/patch、合并
+├── project             # 管理 Gitea repo project board、column、issue/PR card
+├── release             # 管理仓库 release 和 release asset
+├── repo                # 创建、查看、列出、clone、migrate 仓库
+├── run                 # 查看或控制 Gitea Actions workflow run
+├── runner              # 管理 Gitea Actions runner 和 registration token
+├── server              # 安装、初始化、启动、检查本机托管的 Gitea 服务
+├── set-token           # 配置 ChatTea API token 和 repo-local git auth
+└── token               # 创建、列出、删除、bootstrap Gitea access token
 ```
 
-## Raw API
+## 原始 API
 
 ```text
 chattea api PATH
@@ -35,105 +35,105 @@ chattea api PATH
   --param KEY=VALUE
 ```
 
-Current practiced uses:
+当前实践中用 raw API 覆盖的部分：
 
-- `POST /orgs`: create an organization;
-- `POST /admin/users`: create a user;
-- `GET /orgs/{org}/teams`: inspect organization teams;
-- `PUT /teams/{id}/members/{username}`: add a user to a team.
+- `POST /orgs`：创建组织；
+- `POST /admin/users`：创建用户；
+- `GET /orgs/{org}/teams`：查看组织 teams；
+- `PUT /teams/{id}/members/{username}`：把用户加入 team。
 
-These are good candidates for first-class ChatTea wrappers once the docs flow stabilizes.
+这些是后续一等 ChatTea 封装的候选项。只有当实践流程继续依赖它们时，再补对应基础设施。
 
-## Auth And Token
+## 认证和令牌
 
 ```text
 chattea auth
-├── login               # write ChatTea base URL / token and try repo-local git auth
-├── status              # show current base URL and masked token state
-└── token               # show masked token for confirmation
+├── login               # 写入 ChatTea base URL / token，并尝试配置 repo-local git auth
+├── status              # 显示当前 base URL 和 masked token 状态
+└── token               # 显示 masked token 便于确认
 
-chattea set-token       # legacy/shortcut login entry, often used inside a git repo
+chattea set-token       # login 的旧入口/快捷入口，常在 git repo 内配置 extraHeader
 
 chattea token
-├── bootstrap           # create a token, then configure ChatTea/Git credentials
-├── create              # create an access token with username/password BasicAuth
-├── delete              # delete an access token by id or name
-└── list                # list access tokens with username/password BasicAuth
+├── bootstrap           # 创建 token，然后配置 ChatTea/Git credentials
+├── create              # 用用户名密码 BasicAuth 创建 access token
+├── delete              # 按 id 或 name 删除 access token
+└── list                # 用用户名密码 BasicAuth 列出 access token
 ```
 
-Current practical note: `chattea set-token` writes repo-local git auth to `http.<url>.extraHeader`. The practiced flow found that remotes without `.git` work with the current normalization. Remotes with `.git` need an implementation follow-up so both URL shapes are configured.
+实践校对点：`chattea set-token` 会同时写入 remote URL 带 `.git` 和不带 `.git` 两种 `extraHeader` key，避免 git remote 与 `http.<url>.extraHeader` key 不一致导致 `git push` 不带鉴权 header。
 
-## Repository
+## 仓库
 
 ```text
 chattea repo
-├── clone               # clone from the configured Gitea base URL
-├── create              # create a user or organization repository
-├── list                # list repositories for the current user or an owner
-├── migrate             # migrate from an existing Git URL into Gitea
-└── view                # view an owner/name repository
+├── clone               # 从配置的 Gitea base URL clone 仓库
+├── create              # 创建用户或组织仓库
+├── list                # 列出当前用户或指定 owner 的仓库
+├── migrate             # 从已有 Git URL 迁移仓库到 Gitea
+└── view                # 查看 owner/name 仓库详情
 ```
 
-Permission-related behavior verified by the docs flow:
+权限相关行为：
 
-- `repo create --public` creates a public repository;
-- omitting `--public` creates a private repository;
-- current ChatTea does not expose an explicit `--private` option;
-- current normal repository create/edit flow does not expose a repo-level `internal` visibility input.
+- `repo create --public` 创建 public repo；
+- `repo create --private` 显式创建 private repo；
+- 不传 `--public` / `--private` 时仍默认创建 private repo；
+- 当前普通 repo create/edit 流程没有暴露 repo-level `internal` visibility 输入。
 
-## Issue
+## 问题
 
 ```text
 chattea issue
-├── create              # create an issue
-├── list                # list issues by open/closed/all state
-├── view                # view issue details
-├── edit                # edit title, body, state, labels, milestone, assignees
-├── close               # close an issue
-├── reopen              # reopen an issue
-├── delete              # delete an issue, with confirmation
+├── create              # 创建 issue
+├── list                # 按 open/closed/all 列 issue
+├── view                # 查看 issue 详情
+├── edit                # 修改标题、正文、状态、label、milestone、assignee
+├── close               # 关闭 issue
+├── reopen              # 重开 issue
+├── delete              # 删除 issue，需要确认
 ├── comment
-│   ├── create          # add an issue comment
-│   ├── list            # list issue comments
-│   ├── edit            # edit an issue comment
-│   └── delete          # delete an issue comment, with confirmation
+│   ├── create          # 添加 issue 评论
+│   ├── list            # 列出 issue 评论
+│   ├── edit            # 编辑 issue 评论
+│   └── delete          # 删除 issue 评论，需要确认
 ├── label
-│   ├── add             # add label IDs to an issue
-│   └── remove          # remove a label ID from an issue
+│   ├── add             # 给 issue 添加 label id
+│   └── remove          # 从 issue 移除 label id
 └── assign
-    ├── add             # add issue assignees
-    └── remove          # remove issue assignees
+    ├── add             # 添加 issue assignee
+    └── remove          # 移除 issue assignee
 ```
 
-The practiced quick start covered create, view, comment create/list/edit, close, reopen, and state-filtered list.
+当前 quick start 已覆盖 create、view、comment create/list/edit、close、reopen、按状态 list。
 
-## Pull Request
+## 合并请求
 
 ```text
 chattea pr
-├── create              # create a PR from a head branch into a base branch
-├── list                # list PRs by open/closed/all state
-├── view                # view PR details
-├── edit                # edit PR title, body, state, or base
-├── close               # close a PR
-├── reopen              # reopen a PR
-├── merge               # merge a PR with merge/rebase/squash/fast-forward methods
-├── diff                # output PR diff
-├── patch               # output PR patch
-├── commits             # list PR commits
-├── files               # list changed files
+├── create              # 从 head 分支向 base 分支创建 PR
+├── list                # 按 open/closed/all 列 PR
+├── view                # 查看 PR 详情
+├── edit                # 修改 PR 标题、正文、状态或 base
+├── close               # 关闭 PR
+├── reopen              # 重开 PR
+├── merge               # 用 merge/rebase/squash/fast-forward 等方式合并 PR
+├── diff                # 输出 PR diff
+├── patch               # 输出 PR patch
+├── commits             # 列出 PR commits
+├── files               # 列出变更文件
 ├── comment
-│   ├── create          # add a PR issue-comment
-│   └── list            # list PR issue-comments
+│   ├── create          # 添加 PR issue-comment
+│   └── list            # 列出 PR issue-comments
 └── review
-    ├── create          # create a PR review event
-    ├── list            # list PR reviews
-    └── submit          # submit an existing pending review
+    ├── create          # 创建 PR review event
+    ├── list            # 列出 PR reviews
+    └── submit          # 提交已有 pending review
 ```
 
-The practiced quick start covered create, view, files, commits, comment, review, close, reopen, and merge.
+当前 quick start 已覆盖 create、view、files、commits、comment、review、close、reopen、merge。
 
-## Labels And Milestones
+## 标签和里程碑
 
 ```text
 chattea label
@@ -152,33 +152,33 @@ chattea milestone
 └── delete
 ```
 
-These commands support issue and PR workflows through label IDs and milestone IDs.
+这些命令配合 issue / PR 的 label ID 和 milestone ID 使用。
 
-## Project Boards
+## 项目看板
 
 ```text
 chattea project
-├── create              # create a repo-scoped project board
-├── list                # list repo projects
-├── view                # view a repo project
-├── edit                # edit a repo project
-├── delete              # delete a repo project
+├── create              # 创建 repo-scoped project board
+├── list                # 列 repo projects
+├── view                # 查看 repo project
+├── edit                # 编辑 repo project
+├── delete              # 删除 repo project
 ├── column
-│   ├── create          # create a project column
-│   ├── list            # list project columns
-│   ├── edit            # edit a project column
-│   └── delete          # delete a project column
+│   ├── create          # 创建 project column
+│   ├── list            # 列 project columns
+│   ├── edit            # 编辑 project column
+│   └── delete          # 删除 project column
 ├── card                # issue/PR card helpers
 │   ├── add
 │   ├── list
 │   ├── move
 │   └── remove
-└── issue               # compatibility alias for card helpers
+└── issue               # card helpers 的兼容别名
 ```
 
-Use `project card` in new docs and automation. `project issue` remains a compatibility alias.
+新文档和新自动化优先使用 `project card`。`project issue` 只保留为兼容别名。
 
-## Releases
+## 发布版本
 
 ```text
 chattea release
@@ -194,9 +194,9 @@ chattea release
     └── delete
 ```
 
-Release asset upload remains outside the current first-class surface until the HTTP client grows multipart upload support.
+Release asset upload 暂不作为一等命令，等 HTTP client 支持 multipart upload 后再补。
 
-## Actions: Runs, Jobs, Artifacts, Runner
+## Actions：运行、任务、产物和 Runner
 
 ```text
 chattea run
@@ -220,49 +220,48 @@ chattea artifact
 └── delete
 
 chattea runner
-├── setup               # install, register, and manage the local runner
+├── setup               # 安装、注册并管理本机 runner
 ├── list
 ├── view
 ├── edit
 ├── delete
-└── token               # get a runner registration token
-    ├── --scope repo    # requires --repo OWNER/NAME
-    ├── --scope org     # requires --org ORG
+└── token               # 获取 runner registration token
+    ├── --scope repo    # 需要 --repo OWNER/NAME
+    ├── --scope org     # 需要 --org ORG
     ├── --scope user
     └── --scope admin
 ```
 
-These commands cover the first Gitea Actions surface: runner lifecycle, PR-triggered runs, jobs, logs, and artifacts.
+这些命令覆盖第一版 Gitea Actions 面：runner 生命周期、PR 触发的 run、job、log 和 artifact。
 
-## Server
+## 服务
 
 ```text
 chattea server
-├── bootstrap           # install/init Gitea, create admin/token, write ChatTea config
-├── install             # download the ChatArch Gitea binary
-├── init                # create a minimal app.ini
-├── start               # install and start the user systemd service
-├── stop                # stop the user systemd service
-├── restart             # restart the user systemd service
-├── status              # inspect user systemd service status
-├── logs                # read service logs
-├── health              # check Gitea API reachability
-├── config              # view/edit managed app.ini values
-├── version             # inspect binary or server version
-└── serve               # run Gitea in the foreground for debugging
+├── bootstrap           # install/init Gitea，创建 admin/token，写 ChatTea config
+├── install             # 下载 ChatArch Gitea binary
+├── init                # 创建最小 app.ini
+├── start               # 安装并启动 user systemd service
+├── stop                # 停止 user systemd service
+├── restart             # 重启 user systemd service
+├── status              # 查看 user systemd service 状态
+├── logs                # 查看服务日志
+├── health              # 检查 Gitea API 是否可达
+├── config              # 查看/编辑托管 app.ini
+├── version             # 查看 binary 或 server 版本
+└── serve               # 前台运行 Gitea，用于调试
 ```
 
-The managed service is operated by `chattea-gitea.service`; runner operations use `chattea-runner.service`.
+Gitea 服务由 `chattea-gitea.service` 管理；runner 由 `chattea-runner.service` 管理。
 
-## Current Wrapper Gaps
+## 当前封装缺口
 
-The recent quick start and permissions practice still needed raw API for:
+最近的 quick start 和权限实践仍需要 raw API 的部分：
 
-- organization create/view/list;
-- admin user create/view/list;
-- team list/add-member/remove-member;
-- user-owned repository creation through an admin create-as-user path;
-- explicit `repo create --private` intent;
-- `set-token` support for remote URLs both with and without a trailing `.git`.
+- organization create/view/list；
+- admin user create/view/list；
+- team list/add-member/remove-member；
+- 通过 admin create-as-user 路径创建 user-owned repo；
+- 继续实践 user-owned repo 的 admin create-as-user 路径。
 
-Treat these as flow-discovered Infra follow-ups. They should be implemented only when a docs or practice flow needs them, then this page should be updated with the new first-class command shape.
+这些都是实践暴露出的基础设施 follow-up。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。

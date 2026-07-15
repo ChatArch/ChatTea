@@ -1,44 +1,44 @@
-# ChatTea-managed Gitea Service Operations
+# ChatTea 管理的 Gitea 服务运维
 
-This page records the operating pattern for a ChatTea-managed Gitea service. It is written for public repository docs, so it uses placeholders instead of real hostnames, machine paths, account names, passwords, tokens, private keys, or internal deployment URLs.
+这篇文档记录 ChatTea 管理 Gitea 服务时的运维模式。正文面向公开仓库，因此只使用占位符，不写真实域名、机器路径、账号、密码、token、证书私钥路径或内部部署地址。
 
-Keep concrete values in the machine-local project record or restricted env files. Do not commit them to repository documentation, screenshots, PR descriptions, or CI logs.
+真实值应保存在机器本地项目记录或受限环境文件中，不应进入仓库文档、截图、PR 描述或 CI 日志。
 
-## Placeholder Convention
+## 占位符约定
 
-| Placeholder | Meaning |
+| 占位符 | 含义 |
 | --- | --- |
-| `<workspace>` | Local workspace root on the service host |
-| `<chatarch-home>` | Local ChatArch runtime home for ChatTea-managed files |
-| `<chatarch-venv>` | Python environment that provides `chattea` and `chatenv` |
-| `<gitea-public-base-url>` | Public HTTPS browser/API base URL |
-| `<gitea-local-base-url>` | Local HTTPS base URL served by local nginx |
-| `<gitea-loopback-base-url>` | Loopback upstream URL, usually `http://127.0.0.1:<port>` |
-| `<service>.local.example.invalid` | Mock local service hostname |
-| `<service>.public.example.invalid` | Mock public service hostname |
-| `<restricted-env-file>` | Machine-local env file that stores private service credentials |
-| `<gitea-bootstrap-project>` | Local project record for this service setup |
+| `<workspace>` | 服务机器上的本地工作区根目录 |
+| `<chatarch-home>` | ChatTea 管理运行时文件的 ChatArch home |
+| `<chatarch-venv>` | 提供 `chattea` / `chatenv` 的 Python 环境 |
+| `<gitea-public-base-url>` | 对浏览器、API、git 访问暴露的公网 HTTPS 地址 |
+| `<gitea-local-base-url>` | local nginx 暴露的本地 HTTPS 地址 |
+| `<gitea-loopback-base-url>` | Gitea 本地 upstream，通常是 `http://127.0.0.1:<port>` |
+| `<service>.local.example.invalid` | 示例 local 服务域名 |
+| `<service>.public.example.invalid` | 示例 public 服务域名 |
+| `<restricted-env-file>` | 机器本地的受限环境文件，保存服务凭据 |
+| `<gitea-bootstrap-project>` | 本次服务搭建对应的本地项目记录 |
 
-## Endpoint Shape
+## 访问入口形态
 
-Committed docs should use placeholder URLs:
+提交到仓库的文档只写占位符：
 
 ```text
-Public HTTPS:      <gitea-public-base-url>
-Local HTTPS:       <gitea-local-base-url>
-Loopback upstream: <gitea-loopback-base-url>
-Version check:     <gitea-public-base-url>/api/v1/version
+公网 HTTPS:      <gitea-public-base-url>
+本地 HTTPS:      <gitea-local-base-url>
+本机 upstream:   <gitea-loopback-base-url>
+版本检查:        <gitea-public-base-url>/api/v1/version
 ```
 
-Expected version check response shape:
+版本检查的返回形态应类似：
 
 ```json
 {"version":"<gitea-version>"}
 ```
 
-## Managed Paths
+## 托管文件位置
 
-Use placeholders for concrete paths:
+公开文档中只写路径形态，不写真实机器路径：
 
 ```text
 Gitea binary:          <chatarch-home>/chattea/bin/gitea
@@ -50,11 +50,11 @@ Credential env file:   <restricted-env-file>
 Bootstrap project log: <workspace>/projects/<gitea-bootstrap-project>/
 ```
 
-The credential env file should be mode `0600`. Never copy passwords, tokens, certificate private keys, or `git config http.*.extraHeader` values into docs or screenshots.
+受限环境文件应使用 `0600` 权限。不要把密码、token、证书私钥、`git config http.*.extraHeader` 写进文档或截图。
 
-## Start And Manage The Service
+## 启动和管理服务
 
-Load the restricted environment only on the service host:
+只在服务机器的私有终端加载受限环境：
 
 ```bash
 set -a
@@ -62,7 +62,7 @@ source <restricted-env-file>
 set +a
 ```
 
-Use ChatTea for the managed Gitea lifecycle:
+使用 ChatTea 管理 Gitea 生命周期：
 
 ```bash
 <chatarch-venv>/bin/chattea server status
@@ -72,7 +72,7 @@ Use ChatTea for the managed Gitea lifecycle:
 <chatarch-venv>/bin/chattea server health --url <gitea-loopback-base-url>
 ```
 
-The service uses user-level systemd units:
+服务以 user-level systemd 运行：
 
 ```bash
 systemctl --user status chattea-gitea.service
@@ -81,7 +81,7 @@ systemctl --user restart chattea-gitea.service
 systemctl --user restart chattea-runner.service
 ```
 
-Expected Gitea process shape:
+Gitea 进程形态：
 
 ```bash
 <chatarch-home>/chattea/bin/gitea web \
@@ -89,25 +89,25 @@ Expected Gitea process shape:
   --work-path <chatarch-home>/chattea/gitea
 ```
 
-Expected runner process shape:
+Runner 进程形态：
 
 ```bash
 <chatarch-home>/chattea/runner/bin/gitea-runner daemon \
   -c <chatarch-home>/chattea/runner/config/config.yaml
 ```
 
-Do not run a foreground `gitea web` process on the same port while `chattea-gitea.service` is already running.
+如果 `chattea-gitea.service` 已经占用端口，不要再在同一端口前台运行 `gitea web`。
 
-## Admin Credentials
+## 管理员凭据
 
-The admin username, password, and access token live in restricted env files and ChatEnv. Inspect masked state first:
+管理员用户名、密码和 access token 位于受限环境文件和 ChatEnv 中。先查看脱敏状态：
 
 ```bash
 <chatarch-venv>/bin/chatenv cat -t chattea
 <chatarch-venv>/bin/chattea auth status
 ```
 
-If a human needs browser login credentials, read them only in a private terminal on the service host:
+如果人工登录浏览器需要账号密码，只能在服务机器的私有终端读取：
 
 ```bash
 set -a
@@ -119,24 +119,24 @@ printf 'Username: %s\n' "$GITEA_USERNAME"
 printf 'Password: %s\n' "$GITEA_PASSWORD"
 ```
 
-`GITEA_TOKEN` and `CHATTEA_TOKEN` are also stored there for API and ChatTea access. Treat them as secrets.
+`GITEA_TOKEN` 和 `CHATTEA_TOKEN` 同样是敏感值，只用于 API、ChatTea 和 git transport 鉴权。
 
-If credentials need to be reset or re-aligned with ChatEnv, use the bootstrap project scripts rather than editing env files by hand:
+如果需要重置或重新对齐凭据，优先使用 bootstrap 项目里的脚本，不手工编辑 env 文件：
 
 ```bash
 python3 <workspace>/projects/<gitea-bootstrap-project>/scripts/configure_gitea_account_env.py
 bash <workspace>/projects/<gitea-bootstrap-project>/scripts/verify_gitea_env.sh
 ```
 
-## Local Nginx And Public Exposure
+## 本地 Nginx 和公网入口
 
-Gitea should listen only on a loopback upstream:
+Gitea 自身应只监听 loopback upstream：
 
 ```text
 127.0.0.1:<gitea-http-port>
 ```
 
-Local nginx exposes it through a local hostname:
+local nginx 负责暴露本地域名：
 
 ```text
 nginx site file: <nginx-single-sites-dir>/<service>-local.conf
@@ -144,28 +144,28 @@ server_name:     <service>.local.example.invalid
 upstream:        <gitea-loopback-base-url>
 ```
 
-SSL should use a shared wildcard certificate:
+SSL 使用共享通配证书：
 
 ```text
 certificate: <nginx-cert-dir>/<wildcard-cert-name>/fullchain.pem
 private key: <nginx-cert-dir>/<wildcard-cert-name>/privkey.pem
 ```
 
-The certificate should cover both local and public wildcard zones, for example:
+证书应覆盖 local 和 public 两类通配域名，例如：
 
 ```text
 *.local.example.invalid
 *.public.example.invalid
 ```
 
-For ordinary services, do not add a separate public Gitea nginx `server_name`. The pattern is:
+普通服务不需要额外配置 public Gitea nginx `server_name`。约定模式是：
 
-1. local nginx explicitly serves `<service>.local.example.invalid`;
-2. wildcard DNS covers `<service>.public.example.invalid`;
-3. the existing public-entry layer routes public HTTPS back to local nginx;
-4. operators verify the public URL instead of adding per-service DNS records or per-service certificates.
+1. local nginx 显式服务 `<service>.local.example.invalid`；
+2. wildcard DNS 覆盖 `<service>.public.example.invalid`；
+3. 已有 public-entry 层把公网 HTTPS 转回 local nginx；
+4. 运维只验证 public URL，不为每个服务新增 DNS、证书或 tunnel 配置。
 
-Verification command shape:
+验证命令形态：
 
 ```bash
 curl --noproxy '*' -sS \
@@ -175,15 +175,15 @@ curl --noproxy '*' -sS \
 curl -sS https://<service>.public.example.invalid/api/v1/version
 ```
 
-## Screenshot And Log Policy
+## 截图和日志规则
 
-Do not commit screenshots that expose real hostnames, repository names, usernames, organization names, tokens, or machine paths. If screenshots are useful for review, create mock screenshots or keep real captures in a local project record outside the repository.
+不要提交暴露真实域名、仓库名、用户名、组织名、token 或机器路径的截图。需要 review 页面效果时，使用 mock 数据和 mock 域名；真实截图只保存在本地项目记录中。
 
-## Operational Rules
+## 运维规则
 
-- Do not commit real URLs for private or internal infrastructure; use placeholders.
-- Do not commit passwords, tokens, git extraHeader values, DNS secrets, or private key contents.
-- Do not edit public-entry or tunnel configuration for ordinary service operations unless the task explicitly targets that infrastructure.
-- Do not create per-service DNS records when wildcard DNS covers the service hostnames.
-- Do not create per-service certificates when a shared wildcard certificate covers the service hostnames.
-- Keep `ROOT_URL` and `CHATTEA_BASE_URL` changes deliberate because they affect generated clone URLs and API clients.
+- 公开文档不写私有或内部服务的真实 URL，使用占位符。
+- 不提交密码、token、git extraHeader、DNS secret 或证书私钥内容。
+- 普通 Gitea 服务接入不修改 public-entry / tunnel 配置，除非任务明确要求。
+- wildcard DNS 已覆盖时，不为单个服务新增 DNS 记录。
+- 共享 wildcard 证书已覆盖时，不为单个服务申请证书。
+- 修改 `ROOT_URL` 和 `CHATTEA_BASE_URL` 要谨慎，因为它们会影响 clone URL 和 API client。
