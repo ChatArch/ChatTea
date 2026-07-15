@@ -2,7 +2,7 @@
 
 这篇文档是当前 ChatTea CLI 的简明能力地图，用来校对哪些 Gitea 流程已经有一等 ChatTea 命令，哪些流程还需要 `chattea api`。
 
-可导入 Python 函数映射见 [接口树](interface-tree.md)。更完整的 route mapping 和实践截图见 [CLI 实战指南](cli-guide.md)。
+可导入 Python 函数映射见 [接口树](interface-tree.md)。更完整的 路由 mapping 和实践截图见 [CLI 实战指南](cli-guide.md)。
 
 ## 顶层命令
 
@@ -61,7 +61,7 @@ chattea token
 └── list                # 用用户名密码 BasicAuth 列出 access token
 ```
 
-实践校对点：`chattea set-token` 会同时写入 remote URL 带 `.git` 和不带 `.git` 两种 `extraHeader` key，避免 git remote 与 `http.<url>.extraHeader` key 不一致导致 `git push` 不带鉴权 header。
+实践校对点：`chattea set-token` 会同时写入 远端 URL 带 `.git` 和不带 `.git` 两种 `extraHeader` key，避免 git 远端 与 `http.<url>.extraHeader` key 不一致导致 `git push` 不带鉴权 header。
 
 ## 仓库
 
@@ -76,10 +76,10 @@ chattea repo
 
 权限相关行为：
 
-- `repo create --public` 创建 public repo；
-- `repo create --private` 显式创建 private repo；
-- 不传 `--public` / `--private` 时仍默认创建 private repo；
-- 当前普通 repo create/edit 流程没有暴露 repo-level `internal` visibility 输入。
+- `repo create --public` 创建 public 仓库；
+- `repo create --private` 显式创建 private 仓库；
+- 不传 `--public` / `--private` 时仍默认创建 private 仓库；
+- 当前普通 仓库 create/edit 流程没有暴露 仓库-level `internal` visibility 输入。
 
 ## 问题
 
@@ -105,7 +105,7 @@ chattea issue
     └── remove          # 移除 issue assignee
 ```
 
-当前 quick start 已覆盖 create、view、comment create/list/edit、close、reopen、按状态 list。
+当前 quick start 已覆盖 create、view、评论 create/list/edit、close、reopen、按状态 list。
 
 ## 合并请求
 
@@ -131,7 +131,7 @@ chattea pr
     └── submit          # 提交已有 pending review
 ```
 
-当前 quick start 已覆盖 create、view、files、commits、comment、review、close、reopen、merge。
+当前 quick start 已覆盖 create、view、files、commits、评论、review、close、reopen、merge。
 
 ## 标签和里程碑
 
@@ -152,7 +152,7 @@ chattea milestone
 └── delete
 ```
 
-这些命令配合 issue / PR 的 label ID 和 milestone ID 使用。
+这些命令配合 问题 / PR 的 标签 ID 和 里程碑 ID 使用。
 
 ## 项目看板
 
@@ -194,9 +194,9 @@ chattea release
     └── delete
 ```
 
-Release asset upload 暂不作为一等命令，等 HTTP client 支持 multipart upload 后再补。
+发布版本 附件 上传 暂不作为一等命令，等 HTTP client 支持 multipart 上传 后再补。
 
-## Actions：运行、任务、产物和 Runner
+## Actions：运行、任务、产物和运行器
 
 ```text
 chattea run
@@ -232,7 +232,7 @@ chattea runner
     └── --scope admin
 ```
 
-这些命令覆盖第一版 Gitea Actions 面：runner 生命周期、PR 触发的 run、job、log 和 artifact。
+这些命令覆盖第一版 Gitea Actions 面：运行器 生命周期、PR 触发的 run、job、log 和 产物。
 
 ## 服务
 
@@ -252,7 +252,7 @@ chattea server
 └── serve               # 前台运行 Gitea，用于调试
 ```
 
-Gitea 服务由 `chattea-gitea.service` 管理；runner 由 `chattea-runner.service` 管理。
+Gitea 服务由 `chattea-gitea.service` 管理；运行器 由 `chattea-runner.service` 管理。
 
 ## 当前封装缺口
 
@@ -261,7 +261,7 @@ Gitea 服务由 `chattea-gitea.service` 管理；runner 由 `chattea-runner.serv
 - organization create/view/list；
 - admin user create/view/list；
 - team list/add-member/remove-member；
-- 通过 admin create-as-user 路径创建 user-owned repo；
-- 继续实践 user-owned repo 的 admin create-as-user 路径。
+- 通过 admin create-as-user 路径创建 user-owned 仓库；
+- 继续实践 user-owned 仓库 的 admin create-as-user 路径。
 
-这些都是实践暴露出的基础设施 follow-up。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。
+这些都是实践暴露出的基础设施后续项。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。

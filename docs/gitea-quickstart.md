@@ -1,8 +1,8 @@
 # ChatTea / Gitea 端到端快速开始
 
-这篇 quick start 记录我们已经实践过的 ChatTea + Gitea 流程：从已有 Gitea 服务出发，创建组织、用户、团队成员关系、仓库、本地 git 内容、issue 和 PR。
+这篇 quick start 记录我们已经实践过的 ChatTea + Gitea 流程：从已有 Gitea 服务出发，创建组织、用户、团队成员关系、仓库、本地 git 内容、问题 和 PR。
 
-文档使用占位符，不写真实域名、组织名、用户名、仓库名、token、密码、本地路径或运行日志。真实对象和日志只保存在本地项目记录中。
+文档使用占位符，不写真实域名、组织名、用户名、仓库名、令牌、密码、本地路径或运行日志。真实对象和日志只保存在本地项目记录中。
 
 服务暴露模式见 [ChatTea 管理的 Gitea 服务运维](gitea-service-operations.md)。CLI 能力地图见 [ChatTea CLI 能力地图](chattea-cli-tree.md)。
 
@@ -11,17 +11,17 @@
 | 占位符 | 含义 |
 | --- | --- |
 | `<gitea-api-base-url>` | ChatTea 使用的 Gitea API/browser base URL |
-| `<gitea-public-base-url>` | 浏览器和 git remote 使用的公网 HTTPS base URL |
+| `<gitea-public-base-url>` | 浏览器和 git 远端 使用的公网 HTTPS base URL |
 | `<restricted-env-file>` | 保存服务凭据的机器本地受限环境文件 |
 | `<chatarch-venv>` | 提供 `chattea` 的 Python 环境 |
 | `<demo-org>` | 示例组织名 |
 | `<demo-user>` | 示例用户名 |
 | `<demo-repo>` | 示例仓库名 |
-| `<demo-owner>/<demo-repo>` | 示例 owner/repo |
+| `<demo-owner>/<demo-repo>` | 示例 owner/仓库 |
 | `<feature-branch>` | 示例 feature 分支 |
-| `<issue-number>` | 示例 issue 编号 |
+| `<issue-number>` | 示例 问题 编号 |
 | `<pr-number>` | 示例 PR 编号 |
-| `<comment-id>` | 示例 comment id |
+| `<comment-id>` | 示例 评论 id |
 | `<team-id>` | 示例 team id |
 
 ## 0. 准备环境
@@ -165,15 +165,15 @@ git add README.md
 git commit -m 'docs: add quickstart readme'
 ```
 
-添加 public remote：
+添加 public 远端：
 
 ```bash
 git remote add origin "$GITEA_PUBLIC/$DEMO_FULL_REPO"
 ```
 
-实践校对后，`chattea set-token` 应同时写入 remote 带 `.git` 和不带 `.git` 两种 `extraHeader` key，保证两种 remote 形态都能用于 `git push`。
+实践校对后，`chattea set-token` 应同时写入 远端 带 `.git` 和不带 `.git` 两种 `extraHeader` key，保证两种 远端 形态都能用于 `git push`。
 
-配置 repo-local token，不打印 token 值：
+配置 仓库本地 令牌，不打印 令牌 值：
 
 ```bash
 CHATARCH_HOME="$PWD/.chatarch" \
@@ -201,7 +201,7 @@ git push -u origin main
 git switch -c <feature-branch>
 
 cat >> README.md <<'EOF'
-- This line is added from a feature branch and merged through a PR.
+- 这行来自 feature 分支，并通过 PR 合并。
 EOF
 
 git add README.md
@@ -211,7 +211,7 @@ git push -u origin <feature-branch>
 
 ## 6. 问题流程
 
-创建 issue：
+创建 问题：
 
 ```bash
 $CHATTEA issue create \
@@ -255,7 +255,7 @@ $CHATTEA issue reopen "$ISSUE" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 $CHATTEA issue close "$ISSUE" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 ```
 
-按状态列 issue：
+按状态列 问题：
 
 ```bash
 $CHATTEA issue list --repo "$DEMO_FULL_REPO" --state open --url "$GITEA_API"
@@ -351,9 +351,9 @@ $CHATTEA pr patch "$PR" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 - `chattea api /version`：确认 API 可达；
 - `chattea repo create/list/view`：确认仓库 API；
 - `chattea set-token` + `git push`：确认 git transport 鉴权；
-- `chattea issue create/view/comment/list/edit/close/reopen`：确认 issue 流程；
+- `chattea issue create/view/comment/list/edit/close/reopen`：确认 问题 流程；
 - `chattea pr create/view/files/commits/comment/review/close/reopen/merge`：确认 PR 流程；
-- 浏览器访问 mock 或已脱敏的 repo/issue/PR 页面：确认 UI 渲染。
+- 浏览器访问 mock 或已脱敏的 仓库/问题/PR 页面：确认 UI 渲染。
 
 不要提交真实 `GITEA_TOKEN`、`CHATTEA_TOKEN`、用户密码、证书私钥、git extraHeader 或实践环境 URL。
 
@@ -363,4 +363,4 @@ $CHATTEA pr patch "$PR" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 
 - 仍待补：增加一等 `org`、`user`、`team` 命令，减少 raw `chattea api`；
 - 本轮已校对：`repo create --private`，让 public/private 选择更清楚；
-- 本轮已校对：`set-token` 同时支持 `https://host/owner/repo` 和 `https://host/owner/repo.git` 两种 remote 形态。
+- 本轮已校对：`set-token` 同时支持 `https://host/owner/repo` 和 `https://host/owner/repo.git` 两种 远端 形态。

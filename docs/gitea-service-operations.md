@@ -1,6 +1,6 @@
 # ChatTea 管理的 Gitea 服务运维
 
-这篇文档记录 ChatTea 管理 Gitea 服务时的运维模式。正文面向公开仓库，因此只使用占位符，不写真实域名、机器路径、账号、密码、token、证书私钥路径或内部部署地址。
+这篇文档记录 ChatTea 管理 Gitea 服务时的运维模式。正文面向公开仓库，因此只使用占位符，不写真实域名、机器路径、账号、密码、令牌、证书私钥路径或内部部署地址。
 
 真实值应保存在机器本地项目记录或受限环境文件中，不应进入仓库文档、截图、PR 描述或 CI 日志。
 
@@ -50,7 +50,7 @@ Credential env file:   <restricted-env-file>
 Bootstrap project log: <workspace>/projects/<gitea-bootstrap-project>/
 ```
 
-受限环境文件应使用 `0600` 权限。不要把密码、token、证书私钥、`git config http.*.extraHeader` 写进文档或截图。
+受限环境文件应使用 `0600` 权限。不要把密码、令牌、证书私钥、`git config http.*.extraHeader` 写进文档或截图。
 
 ## 启动和管理服务
 
@@ -89,7 +89,7 @@ Gitea 进程形态：
   --work-path <chatarch-home>/chattea/gitea
 ```
 
-Runner 进程形态：
+运行器 进程形态：
 
 ```bash
 <chatarch-home>/chattea/runner/bin/gitea-runner daemon \
@@ -100,7 +100,7 @@ Runner 进程形态：
 
 ## 管理员凭据
 
-管理员用户名、密码和 access token 位于受限环境文件和 ChatEnv 中。先查看脱敏状态：
+管理员用户名、密码和 访问令牌 位于受限环境文件和 ChatEnv 中。先查看脱敏状态：
 
 ```bash
 <chatarch-venv>/bin/chatenv cat -t chattea
@@ -121,7 +121,7 @@ printf 'Password: %s\n' "$GITEA_PASSWORD"
 
 `GITEA_TOKEN` 和 `CHATTEA_TOKEN` 同样是敏感值，只用于 API、ChatTea 和 git transport 鉴权。
 
-如果需要重置或重新对齐凭据，优先使用 bootstrap 项目里的脚本，不手工编辑 env 文件：
+如果需要重置或重新对齐凭据，优先使用 引导 项目里的脚本，不手工编辑 env 文件：
 
 ```bash
 python3 <workspace>/projects/<gitea-bootstrap-project>/scripts/configure_gitea_account_env.py
@@ -177,12 +177,12 @@ curl -sS https://<service>.public.example.invalid/api/v1/version
 
 ## 截图和日志规则
 
-不要提交暴露真实域名、仓库名、用户名、组织名、token 或机器路径的截图。需要 review 页面效果时，使用 mock 数据和 mock 域名；真实截图只保存在本地项目记录中。
+不要提交暴露真实域名、仓库名、用户名、组织名、令牌 或机器路径的截图。需要 review 页面效果时，使用 mock 数据和 mock 域名；真实截图只保存在本地项目记录中。
 
 ## 运维规则
 
 - 公开文档不写私有或内部服务的真实 URL，使用占位符。
-- 不提交密码、token、git extraHeader、DNS secret 或证书私钥内容。
+- 不提交密码、令牌、git extraHeader、DNS secret 或证书私钥内容。
 - 普通 Gitea 服务接入不修改 public-entry / tunnel 配置，除非任务明确要求。
 - wildcard DNS 已覆盖时，不为单个服务新增 DNS 记录。
 - 共享 wildcard 证书已覆盖时，不为单个服务申请证书。

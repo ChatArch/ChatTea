@@ -1,8 +1,8 @@
-# ChatTea Interface Tree
+# ChatTea 接口树
 
-ChatTea follows a GitHub-familiar resource model for Gitea APIs, plus ChatTea-specific commands for self-hosted/internal Gitea service management.
+ChatTea 面向 Gitea API 采用接近 GitHub 的资源模型，同时保留 ChatTea 自有命令，用于自托管 / 内部 Gitea 服务管理。
 
-## Current CLI Surface
+## 当前 CLI 能力面
 
 ```text
 chattea
@@ -156,11 +156,11 @@ chattea
     └── delete
 ```
 
-`project issue` is a compatibility alias for `project card`. Use `project card` in new docs and automation.
+`project issue` 是 `project card` 的兼容别名。新文档和新自动化应使用 `project card`。
 
-## Target CLI Direction
+## 目标 CLI 方向
 
-See `docs/cli-alignment.md` for the annotated target tree. The current implemented surface already covers the core Gitea resource groups:
+带注释的目标树见 [CLI 对齐计划](cli-alignment.md)。当前实现已经覆盖核心 Gitea 资源组：
 
 - `repo`
 - `issue`
@@ -174,54 +174,54 @@ See `docs/cli-alignment.md` for the annotated target tree. The current implement
 - `job`
 - `artifact`
 
-Future API work should grow only when there is a real Gitea route or a concrete local implementation contract. Candidate future groups include:
+未来 API 能力只应在存在真实 Gitea 路由 或明确本地实现合约时扩展。候选资源组包括：
 
 - `workflow`
 - `secret`
 - `variable`
 - `status`
 
-ChatTea-specific custom commands stay:
+ChatTea 自有命令保留为：
 
-- `set-token`: configure an existing Gitea token in ChatEnv and repo-local git config.
-- `server`: internal/self-hosted Gitea install, app.ini, process, and health management.
+- `set-token`：把已有 Gitea 令牌 配置到 ChatEnv 和 仓库本地 git config；
+- `server`：管理内部 / 自托管 Gitea 的安装、`app.ini`、进程和健康检查。
 
-## Responsibilities
+## 职责边界
 
-- `set-token`: store the default Gitea base URL and API token in the ChatEnv `ChatTea` active profile.
-- `token create/list/delete/bootstrap`: create/list/delete Gitea access tokens via BasicAuth; bootstrap creates or rotates the managed token and then configures ChatTea/Git credentials.
-- `auth login/status/token`: auxiliary namespace over the same credential state.
-- `api`: raw Gitea API passthrough for routes not yet wrapped by first-class commands.
-- `server install`: install latest ChatArch internal Gitea by default; `--version` can pin a release.
-- `server init`: create a minimal `app.ini` for a local SQLite-backed Gitea instance; listen address and HTTP port are CLI init parameters, not Env fields.
-- `server serve`: run Gitea in the foreground for debugging or one-off sessions.
-- `server start/stop/restart/status/logs`: manage the fixed user-level systemd service `chattea-gitea.service`.
-- `server version/health`: inspect the local binary or configured Gitea HTTP endpoint.
-- `server config path/show/get/set`: inspect or update the managed Gitea `app.ini`, independent from ChatEnv.
-- `repo list/view/create`: cover basic repository inventory and creation via Gitea API.
-- `repo clone`: clone from the configured Gitea instance without configuring Git auth headers.
-- `repo migrate`: create a Gitea migration from an existing Git clone URL.
-- `issue list/view/create/edit/close/reopen/delete`: manage repository issues through `/repos/{owner}/{repo}/issues` routes.
-- `issue comment list/create/edit/delete`: manage issue comments through issue comment routes; PR comments reuse the same Gitea issue-comment model.
-- `issue label add/remove` and `issue assign add/remove`: manage issue labels and assignees through repo-scoped issue routes.
-- `label list/view/create/edit/delete`: manage repository labels through `/repos/{owner}/{repo}/labels` routes.
-- `milestone list/view/create/edit/close/delete`: manage repository milestones through `/repos/{owner}/{repo}/milestones` routes.
-- `pr list/view/create/edit/close/reopen/merge/diff/patch/commits/files`: manage pull requests through `/repos/{owner}/{repo}/pulls` routes. `pr checkout` is intentionally not part of this surface.
-- `pr review list/create/submit`: manage pull request reviews through `/repos/{owner}/{repo}/pulls/{index}/reviews` routes.
-- `release list/view/latest/by-tag/create/edit/delete`: manage repository releases through `/repos/{owner}/{repo}/releases` routes.
-- `release asset list/delete`: inspect and delete release assets. Multipart asset upload is left out until the HTTP client grows upload support.
-- `project list/view/create/edit/delete`: manage repository-scoped Gitea Projects.
-- `project column list/create/edit/delete`: manage columns in a repository Project board.
-- `project card list/add/remove/move`: manage issue/PR cards in Project columns.
-- `runner token/list/view/edit/delete`: manage Gitea Actions runners through repo/org/user/admin runner APIs.
-- `runner setup install/register/start/stop/status/logs/doctor`: install and operate the local `gitea-runner` service for development and self-hosted runners.
-- `run list/view/jobs/logs/rerun/rerun-failed/delete`: inspect and control Gitea Actions workflow runs.
-- `job view/logs/rerun`: inspect job metadata, fetch logs, and rerun a job through its parent run.
-- `artifact list/view/download/delete`: inspect, download, and delete Actions artifacts.
+- `set-token`：把默认 Gitea base URL 和 API 令牌 存入 ChatEnv 的 `ChatTea` active 配置档。
+- `token create/list/delete/bootstrap`：通过 BasicAuth 创建、列出、删除 Gitea 访问令牌；引导 会创建或轮换托管 令牌，然后配置 ChatTea/Git 凭据。
+- `auth login/status/token`：同一套凭据状态上的辅助命名空间。
+- `api`：对尚未一等封装的 路由 提供原始 Gitea API passthrough。
+- `server install`：默认安装最新 ChatArch 内部 Gitea；`--version` 可固定 发布版本。
+- `server init`：为本地 SQLite 支撑的 Gitea 实例创建最小 `app.ini`；监听地址 和 HTTP port 是 CLI init 参数，不是 Env 字段。
+- `server serve`：前台运行 Gitea，用于调试或一次性会话。
+- `server start/stop/restart/status/logs`：管理固定的 用户级 systemd 服务 `chattea-gitea.service`。
+- `server version/health`：检查本地 二进制文件 或已配置的 Gitea HTTP 端点。
+- `server config path/show/get/set`：查看或更新托管 Gitea `app.ini`，与 ChatEnv 独立。
+- `repo list/view/create`：覆盖基础仓库列表、详情和创建 API。
+- `repo clone`：从已配置 Gitea 实例 clone 仓库，不额外配置 Git 鉴权 header。
+- `repo migrate`：从已有 Git clone URL 创建 Gitea 迁移。
+- `issue list/view/create/edit/close/reopen/delete`：通过 `/repos/{owner}/{repo}/issues` 路由 管理仓库 问题。
+- `issue comment list/create/edit/delete`：通过 问题 评论 路由 管理评论；PR 评论复用 Gitea 问题-评论 模型。
+- `issue label add/remove` 和 `issue assign add/remove`：通过 仓库级 问题 路由 管理 标签 和 负责人。
+- `label list/view/create/edit/delete`：通过 `/repos/{owner}/{repo}/labels` 管理仓库 标签。
+- `milestone list/view/create/edit/close/delete`：通过 `/repos/{owner}/{repo}/milestones` 管理仓库 里程碑。
+- `pr list/view/create/edit/close/reopen/merge/diff/patch/commits/files`：通过 `/repos/{owner}/{repo}/pulls` 路由 管理 PR。`pr checkout` 不属于当前能力面。
+- `pr review list/create/submit`：通过 `/repos/{owner}/{repo}/pulls/{index}/reviews` 路由 管理 PR review。
+- `release list/view/latest/by-tag/create/edit/delete`：通过 `/repos/{owner}/{repo}/releases` 路由 管理 发布版本。
+- `release asset list/delete`：查看和删除 发布版本 附件。Multipart 附件 上传 等 HTTP client 支持 上传 后再补。
+- `project list/view/create/edit/delete`：管理 仓库级 Gitea Projects。
+- `project column list/create/edit/delete`：管理 仓库 项目看板 中的 column。
+- `project card list/add/remove/move`：管理 项目列 中的 问题/PR card。
+- `runner token/list/view/edit/delete`：通过 仓库/org/user/admin 运行器 API 管理 Gitea Actions 运行器。
+- `runner setup install/register/start/stop/status/logs/doctor`：安装并运行本地 `gitea-runner`，用于开发和自托管 运行器。
+- `run list/view/jobs/logs/rerun/rerun-failed/delete`：查看并控制 Gitea Actions 工作流 run。
+- `job view/logs/rerun`：查看 job 元数据、获取日志并通过 parent run 重跑 job。
+- `artifact list/view/download/delete`：查看、下载和删除 Actions 产物。
 
-## CLI to Python Function Mapping
+## CLI 到 Python 函数映射
 
-Every CLI command has an importable Python function behind it so integrations do not need to shell out.
+每个 CLI 命令背后都有可导入 Python 函数，集成方不需要 shell out。
 
 ```text
 chattea set-token             -> chattea.commands.auth.configure_token
@@ -343,7 +343,7 @@ chattea project card remove   -> chattea.commands.project.remove_card
 chattea project card move     -> chattea.commands.project.move_card
 ```
 
-Lower-level reusable modules stay available:
+底层可复用模块也保持可用：
 
 ```text
 chattea.config  -> ChatTeaEnvConfig, load_config, save_config, set_token
@@ -352,11 +352,11 @@ chattea.server  -> install_binary, init_instance, run_gitea, write_user_service
 chattea.commands.runner -> runner binary install, registration, user service helpers
 ```
 
-CLI command modules should parse options, call these functions/classes, and render results only.
+CLI command module 只应解析参数、调用这些函数 / 类，并渲染结果。
 
-## ChatEnv Boundary
+## ChatEnv 边界
 
-Official ChatEnv fields are:
+正式 ChatEnv 字段为：
 
 ```text
 CHATTEA_BASE_URL
@@ -367,12 +367,12 @@ CHATTEA_WORK_PATH
 CHATTEA_CONFIG
 ```
 
-`CHATTEA_URL` and old `CHATTEA_GITEA_*` names are legacy read-only fallbacks. Listen address, HTTP port, domain, service name, install version, repo names, project IDs, issue IDs, and runner IDs are intentionally not official Env fields.
+`CHATTEA_URL` 和旧的 `CHATTEA_GITEA_*` 名称只是 legacy read-only 回退项。Listen address、HTTP port、domain、service name、install version、仓库 name、project ID、问题 ID 和 运行器 ID 都不应成为正式 Env 字段。
 
-## Interaction Boundary
+## 交互边界
 
-Commands with recoverable missing input use ChatStyle `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()`.
+缺少可恢复输入时，命令使用 ChatStyle 的 `CommandSchema`、`CommandField`、`add_interactive_option()` 和 `resolve_command_inputs()`。
 
-- `-i` / `--interactive`: force prompts.
-- `-I` / `--no-interactive`: disable prompts and fail fast.
-- default `interactive=None`: auto-prompt only when missing input is recoverable.
+- `-i` / `--interactive`：强制交互；
+- `-I` / `--no-interactive`：禁用交互并快速失败；
+- 默认 `interactive=None`：只有缺少可恢复输入时才自动 prompt。
