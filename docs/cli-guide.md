@@ -101,6 +101,8 @@ chattea server health
 
 `server config set` 修改的是 `app.ini`；这是运行时配置，通常需要 restart 才可靠生效。相比之下，问题/PR/project/run/job/运行器 的 REST API 命令操作的是 live Gitea state，不需要重启 Gitea。
 
+Token 边界要分清楚：ChatTea 这个 Python 源码仓库的 remote 是 GitHub，push 和 PR 使用 `chatgh` / GitHub token；临时实践仓库的 remote 是自建 Gitea，仓库 API 和 git push 使用 `chattea` / Gitea token。`chattea set-token` 只应在 Gitea 仓库目录里写 repo-local git `extraHeader`，或者通过 `--repo OWNER/NAME` 明确指定 Gitea 仓库；不应把 Gitea token 写进 GitHub 源码仓库的 local git config。
+
 ## 仓库、问题和项目看板示例
 
 下面流程在本地 ChatTea 管理的 Gitea 服务上运行：创建 仓库，添加 问题 元数据，创建 仓库级 项目看板，然后把 问题 添加为 项目卡片。
@@ -169,22 +171,28 @@ chattea pr merge       -> POST /repos/{owner}/{repo}/pulls/{index}/merge
 1. Gitea REST API 层：
    - 注册令牌
    - 运行器 list/view/edit/delete
-   - 仓库/org/user/admin scopes
+   - repo/user/org/admin scope
 2. 本地 setup 层：
    - 安装 `gitea-runner`
-   - 写 运行器 config
-   - 用 Gitea 令牌 注册 运行器
-   - 管理 `chattea-runner.service`
+   - 写运行器 config
+   - 用 Gitea 注册令牌注册运行器
+   - 管理 `chattea-runner.service` 或手动启动多个 runner daemon
 
-第一版实现默认使用 host 运行器 标签：
+第一版实现默认使用 host 运行器标签：
 
 ```text
-ubuntu-latest:host
+<runner-label>:host
 ```
 
-这样真实实践不依赖 Docker 镜像拉取。
+workflow 中使用冒号前的 label：
 
-下面的 Actions run 和 job 页面展示 工作流 被注册 运行器 接收并成功完成。
+```yaml
+runs-on: <runner-label>
+```
+
+真实实践已经验证：repo-scope 两个 host runner 可以在同一台机器、同一 Unix 用户下并发处理同一个 PR workflow 的两个 job；user-scope、org-scope、admin-scope runner 也分别被对应仓库 workflow 调用成功。更完整的配置、运行目录、scope 和并发结论见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
+
+下面的 Actions run 和 job 页面展示工作流被注册运行器接收并成功完成。
 
 ![Gitea Actions run 页面](assets/cli-guide/gitea-actions-run.png)
 

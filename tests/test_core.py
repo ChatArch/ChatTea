@@ -76,6 +76,18 @@ def test_gitea_client_resolves_token_from_git_config(monkeypatch, tmp_path):
     assert client.token == "repo-token"
 
 
+def test_resolve_token_ignores_git_credentials_for_other_hosts(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    monkeypatch.setenv("CHATTEA_BASE_URL", "https://gitea.local")
+    monkeypatch.setenv("CHATTEA_TOKEN", "gitea-token")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_git_repo(repo, "https://github.com/ChatArch/ChatTea.git")
+    configure_token("https://github.com", "github-token", repo="ChatArch/ChatTea", cwd=repo, save_env=False)
+
+    assert resolve_token(base_url="https://gitea.local", cwd=repo) == "gitea-token"
+
+
 def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_path):
     monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
     path = tmp_path / "config.json"

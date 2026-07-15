@@ -69,6 +69,65 @@ chattea artifact delete    -> DELETE /repos/{owner}/{repo}/actions/artifacts/{ar
 
 `runner setup` 系列命令是本地系统辅助函数：安装或定位 `gitea-runner`，在 ChatTea 运行时目录下写运行器配置，用 Gitea 注册令牌注册运行器，并管理用户级 systemd 服务。
 
+## 运行器配置和运行环境
+
+一次运行器注册至少涉及四类本地状态：
+
+```text
+<runner-root>/bin/gitea-runner          # 运行器二进制文件
+<runner-root>/config/config.yaml        # 运行器配置
+<runner-root>/.runner                   # 注册后的本地 runner 身份文件，敏感，不提交
+<runner-root>/work/                     # host 后端执行 job 的工作目录父目录
+```
+
+实践中生成的 `config.yaml` 关键字段如下：
+
+```yaml
+runner:
+  file: .runner
+  capacity: 1
+  timeout: 3h
+  labels:
+    - "<runner-label>:host"
+cache:
+  enabled: false
+host:
+  workdir_parent: <runner-root>/work
+```
+
+这里的 `capacity: 1` 表示单个 runner daemon 同时只接一个 job。要在同一台机器、同一 Unix 用户下并发跑多个 job，实践路径是启动多个 runner root，每个 root 有自己的 `.runner`、`config.yaml` 和 `work/`。本轮真实实践注册了两个 repo-scope runner，它们分别使用不同 label 和不同 root；同一个 workflow 里的两个 job 几乎同时开始，并都成功完成。
+
+当前 ChatTea CLI 的 `runner setup start` 使用固定的用户级 systemd service 名 `chattea-runner.service`，因此它适合管理一个默认 runner。多 runner 并发实践使用的是多个独立 root 加手动启动多个 `gitea-runner daemon -c <config>`。如果要把多 runner 变成长期服务，后续 infra 应支持按 runner name/root 生成多个 service 名。
+
+## Host 后端和 Docker
+
+实践使用的是 host 后端，不依赖 Docker。注册 label 时写成：
+
+```text
+<runner-label>:host
+```
+
+workflow 中引用时只写冒号前的 label：
+
+```yaml
+runs-on: <runner-label>
+```
+
+host 后端下，job 以启动 runner daemon 的同一 Unix 用户执行，工作目录位于 `host.workdir_parent` 下。它适合本机可信任务和内网开发验证；如果执行不可信 workflow，需要额外隔离策略。
+
+## Scope：repo、user、org、admin
+
+Gitea runner 注册令牌支持四种 scope。ChatTea CLI 暴露为 `chattea runner token --scope ...` 和 `chattea runner setup register --scope ...`。
+
+| Scope | 注册命令形态 | 本轮实践结果 |
+| --- | --- | --- |
+| repo | `--scope repo --repo OWNER/REPO` | 两个 repo-scope host runner 被同一个 PR workflow 的两个 job 分别调用，pull_request run 成功 |
+| user | `--scope user` | user-scope host runner 被用户仓库 workflow 调用，push run 成功 |
+| org | `--scope org --org ORG` | org-scope host runner 被组织仓库 workflow 调用，push run 成功 |
+| admin | `--scope admin` | admin-scope host runner 被仓库 workflow 调用，push run 成功 |
+
+实践结论：workflow 是否能调用 runner，核心取决于 runner 的 scope 是否覆盖该仓库，以及 workflow 的 `runs-on` 是否匹配 runner 注册 label。
+
 ## 运行器设置
 
 运行工作流前，先在 ChatTea 管理的开发 Gitea 服务上启用 Actions：
@@ -153,15 +212,28 @@ chattea job logs --repo gitea_admin/demo <job-id>
 
 ## 已验证的本地实践结果
 
-开发服务器上的真实实践覆盖了以下结果：
+开发服务器上的真实实践覆盖了两组结果。
+
+第一组验证 repo-scope 多 runner 并发和 PR 触发：
 
 ```text
-repository: gitea_admin/<actions-practice-repo>
-runner: <chattea-runner-name>
-pull_request run: completed
-job: completed
-result: success
-log marker: chattea actions practice
+scope: repo
+runner count: 2
+runner backend: host
+runner capacity: 1 per daemon
+workflow event: pull_request
+workflow jobs: runner_a, runner_b
+runs-on: <runner-label-a>, <runner-label-b>
+job result: both completed successfully
+job start: two jobs started within about one second
+```
+
+第二组验证 scope 覆盖范围：
+
+```text
+user-scope runner -> user-owned repo push workflow -> success
+org-scope runner  -> org-owned repo push workflow  -> success
+admin-scope runner -> repo push workflow           -> success
 ```
 
 实践注意：推送新分支后立刻创建 PR，可能和 Gitea 分支可见性刷新产生竞态。如果刚 push 后创建 PR 返回 `404`，短暂等待后用同一个 `head=<feature-branch>` 请求载荷重试即可。

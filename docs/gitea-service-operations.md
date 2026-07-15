@@ -89,12 +89,14 @@ Gitea 进程形态：
   --work-path <chatarch-home>/chattea/gitea
 ```
 
-运行器 进程形态：
+运行器进程形态：
 
 ```bash
 <chatarch-home>/chattea/runner/bin/gitea-runner daemon \
   -c <chatarch-home>/chattea/runner/config/config.yaml
 ```
+
+默认 ChatTea 运维面管理的是一个 `chattea-runner.service`。本轮实践证明，同一台机器、同一 Unix 用户下可以运行多个 host runner；做法是为每个 runner 使用独立 `<runner-root>`、独立 `.runner`、独立 `config.yaml` 和独立 `work/`，再分别启动 `gitea-runner daemon -c <config>`。当前 CLI 还没有为多 runner 生成多个长期 systemd service 名，这是后续 infra 项。
 
 如果 `chattea-gitea.service` 已经占用端口，不要再在同一端口前台运行 `gitea web`。
 

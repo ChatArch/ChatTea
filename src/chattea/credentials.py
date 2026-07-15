@@ -87,6 +87,11 @@ def credential_target_from_git_remote(cwd: str | Path | None = None, remote: str
     return parse_gitea_remote(result.stdout)
 
 
+def credential_target_matches_base_url(target: CredentialTarget, base_url: str) -> bool:
+    parsed = urlparse(normalize_base_url(base_url))
+    return target.protocol == parsed.scheme and target.host == parsed.netloc
+
+
 def git_extraheader_key(target: CredentialTarget) -> str:
     return f"http.{target.url}.extraHeader"
 
@@ -145,8 +150,14 @@ def resolve_token(
     if token:
         return token
     loaded = config or load_config()
-    target = credential_target_from_repo(base_url or loaded.url, repo) if repo else None
-    git_token = read_git_token(target, cwd=cwd)
+    resolved_base_url = base_url or loaded.url
+    if repo:
+        target = credential_target_from_repo(resolved_base_url, repo)
+    else:
+        target = credential_target_from_git_remote(cwd)
+        if target and not credential_target_matches_base_url(target, resolved_base_url):
+            target = None
+    git_token = read_git_token(target, cwd=cwd) if target else None
     if git_token:
         return git_token
     return loaded.token
@@ -163,7 +174,12 @@ def configure_token(
 ) -> dict[str, object]:
     normalized_url = normalize_base_url(base_url)
     env_path = save_env_token(normalized_url, token) if save_env else None
-    target = credential_target_from_repo(normalized_url, repo) if repo else credential_target_from_git_remote(cwd)
+    if repo:
+        target = credential_target_from_repo(normalized_url, repo)
+    else:
+        target = credential_target_from_git_remote(cwd)
+        if target and not credential_target_matches_base_url(target, normalized_url):
+            target = None
     git_key = None
     git_keys: list[str] = []
     if configure_git and target is not None:
