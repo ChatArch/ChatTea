@@ -651,4 +651,4 @@ pip install -e ".[docs]"
 mkdocs serve
 ```
 
-英文版见：[index.en.md](index.en.md)。
+英文版通过页面右上角语言切换进入。
