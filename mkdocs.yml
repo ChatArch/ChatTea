@@ -17,5 +17,6 @@ nav:
   - Gitea 服务运维: gitea-service-operations.md
   - Gitea 权限与可见性: gitea-permissions-and-visibility.md
   - Actions / Flow（动作 / 流程）快速开始: actions-flow-quickstart.md
+  - Runner 多实例第一版方案: runner-multi-instance-plan.md
   - CLI 对齐计划: cli-alignment.md
   - English: index.en.md
