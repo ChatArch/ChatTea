@@ -11,6 +11,7 @@ chattea
 ├── api                 # 调用尚未被一等封装的原始 Gitea API
 ├── artifact            # 查看、下载、删除 Gitea Actions 产物
 ├── auth                # 配置和检查 ChatTea base URL / token
+├── bot                 # 管理本机 Gitea bot / 服务账号和 token
 ├── issue               # 管理仓库问题、评论、标签和负责人
 ├── job                 # 查看、读取日志或重跑 Gitea Actions job
 ├── label               # 管理仓库标签
@@ -62,6 +63,19 @@ chattea token           # 管理 Gitea access token 生命周期
 ```
 
 实践校对点：`chattea set-token` 会同时写入远端 URL 带 `.git` 和不带 `.git` 两种 `extraHeader` key，避免 git remote 与 `http.<url>.extraHeader` key 不一致导致 `git push` 不带鉴权 header。
+
+## 机器人账号与服务账号
+
+```text
+chattea bot             # 管理本机 Gitea bot / 服务账号
+├── plan                # 检查本机 Gitea binary 是否支持 bot create / token generate / delete
+├── create              # 创建 Gitea UserTypeBot，可同时生成 scoped token
+├── delete              # 删除本机 bot / 用户；临时实践账号可配合 --purge 清理
+└── token               # 管理本机 bot token
+    └── create          # 给已存在 bot 生成 scoped token
+```
+
+`bot` 第一版只承诺本机托管 Gitea 的 local backend：通过 `gitea admin user create --user-type bot` 和 `gitea admin user generate-access-token --raw` 工作。稳定 REST API 还不能完整创建和识别 `UserTypeBot`，所以远程 API-only 场景暂不声称是真 bot。`@bot` 唤醒机制、主要用途和真实截图见 [机器人账号与服务账号](bot-service-account-plan.md)。
 
 ## 仓库
 
@@ -288,6 +302,7 @@ Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<r
 - admin user create/view/list；
 - team list/add-member/remove-member；
 - 通过 admin create-as-user 路径创建 user-owned 仓库；
-- 继续实践 user-owned 仓库的 admin create-as-user 路径。
+- 继续实践 user-owned 仓库的 admin create-as-user 路径；
+- bot / service account 的远程 REST backend：Gitea 底层和本机 admin CLI 已支持 bot 用户类型，但稳定 REST API 尚未完整暴露；当前已实现本机 local backend，后续再补通知轮询和 webhook receiver。
 
 这些都是实践暴露出的基础设施后续项。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。

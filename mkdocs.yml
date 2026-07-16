@@ -3,21 +3,85 @@ site_url: https://arch.gh.wzhecnu.cn/ChatTea/
 repo_url: https://github.com/ChatArch/ChatTea
 repo_name: ChatArch/ChatTea
 edit_uri: edit/main/docs/
+docs_dir: docs/
 theme:
   name: material
   language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 中文
+          build: true
+          site_name: ChatTea 文档
+        - locale: en
+          name: English
+          build: true
+          site_name: ChatTea Documentation
+          nav_translations:
+            首页: Home
+            入门: Getting Started
+            从零开始快速开始: From Scratch
+            Gitea 端到端快速开始: Gitea End-to-End
+            Gitea 服务: Gitea Service
+            服务运维: Service Operations
+            权限与可见性: Permissions and Visibility
+            仓库协作: Repository Collaboration
+            仓库协作快速开始: Repository Collaboration Quickstart
+            Bot / 服务账号: Bot / Service Accounts
+            机器人账号与服务账号: Bot and Service Accounts
+            Actions: Actions
+            Actions / Flow（动作 / 流程）快速开始: Actions / Flow Quickstart
+            Runner: Runner
+            Runner 运行环境与多实例: Runner Environment and Multi-Instance
+            Runner 多实例第一版方案: Runner Multi-Instance Plan
+            CLI / 接口: CLI / API
+            CLI 实战指南: CLI Guide
+            CLI 能力地图: CLI Capability Map
+            接口树: Interface Tree
+            CLI 对齐计划: CLI Alignment Plan
+extra:
+  alternate:
+    - name: 中文
+      link: /ChatTea/
+      lang: zh
+    - name: English
+      link: /ChatTea/en/
+      lang: en
 nav:
   - 首页: index.md
-  - 接口树: interface-tree.md
-  - CLI 实战指南: cli-guide.md
-  - CLI 能力地图: chattea-cli-tree.md
-  - 从零开始快速开始: from-scratch-quickstart.md
-  - 仓库协作快速开始: repo-collaboration-quickstart.md
-  - Gitea 端到端快速开始: gitea-quickstart.md
-  - Gitea 服务运维: gitea-service-operations.md
-  - Gitea 权限与可见性: gitea-permissions-and-visibility.md
-  - Actions / Flow（动作 / 流程）快速开始: actions-flow-quickstart.md
-  - Runner 运行环境与多实例: runner-environment-and-registration.md
-  - Runner 多实例第一版方案: runner-multi-instance-plan.md
-  - CLI 对齐计划: cli-alignment.md
-  - English: index.en.md
+  - 入门:
+      - 从零开始快速开始: from-scratch-quickstart.md
+      - Gitea 端到端快速开始: gitea-quickstart.md
+  - Gitea 服务:
+      - 服务运维: gitea-service-operations.md
+      - 权限与可见性: gitea-permissions-and-visibility.md
+  - 仓库协作:
+      - 仓库协作快速开始: repo-collaboration-quickstart.md
+  - Bot / 服务账号:
+      - 机器人账号与服务账号: bot-service-account-plan.md
+  - Actions:
+      - Actions / Flow（动作 / 流程）快速开始: actions-flow-quickstart.md
+  - Runner:
+      - Runner 运行环境与多实例: runner-environment-and-registration.md
+      - Runner 多实例第一版方案: runner-multi-instance-plan.md
+  - CLI / 接口:
+      - CLI 实战指南: cli-guide.md
+      - CLI 能力地图: chattea-cli-tree.md
+      - 接口树: interface-tree.md
+      - CLI 对齐计划: cli-alignment.md

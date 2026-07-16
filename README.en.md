@@ -27,6 +27,7 @@ Choose a guide by scenario:
 | --- | --- |
 | Bootstrap local Gitea from a blank machine | `docs/from-scratch-quickstart.md` |
 | Repository, issue, project, PR, and release collaboration | `docs/repo-collaboration-quickstart.md` |
+| Bot/service accounts and `@bot` wake-up flow | `docs/bot-service-account-plan.md` |
 | Runner, Actions run/job/log/artifact flow | `docs/actions-flow-quickstart.md` |
 | Full CLI tree and screenshots | `docs/cli-guide.md` |
 
@@ -143,6 +144,12 @@ chattea
 │   ├── list
 │   ├── delete
 │   └── bootstrap
+├── bot
+│   ├── plan
+│   ├── create
+│   ├── delete
+│   └── token
+│       └── create
 ├── server
 │   ├── install
 │   ├── init
@@ -246,7 +253,7 @@ chattea
     └── issue
 ```
 
-`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `issue`, `label`, `milestone`, `pr`, and `release` cover repo-level collaboration. `runner`, `run`, `job`, and `artifact` cover the first Gitea Actions/Flow surface: runner registration/lifecycle, PR-triggered runs, jobs, logs, and artifacts. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`.
+`server bootstrap` performs the first local install/init/admin/token/credential workflow. `token bootstrap` creates a Gitea access token through BasicAuth and then configures ChatTea/Git credentials. `bot` manages local Gitea bot/service-account users through the managed Gitea admin CLI. `issue`, `label`, `milestone`, `pr`, and `release` cover repo-level collaboration. `runner`, `run`, `job`, and `artifact` cover the first Gitea Actions/Flow surface: runner registration/lifecycle, PR-triggered runs, jobs, logs, and artifacts. `project issue` is a compatibility alias for `project card`. New docs and automation should use `project card`.
 
 See `docs/cli-guide.md` for the complete CLI tree, Gitea Web screenshots, and end-to-end examples.
 

@@ -28,6 +28,12 @@ chattea
 │   ├── list
 │   ├── delete
 │   └── bootstrap
+├── bot
+│   ├── plan
+│   ├── create
+│   ├── delete
+│   └── token
+│       └── create
 ├── server
 │   ├── install
 │   ├── init

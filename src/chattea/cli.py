@@ -9,6 +9,7 @@ from chattea import __version__
 from chattea.commands.api import api_command
 from chattea.commands.artifact import artifact_group
 from chattea.commands.auth import auth_group, render_token_config, resolve_login_values
+from chattea.commands.bot import bot_group
 from chattea.commands.issue import issue_group
 from chattea.commands.job import job_group
 from chattea.commands.label import label_group
@@ -55,6 +56,7 @@ main.add_command(artifact_group)
 main.add_command(project_group)
 main.add_command(auth_group)
 main.add_command(token_group)
+main.add_command(bot_group)
 main.add_command(api_command)
 
 
