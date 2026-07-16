@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="382" viewBox="0 0 1180 382">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10201a"/><stop offset="1" stop-color="#1f2a37"/></linearGradient></defs>
+<rect width="1180" height="382" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">Runner workflow execution evidence</text>
+<text x="26" y="64" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea pr create --repo OWNER/REPO --title &quot;Runner multi-instance practice&quot; --head runner-practice --base main</text>
+<text x="26" y="88" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: #1 Runner multi-instance practice</text>
+<text x="26" y="112" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea run view --repo OWNER/REPO &lt;run-id&gt;</text>
+<text x="26" y="136" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">event=pull_request status=completed conclusion=success</text>
+<text x="26" y="160" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea run jobs --repo OWNER/REPO &lt;run-id&gt; --json-output</text>
+<text x="26" y="184" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">runner_a: status=completed conclusion=success runner_name=&lt;runner-a&gt; started_at=...03:35:12Z</text>
+<text x="26" y="208" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">runner_b: status=completed conclusion=success runner_name=&lt;runner-b&gt; started_at=...03:35:12Z</text>
+<text x="26" y="232" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea job logs --repo OWNER/REPO &lt;job-a-id&gt;</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">whoami=&lt;runner-user&gt;</text>
+<text x="26" y="280" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">pwd=&lt;runner-root&gt;/work/&lt;task-id&gt;/hostexecutor</text>
+<text x="26" y="304" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">workspace=&lt;runner-root&gt;/work/&lt;task-id&gt;/hostexecutor</text>
+<text x="26" y="328" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner local stop &lt;runner-a&gt; &amp;&amp; chattea runner local remove &lt;runner-a&gt; --yes</text>
+<text x="26" y="352" fill="#fde68a" font-family="Menlo, Consolas, monospace" font-size="15">cleanup disables the user service, removes the unit file, and removes local runner root</text>
+</svg>

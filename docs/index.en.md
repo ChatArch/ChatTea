@@ -99,12 +99,10 @@ chattea
 │   ├── delete
 │   └── asset
 ├── runner
-│   ├── token
-│   ├── list
-│   ├── view
-│   ├── edit
-│   ├── delete
-│   └── setup
+│   ├── registry
+│   ├── local
+│   ├── pool
+│   └── workflow
 ├── run
 │   ├── list
 │   ├── view
@@ -137,9 +135,9 @@ chattea
 
 See [CLI Guide](cli-guide.md) for the complete CLI tree, Gitea Web screenshots, and end-to-end examples.
 
-See [Repo Collaboration Quick Start](repo-collaboration-quickstart.md) for a local end-to-end repo collaboration smoke flow with terminal screenshots.
+See [Repo Collaboration Quick Start](repo-collaboration-quickstart.md) for a local end-to-end repo collaboration practice flow with terminal screenshots.
 
-See [Actions / Flow Quick Start](actions-flow-quickstart.md) for the runner registration, PR-triggered run, job, and logs smoke flow.
+See [Actions / Flow Quick Start](actions-flow-quickstart.md) and [Runner Environment and Registration](runner-environment-and-registration.md) for runner registration, PR-triggered runs, jobs, logs, and Runner environment details.
 
 ## End-to-End Local Gitea Setup
 

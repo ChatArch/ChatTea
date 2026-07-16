@@ -43,9 +43,12 @@ chattea
 │   ├── column list/create/edit/delete
 │   ├── card list/add/remove/move
 │   └── issue list/add/remove/move   # card 的兼容别名
-├── runner                    # Gitea Actions runner API + 本地 setup
-│   ├── token/list/view/edit/delete  # REST: /actions/runners
-│   └── setup install/register/start/stop/status/logs/doctor
+├── runner                    # Gitea Actions runner registry + local instances
+│   ├── registry token/list/view/enable/disable/delete
+│   ├── local install/create/register/list/view/start/stop/restart/status/logs/doctor/remove
+│   ├── local config show/set-labels/set-capacity/set-workdir/set-backend
+│   ├── pool create/start/stop/status/remove
+│   └── workflow labels/example/check
 ├── run                       # REST: /repos/{owner}/{repo}/actions/runs
 │   └── list/view/jobs/logs/rerun/rerun-failed/delete
 ├── job                       # REST: /repos/{owner}/{repo}/actions/jobs
@@ -68,7 +71,7 @@ from chattea.api import GiteaClient
 from chattea.commands.repo import create_repository
 from chattea.commands.issue import create_issue
 from chattea.commands.project import add_card
-from chattea.commands.runner import register_runner
+from chattea.commands.runner import register_local_runner
 from chattea.commands.run import list_runs
 from chattea.commands.job import job_logs
 
@@ -76,7 +79,7 @@ client = GiteaClient()
 repo = create_repository(name="demo", owner="gitea_admin")
 issue = create_issue("gitea_admin/demo", title="Document CLI")
 add_card("gitea_admin/demo", project_id=1, column_id=1, issue_id=issue["id"])
-register_runner(scope="repo", repo="gitea_admin/demo", name="chattea-runner-demo")
+register_local_runner("demo", scope="repo", repo="gitea_admin/demo", labels="chattea-runner-demo")
 runs = list_runs("gitea_admin/demo")
 logs = job_logs("gitea_admin/demo", job_id=6)
 ```
@@ -168,15 +171,15 @@ chattea pr merge       -> POST /repos/{owner}/{repo}/pulls/{index}/merge
 
 运行器支持分两层：
 
-1. Gitea REST API 层：
-   - 注册令牌
-   - 运行器 list/view/edit/delete
-   - repo/user/org/admin scope
-2. 本地 setup 层：
-   - 安装 `gitea-runner`
-   - 写运行器 config
-   - 用 Gitea 注册令牌注册运行器
-   - 管理 `chattea-runner.service` 或手动启动多个 runner daemon
+1. Gitea registry 层：
+   - 注册令牌；
+   - 运行器 list/view/enable/disable/delete；
+   - repo/user/org/admin scope。
+2. 本机 local 层：
+   - 安装或复制 `gitea-runner`；
+   - 为每个 runner name 写独立 root/config/workdir；
+   - 用 Gitea 注册令牌注册 runner；
+   - 管理 `chattea-runner@<runner-name>.service`。
 
 第一版实现默认使用 host 运行器标签：
 
@@ -198,21 +201,22 @@ runs-on: <runner-label>
 
 ![Gitea Actions job log 页面](assets/cli-guide/gitea-actions-job-log.png)
 
-运行器 setup 和维护的 CLI 记录：
+运行器 local 注册和维护的 CLI 记录：
 
-![运行器 setup 和维护 CLI 流程](assets/cli-guide/runner-lifecycle.svg)
+![Runner 本机注册和服务维护记录](assets/runner/runner-local-registration.svg)
 
 路由 和 辅助函数 映射：
 
 ```text
-chattea runner token       -> POST /repos/{owner}/{repo}/actions/runners/registration-token
-chattea runner list        -> GET /repos/{owner}/{repo}/actions/runners
-chattea runner edit        -> PATCH /repos/{owner}/{repo}/actions/runners/{runner_id}
-chattea runner delete      -> DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}
-chattea runner setup *     -> local helper around ~/.chatarch/chattea/runner and user systemd
+chattea runner registry token   -> POST /repos/{owner}/{repo}/actions/runners/registration-token
+chattea runner registry list    -> GET /repos/{owner}/{repo}/actions/runners
+chattea runner registry enable  -> PATCH /repos/{owner}/{repo}/actions/runners/{runner_id}
+chattea runner registry disable -> PATCH /repos/{owner}/{repo}/actions/runners/{runner_id}
+chattea runner registry delete  -> DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}
+chattea runner local *          -> local helper around <chattea-home>/runners/<runner-name> and user systemd
 ```
 
-`runner edit` 使用 Gitea 的 `disabled` 字段。CLI 中暴露为 `--disabled` 和 `--enabled`。
+`runner registry enable/disable` 使用 Gitea 的 `disabled` 字段。
 
 ## 运行、任务和日志示例
 

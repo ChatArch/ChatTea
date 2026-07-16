@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.3.0
+
+- Changed the Runner CLI surface to the first-version structured tree: `runner registry`, `runner local`, `runner pool`, and `runner workflow`.
+- Removed the earlier duplicate Runner entry points (`runner token/list/view/edit/delete/setup`) so the initial API does not carry stale aliases.
+- Added local multi-runner instance management with per-runner roots, config files, workdirs, and `chattea-runner@<runner-name>.service` user services.
+- Added host-backend Runner practice documentation, real Gitea Web UI screenshots, and tests for local runner config, service naming, workflow `runs-on` parsing, and removed legacy commands.
+
 ## 0.2.3
 
 - Added `auth` as a GitHub-familiar authentication namespace while keeping `set-token` as a ChatTea quick configuration command.

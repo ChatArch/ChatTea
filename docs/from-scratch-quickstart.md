@@ -24,7 +24,7 @@ chattea set-token
   已有 token 路径：给定已经创建好的 token，把它保存到 ChatTea/ChatEnv，并按需配置 repo-local git config。
 ```
 
-`0.2.3` 的当前实现状态：
+`0.3.0` 的当前实现状态：
 
 ```text
 已实现：

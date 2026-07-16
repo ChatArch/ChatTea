@@ -284,12 +284,10 @@ chattea
 │   ├── delete
 │   └── asset
 ├── runner
-│   ├── token
-│   ├── list
-│   ├── view
-│   ├── edit
-│   ├── delete
-│   └── setup
+│   ├── registry
+│   ├── local
+│   ├── pool
+│   └── workflow
 ├── run
 │   ├── list
 │   ├── view
@@ -322,9 +320,9 @@ chattea
 
 See `docs/cli-guide.md` for the complete CLI tree, Gitea Web screenshots, and end-to-end examples.
 
-See `docs/repo-collaboration-quickstart.md` for a local end-to-end repo collaboration smoke flow with terminal screenshots.
+See `docs/repo-collaboration-quickstart.md` for a local end-to-end repo collaboration practice flow with terminal screenshots.
 
-See `docs/actions-flow-quickstart.md` for the Actions runner/run/job/log smoke flow.
+See `docs/actions-flow-quickstart.md` and `docs/runner-environment-and-registration.md` for Actions runner/run/job/log practice and Runner environment details.
 
 ## Python API
 

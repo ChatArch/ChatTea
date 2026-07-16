@@ -124,19 +124,37 @@ chattea
 │       ├── remove
 │       └── move
 ├── runner
-│   ├── token
-│   ├── list
-│   ├── view
-│   ├── edit
-│   ├── delete
-│   └── setup
-│       ├── install
-│       ├── register
-│       ├── start
-│       ├── stop
-│       ├── status
-│       ├── logs
-│       └── doctor
+│   ├── registry
+│   │   ├── token
+│   │   ├── list
+│   │   ├── view
+│   │   ├── enable
+│   │   ├── disable
+│   │   └── delete
+│   ├── local
+│   │   ├── install
+│   │   ├── create
+│   │   ├── register
+│   │   ├── list
+│   │   ├── view
+│   │   ├── start
+│   │   ├── stop
+│   │   ├── restart
+│   │   ├── status
+│   │   ├── logs
+│   │   ├── doctor
+│   │   ├── config
+│   │   └── remove
+│   ├── pool
+│   │   ├── create
+│   │   ├── start
+│   │   ├── stop
+│   │   ├── status
+│   │   └── remove
+│   └── workflow
+│       ├── labels
+│       ├── example
+│       └── check
 ├── run
 │   ├── list
 │   ├── view
@@ -213,8 +231,10 @@ ChatTea 自有命令保留为：
 - `project list/view/create/edit/delete`：管理 仓库级 Gitea Projects。
 - `project column list/create/edit/delete`：管理 仓库 项目看板 中的 column。
 - `project card list/add/remove/move`：管理 项目列 中的 问题/PR card。
-- `runner token/list/view/edit/delete`：通过 仓库/org/user/admin 运行器 API 管理 Gitea Actions 运行器。
-- `runner setup install/register/start/stop/status/logs/doctor`：安装并运行本地 `gitea-runner`，用于开发和自托管 运行器。
+- `runner registry token/list/view/enable/disable/delete`：通过 仓库/org/user/admin 运行器 API 管理 Gitea Actions 服务器侧 runner 记录。
+- `runner local install/create/register/list/view/start/stop/restart/status/logs/doctor/config/remove`：安装并运行本机 `gitea-runner` 实例，用于开发和自托管 运行器。
+- `runner pool create/start/stop/status/remove`：批量管理同机多个本机 runner 实例。
+- `runner workflow labels/example/check`：辅助校验 workflow `runs-on` 和 runner label。
 - `run list/view/jobs/logs/rerun/rerun-failed/delete`：查看并控制 Gitea Actions 工作流 run。
 - `job view/logs/rerun`：查看 job 元数据、获取日志并通过 parent run 重跑 job。
 - `artifact list/view/download/delete`：查看、下载和删除 Actions 产物。
@@ -302,18 +322,28 @@ chattea release edit          -> chattea.commands.release.edit_release
 chattea release delete        -> chattea.commands.release.delete_release
 chattea release asset list    -> chattea.commands.release.list_assets
 chattea release asset delete  -> chattea.commands.release.delete_asset
-chattea runner token          -> chattea.commands.runner.create_runner_token
-chattea runner list           -> chattea.commands.runner.list_registered_runners
-chattea runner view           -> chattea.commands.runner.view_registered_runner
-chattea runner edit           -> chattea.commands.runner.edit_registered_runner
-chattea runner delete         -> chattea.commands.runner.delete_registered_runner
-chattea runner setup install  -> chattea.commands.runner.install_runner
-chattea runner setup register -> chattea.commands.runner.register_runner
-chattea runner setup start    -> chattea.commands.runner.start_runner_service
-chattea runner setup stop     -> chattea.commands.runner.stop_runner_service
-chattea runner setup status   -> chattea.commands.runner.runner_service_status
-chattea runner setup logs     -> chattea.commands.runner.runner_service_logs
-chattea runner setup doctor   -> chattea.commands.runner.runner_root / runner_binary / runner_config checks
+chattea runner registry token  -> chattea.commands.runner.create_runner_token
+chattea runner registry list   -> chattea.commands.runner.list_registered_runners
+chattea runner registry view   -> chattea.commands.runner.view_registered_runner
+chattea runner registry enable -> chattea.commands.runner.edit_registered_runner
+chattea runner registry disable -> chattea.commands.runner.edit_registered_runner
+chattea runner registry delete -> chattea.commands.runner.delete_registered_runner
+chattea runner local install   -> chattea.commands.runner.install_runner
+chattea runner local create    -> chattea.commands.runner.create_local_runner
+chattea runner local register  -> chattea.commands.runner.register_local_runner
+chattea runner local list      -> chattea.commands.runner.iter_local_runners
+chattea runner local view      -> chattea.commands.runner.local_runner_summary
+chattea runner local start     -> chattea.commands.runner.start_runner_service
+chattea runner local stop      -> chattea.commands.runner.stop_runner_service
+chattea runner local restart   -> chattea.commands.runner.restart_runner_service
+chattea runner local status    -> chattea.commands.runner.runner_service_status
+chattea runner local logs      -> chattea.commands.runner.runner_service_logs
+chattea runner local doctor    -> chattea.commands.runner.local_runner_summary checks
+chattea runner local remove    -> chattea.commands.runner.remove_local_runner
+chattea runner pool create     -> chattea.commands.runner.create_local_runner / register_local_runner
+chattea runner pool status     -> chattea.commands.runner.pool_runners
+chattea runner workflow labels -> chattea.commands.runner.extract_runner_labels
+chattea runner workflow check  -> chattea.commands.runner.parse_workflow_runs_on
 chattea run list              -> chattea.commands.run.list_runs
 chattea run view              -> chattea.commands.run.view_run
 chattea run jobs              -> chattea.commands.run.list_run_jobs
