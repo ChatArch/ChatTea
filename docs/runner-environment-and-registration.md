@@ -202,6 +202,28 @@ started_at: both jobs started in the same second
 
 也就是说，同一机器、同一 Unix 用户下，两个独立 runner service 可以并发接两个不同 job。每个 job 进入各自 runner root 下的 `work/<task-id>/hostexecutor`。
 
+## 网页端表现位置
+
+真实实践完成后，Gitea 网页端主要在四类页面上体现 Runner 和 Actions 结果。
+
+第一，仓库的 `工作流` tab 会出现 workflow run 列表。这里能看到 PR 触发的 run、状态和结论：
+
+![Gitea Actions run 列表页面](assets/runner/web/gitea-actions-list.png)
+
+第二，进入某个 run 后，页面会显示 workflow 图和两个 job 节点。这个页面能确认两个 job 都是成功状态，并且它们来自同一个 `pull_request` run：
+
+![Gitea Actions run 详情页面](assets/runner/web/gitea-actions-run-detail.png)
+
+第三，进入 job 页面后，Gitea 会展示单个 job 的日志区域和运行状态。runner A 的 job 页面对应 `runs-on: <runner-a>`：
+
+![Gitea Actions runner A job 页面](assets/runner/web/gitea-actions-job-runner-a.png)
+
+第四，runner B 的 job 页面对应 `runs-on: <runner-b>`，用于确认两个不同 label 被两个不同 runner 接走：
+
+![Gitea Actions runner B job 页面](assets/runner/web/gitea-actions-job-runner-b.png)
+
+上面的截图是 Gitea 网页端真实页面截图；下面的 SVG 是同一轮实践的脱敏命令摘要，方便在文档里快速扫命令链。
+
 ![Runner PR workflow 成功执行记录](assets/runner/runner-pr-run-success.svg)
 
 ## 维护命令
