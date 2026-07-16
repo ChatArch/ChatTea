@@ -83,13 +83,25 @@ repo.code, repo.issues, repo.pulls, repo.releases, repo.projects, repo.actions, 
 第一版边界：
 
 ```text
-匿名用户：不应看到 private org/repo 内容
+匿名用户：看不到 private org/repo 内容
 组织成员：可看到组织和授权仓库
 任务账号：作为组织成员参与任务处理
-非组织成员：不应看到 private repo 内容
+非组织成员：看不到 private org/repo 内容
 ```
 
-这部分需要结合真实 Gitea 版本继续验证匿名访问、非成员访问和站点级配置的具体表现。
+## 真实访问矩阵
+
+本轮单独创建一组临时 private 组织、private 仓库、普通成员、任务账号和非成员账号，验证 API 与 Git over HTTPS 访问结果。公开文档只记录脱敏结论，不写入服务地址、token、密码或本机路径。
+
+| 访问主体 | API: org | API: repo | API: issues | Git `ls-remote` | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| 匿名用户 | 404 | 404 | 404 | 失败 | 无法看到 private 组织、仓库和 issue。 |
+| 登录但非组织成员 | 404 | 404 | 404 | 失败 | 无法看到 private 组织、仓库和 issue。 |
+| 组织普通成员 | 200 | 200 | 200 | 成功 | 可访问组织仓库、issue 和 Git refs。 |
+| 组织任务账号 | 200 | 200 | 200 | 成功 | 具备处理任务所需的读取和 Git 访问能力。 |
+| 管理员 | 200 | 200 | 200 | 成功 | 管理员可作为运维兜底访问。 |
+
+本次验证确认：`private org + private repo + developers team` 能满足“匿名不可见、非成员不可见、组织成员和任务账号可协作”的第一版边界。
 
 ## ChatTea 命令覆盖
 

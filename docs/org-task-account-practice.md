@@ -65,7 +65,7 @@ pull request: #2
 
 ## 需要验证的问题
 
-1. 组织和仓库的 private/internal 可见性是否满足内部协作：本次已验证组织成员和任务账号可访问 private 组织仓库；匿名/非成员访问还需单独补验证。
+1. 组织和仓库的 private/internal 可见性是否满足内部协作：已补独立访问矩阵，匿名用户和登录非成员访问 private org/repo/issue 均返回 404，Git `ls-remote` 失败；组织成员、任务账号和管理员 API/Git 访问成功。
 2. 普通任务账号被 `@` 后，是否能通过 `/notifications` 感知：已验证。
 3. 任务账号是否能读取 issue/comment 并自动回复：已验证。
 4. 任务账号是否能通过 Git over HTTPS clone/fetch/push：已验证 clone/push；fetch 与 pull 后续可补一条独立验证。
@@ -132,9 +132,9 @@ chattea pr create --repo <org>/<repo> --head task-account/<task-id> --base main 
 
 ## 截图和证据
 
-本次已保存脱敏 CLI/Git 实践记录；公开文档只引用结果，不写入本机路径、服务地址、token 或密码。
+本次已保存脱敏 CLI/Git/API 实践记录；公开文档只引用结果，不写入本机路径、服务地址、token 或密码。
 
-网页截图后续补充，目标位置：
+网页截图本轮先占位，不作为收尾阻塞项。后续如果需要补图，再放到：
 
 ```text
 docs/assets/org-task-account/
@@ -145,5 +145,3 @@ docs/assets/org-task-account/
 - 不包含浏览器地址栏。
 - 不包含 token、密码、本机路径或真实服务地址。
 - 覆盖组织页、组织仓库、issue `@任务账号`、任务账号回复、PR 页面。
-
-当前截图脚本已能通过 API/Git 跑通链路，但 headless Chrome 登录态复用还需要继续稳定化；在截图有效前不把图片作为公开证据。
