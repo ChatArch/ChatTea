@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.1
+
+- Added organization task-account workflow support: admin user creation, organization/team/member helpers, and user notification list/view/poll/mark-read commands.
+- Documented the real private organization workflow from `@task-account` notification pickup through automated reply, Git push, PR creation, and private visibility checks.
+- Fixed list query parameter encoding so notification filters and other repeated query params are sent correctly.
+
 ## 0.3.0
 
 - Changed the Runner CLI surface to the first-version structured tree: `runner registry`, `runner local`, `runner pool`, and `runner workflow`.
