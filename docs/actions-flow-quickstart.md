@@ -6,19 +6,16 @@
 
 ```text
 chattea runner                # 管理 Gitea Actions 运行器
-├── token                     # 获取运行器注册令牌
-├── list                      # 列出运行器
-├── view                      # 查看运行器详情
-├── edit                      # 启用或禁用运行器
-├── delete                    # 删除运行器
-└── setup                     # 本机运行器安装和服务管理
-    ├── install               # 安装 gitea-runner
-    ├── register              # 注册运行器
-    ├── start                 # 启动运行器服务
-    ├── stop                  # 停止运行器服务
-    ├── status                # 查看运行器服务状态
-    ├── logs                  # 查看运行器服务日志
-    └── doctor                # 检查运行器配置和二进制文件
+├── registry                  # 管理 Gitea 服务器侧 runner 记录
+├── local                     # 管理本机 runner instances、root、config 和 service
+├── pool                      # 批量管理同机多个 runner
+├── workflow                  # 检查 workflow runs-on 和 runner labels
+├── setup                     # 兼容默认单 runner 安装和服务管理
+├── token                     # 兼容入口：获取运行器注册令牌
+├── list                      # 兼容入口：列出运行器
+├── view                      # 兼容入口：查看运行器详情
+├── edit                      # 兼容入口：启用或禁用运行器
+└── delete                    # 兼容入口：删除运行器
 
 chattea run                   # 查看和控制 workflow run
 ├── list                      # 列出 run

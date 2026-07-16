@@ -219,20 +219,48 @@ chattea artifact        # 管理 Gitea Actions 产物
 ├── download            # 下载产物 zip
 └── delete              # 删除产物
 
-chattea runner          # 管理 Gitea Actions 运行器
-├── setup               # 安装、注册并管理本机运行器
-├── list                # 列出运行器
-├── view                # 查看运行器详情
-├── edit                # 启用或禁用运行器
-├── delete              # 删除运行器
-└── token               # 获取运行器注册令牌
-    ├── --scope repo    # 获取仓库级注册令牌，需要 --repo OWNER/NAME
-    ├── --scope org     # 获取组织级注册令牌，需要 --org ORG
-    ├── --scope user    # 获取用户级注册令牌
-    └── --scope admin   # 获取管理员级注册令牌
+chattea runner                    # 管理 Gitea Actions 运行器
+├── token/list/view/edit/delete   # 兼容入口：操作 Gitea registry 里的 runner 记录
+├── registry                      # 管理 Gitea 服务器侧 runner 记录
+│   ├── token                     # 获取 repo/user/org/admin 注册令牌
+│   ├── list                      # 按 scope 列出 runner
+│   ├── view                      # 查看 runner 详情
+│   ├── enable                    # 启用 runner
+│   ├── disable                   # 禁用 runner
+│   └── delete                    # 删除 runner 记录
+├── local                         # 管理本机 runner 实例
+│   ├── install                   # 安装或复制 gitea-runner binary
+│   ├── create                    # 创建 runner root 和 config，不注册
+│   ├── register                  # 创建本机 root/config 并注册到 Gitea
+│   ├── list                      # 列出本机已管理 runner instances
+│   ├── view                      # 查看本机 runner root/config/service 摘要
+│   ├── start                     # 启动 chattea-runner@name.service
+│   ├── stop                      # 停止 runner service
+│   ├── restart                   # 重启 runner service
+│   ├── status                    # 查看 systemd user service 状态
+│   ├── logs                      # 查看 runner service 日志
+│   ├── doctor                    # 检查 binary/config/.runner/workdir
+│   ├── config                    # 修改 runner config.yaml
+│   │   ├── show                  # 显示 labels/capacity/workdir/backend 摘要
+│   │   ├── set-labels            # 更新 labels
+│   │   ├── set-capacity          # 更新 capacity
+│   │   ├── set-workdir           # 更新 host workdir_parent
+│   │   └── set-backend           # 更新 label backend 后缀
+│   └── remove                    # disable service 并删除本机 runner root
+├── pool                          # 批量管理同机多个 runner
+│   ├── create                    # 创建或注册 N 个 runner
+│   ├── start                     # 启动 pool 内所有 runner
+│   ├── stop                      # 停止 pool 内所有 runner
+│   ├── status                    # 查看 pool 摘要
+│   └── remove                    # 删除 pool 内本机 runner
+├── workflow                      # workflow 与 runner label 辅助
+│   ├── labels                    # 列出当前 scope 可用于 runs-on 的 labels
+│   ├── example                   # 输出 runs-on 示例
+│   └── check                     # 检查 workflow runs-on 是否有匹配 runner
+└── setup                         # 兼容入口：默认单 runner 安装和服务管理
 ```
 
-这些命令覆盖第一版 Gitea Actions 面：运行器生命周期、PR 触发的 run、job、log 和产物。Actions / Runner 的真实实践流程和截图见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
+这些命令覆盖第一版 Gitea Actions 面：运行器生命周期、PR 触发的 run、job、log 和产物。Runner 运行环境、注册、多实例维护和并发结论见 [Runner 运行环境与多实例](runner-environment-and-registration.md)，Actions / Runner 的端到端流程见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
 
 ## 服务
 
