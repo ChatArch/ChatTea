@@ -15,9 +15,21 @@
 
 第一版先不引入 bot 身份，使用普通 user 作为任务账号。这样 notification、comment、Git over HTTPS 和 PR 都沿用普通用户模型，链路更短。
 
-## User / Organization 可见性
+## User / Organization / Team 的差异
 
-Gitea 的 user 和 organization 可见性有三类：
+Gitea 里这三层不是同一类对象：
+
+| 对象 | 它是什么 | 主要决定什么 | 在本实践中的角色 |
+| --- | --- | --- | --- |
+| User | 可以登录、持有 token、收发 notification、发 issue/comment/PR、执行 Git 操作的账号主体 | “谁在操作”以及操作记录显示成谁 | 普通发起用户和公共任务账号都是普通 user。 |
+| Organization | 仓库和团队的归属空间 | “仓库放在哪个协作边界内”以及组织可见性 | 内部协作组织，下面放项目仓库。 |
+| Team | Organization 里面的成员和权限集合 | “哪些 user 能访问哪些仓库、具备 read/write/admin 和哪些 repo units” | `developers` team 覆盖所有组织仓库，把普通用户和任务账号授权为 write。 |
+
+因此第一版链路的权限路径是：user 先加入 organization 内的 team，team 再把对应仓库权限授予 user。仅有 private organization 不等于仓库自动可协作；真正让成员能看仓库、改代码、发 PR 的是 team 权限。
+
+## User / Organization / Team 可见性
+
+Gitea 的 user、organization 和 team 可见性有三类：
 
 - `public`：公开可见。
 - `limited`：面向登录用户可见。

@@ -75,7 +75,7 @@ pull request: #2
 
 ### 1. 准备组织和账号
 
-待实践记录：
+命令模板：
 
 ```bash
 chattea user create --username <user> --email <user@example.invalid> --password-env USER_PASSWORD --visibility private
@@ -88,7 +88,7 @@ chattea org team member add <team-id> <task-account>
 
 ### 2. 创建组织仓库和 issue
 
-待实践记录：
+命令模板：
 
 ```bash
 chattea repo create <repo> --owner <org> --private
@@ -97,7 +97,7 @@ chattea issue create --repo <org>/<repo> --title "<task title>" --body "@<task-a
 
 ### 3. 任务账号感知并回复
 
-待实践记录：
+命令模板：
 
 ```bash
 chattea notification poll --status unread --subject issue,pull --max-wait 60
@@ -109,7 +109,7 @@ chattea notification mark-read <thread-id>
 
 ### 4. 任务账号提交 PR
 
-待实践记录：
+命令模板：
 
 ```bash
 git clone <org-repo-https-url>
@@ -120,15 +120,15 @@ git push origin task-account/<task-id>
 chattea pr create --repo <org>/<repo> --head task-account/<task-id> --base main --title "<PR title>" --body "@<requester> 已提交，请验收。"
 ```
 
-## 需要补的 Infra
+## 本轮补齐的 Infra
 
-实践中发现缺口再补。当前预期可能需要补：
+实践中已经确认并补齐：
 
-- 组织、用户、成员管理命令。
+- 组织、用户、团队成员管理命令。
 - notification 轮询和 mark-read 命令。
-- issue/PR comment 回复命令。
-- PR 创建命令或现有 PR 命令补齐。
-- Git over HTTPS 凭据配置和脱敏记录。
+- issue comment 回复沿用既有 `chattea issue comment create`。
+- PR 创建沿用既有 `chattea pr create`。
+- Git over HTTPS 通过账号 token 和 repo-local `extraHeader` 跑通。
 
 ## 截图和证据
 

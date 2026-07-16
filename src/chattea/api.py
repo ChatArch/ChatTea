@@ -35,7 +35,7 @@ class GiteaClient:
         extra_headers: dict[str, str] | None = None,
         accept: str = "application/json",
     ) -> bytes:
-        query = f"?{urlencode(params)}" if params else ""
+        query = f"?{urlencode(params, doseq=True)}" if params else ""
         url = f"{self.url}/api/v1{path}{query}"
         body = None if data is None else json.dumps(data).encode("utf-8")
         headers = {"Accept": accept, "User-Agent": "chattea"}

@@ -357,6 +357,33 @@ def test_access_token_api_methods_use_basic_auth(monkeypatch):
         assert call[4]["Authorization"].startswith("Basic ")
 
 
+def test_request_raw_expands_list_query_params(monkeypatch):
+    captured = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    class FakeResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return b"{}"
+
+    def fake_urlopen(request, timeout=30):
+        captured.append(request.full_url)
+        return FakeResponse()
+
+    monkeypatch.setattr("chattea.api.urlopen", fake_urlopen)
+
+    client.request_raw("GET", "/notifications", params={"status-types": ["unread", "read"], "limit": 20})
+
+    assert captured == ["http://gitea.local/api/v1/notifications?status-types=unread&status-types=read&limit=20"]
+
+
 def test_bootstrap_access_token_rotates_existing_default_token(monkeypatch, tmp_path):
     monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
     calls = []
