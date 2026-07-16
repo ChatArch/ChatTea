@@ -111,6 +111,34 @@ class GiteaClient:
             extra_headers=self.basic_auth_header(username, password),
         )
 
+    def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        *,
+        full_name: str | None = None,
+        must_change_password: bool | None = None,
+        restricted: bool | None = None,
+        visibility: str | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            "/admin/users",
+            data=self._payload(
+                username=username,
+                email=email,
+                password=password,
+                full_name=full_name,
+                must_change_password=must_change_password,
+                restricted=restricted,
+                visibility=visibility,
+            ),
+        )
+
+    def delete_user(self, username: str, *, purge: bool | None = None) -> Any:
+        return self.request("DELETE", f"/admin/users/{quote(username)}", params=self._params(purge=purge))
+
     def list_repos(self, owner: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         if owner:
             return self.request("GET", f"/orgs/{quote(owner)}/repos", params={"limit": limit})
@@ -142,6 +170,70 @@ class GiteaClient:
             if owner != me.get("login"):
                 return self.request("POST", f"/orgs/{quote(owner)}/repos", data=payload)
         return self.request("POST", "/user/repos", data=payload)
+
+    def list_orgs(self, *, limit: int = 50, page: int | None = None) -> list[dict[str, Any]]:
+        return self.request("GET", "/orgs", params=self._params(limit=limit, page=page))
+
+    def create_org(
+        self,
+        username: str,
+        *,
+        full_name: str | None = None,
+        description: str | None = None,
+        email: str | None = None,
+        visibility: str | None = None,
+        repo_admin_change_team_access: bool | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            "/orgs",
+            data=self._payload(
+                username=username,
+                full_name=full_name,
+                description=description,
+                email=email,
+                visibility=visibility,
+                repo_admin_change_team_access=repo_admin_change_team_access,
+            ),
+        )
+
+    def get_org(self, org: str) -> dict[str, Any]:
+        return self.request("GET", f"/orgs/{quote(org)}")
+
+    def list_org_teams(self, org: str, *, limit: int = 50, page: int | None = None) -> list[dict[str, Any]]:
+        return self.request("GET", f"/orgs/{quote(org)}/teams", params=self._params(limit=limit, page=page))
+
+    def create_org_team(
+        self,
+        org: str,
+        name: str,
+        *,
+        description: str | None = None,
+        permission: str | None = None,
+        includes_all_repositories: bool | None = None,
+        can_create_org_repo: bool | None = None,
+        units: list[str] | None = None,
+        visibility: str | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            f"/orgs/{quote(org)}/teams",
+            data=self._payload(
+                name=name,
+                description=description,
+                permission=permission,
+                includes_all_repositories=includes_all_repositories,
+                can_create_org_repo=can_create_org_repo,
+                units=units,
+                visibility=visibility,
+            ),
+        )
+
+    def add_team_member(self, team_id: int, username: str) -> Any:
+        return self.request("PUT", f"/teams/{team_id}/members/{quote(username)}")
+
+    def remove_team_member(self, team_id: int, username: str) -> Any:
+        return self.request("DELETE", f"/teams/{team_id}/members/{quote(username)}")
 
     def migrate_repo(
         self,
@@ -272,6 +364,30 @@ class GiteaClient:
 
     def remove_issue_from_project_column(self, owner: str, repo: str, project_id: int, column_id: int, issue_id: int) -> None:
         return self.request("DELETE", f"/repos/{quote(owner)}/{quote(repo)}/projects/{project_id}/columns/{column_id}/issues/{issue_id}")
+
+    def list_notifications(
+        self,
+        *,
+        all_: bool | None = None,
+        status_types: list[str] | None = None,
+        subject_types: list[str] | None = None,
+        since: str | None = None,
+        before: str | None = None,
+        limit: int = 50,
+        page: int | None = None,
+    ) -> list[dict[str, Any]]:
+        params = self._params(all=all_, since=since, before=before, limit=limit, page=page) or {}
+        if status_types:
+            params["status-types"] = status_types
+        if subject_types:
+            params["subject-type"] = subject_types
+        return self.request("GET", "/notifications", params=params or None)
+
+    def get_notification_thread(self, thread_id: int | str) -> dict[str, Any]:
+        return self.request("GET", f"/notifications/threads/{quote(str(thread_id))}")
+
+    def mark_notification_thread(self, thread_id: int | str, *, status: str = "read") -> dict[str, Any] | None:
+        return self.request("PATCH", f"/notifications/threads/{quote(str(thread_id))}", params={"to-status": status})
 
     def move_project_issue(
         self,

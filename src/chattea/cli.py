@@ -14,6 +14,8 @@ from chattea.commands.issue import issue_group
 from chattea.commands.job import job_group
 from chattea.commands.label import label_group
 from chattea.commands.milestone import milestone_group
+from chattea.commands.notification import notification_group
+from chattea.commands.org import org_group
 from chattea.commands.pr import pr_group
 from chattea.commands.project import project_group
 from chattea.commands.release import release_group
@@ -22,6 +24,7 @@ from chattea.commands.runner import runner_group
 from chattea.commands.run import run_group
 from chattea.commands.server import server_group
 from chattea.commands.token import token_group
+from chattea.commands.user import user_group
 
 
 @click.group()
@@ -56,6 +59,9 @@ main.add_command(artifact_group)
 main.add_command(project_group)
 main.add_command(auth_group)
 main.add_command(token_group)
+main.add_command(user_group)
+main.add_command(org_group)
+main.add_command(notification_group)
 main.add_command(bot_group)
 main.add_command(api_command)
 

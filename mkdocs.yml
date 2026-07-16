@@ -40,11 +40,13 @@ plugins:
             Gitea 端到端快速开始: Gitea End-to-End
             Gitea 服务: Gitea Service
             服务运维: Service Operations
+            账号、组织与可见性模型: Accounts, Organizations, and Visibility
             权限与可见性: Permissions and Visibility
             仓库协作: Repository Collaboration
             仓库协作快速开始: Repository Collaboration Quickstart
             Bot / 服务账号: Bot / Service Accounts
             机器人账号与服务账号: Bot and Service Accounts
+            组织任务账号协作闭环: Organization Task Account Flow
             Actions: Actions
             Actions / Flow（动作 / 流程）快速开始: Actions / Flow Quickstart
             Runner: Runner
@@ -70,11 +72,13 @@ nav:
       - Gitea 端到端快速开始: gitea-quickstart.md
   - Gitea 服务:
       - 服务运维: gitea-service-operations.md
+      - 账号、组织与可见性模型: account-organization-visibility.md
       - 权限与可见性: gitea-permissions-and-visibility.md
   - 仓库协作:
       - 仓库协作快速开始: repo-collaboration-quickstart.md
   - Bot / 服务账号:
       - 机器人账号与服务账号: bot-service-account-plan.md
+      - 组织任务账号协作闭环: org-task-account-practice.md
   - Actions:
       - Actions / Flow（动作 / 流程）快速开始: actions-flow-quickstart.md
   - Runner:

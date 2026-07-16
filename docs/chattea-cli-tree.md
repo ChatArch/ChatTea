@@ -16,6 +16,8 @@ chattea
 ├── job                 # 查看、读取日志或重跑 Gitea Actions job
 ├── label               # 管理仓库标签
 ├── milestone           # 管理仓库里程碑
+├── notification        # 轮询和标记当前用户的通知线程
+├── org                 # 管理组织、团队和团队成员
 ├── pr                  # 管理合并请求、评论、review、diff/patch 和合并
 ├── project             # 管理 Gitea 仓库项目看板、列和卡片
 ├── release             # 管理仓库发布版本和发布附件
@@ -24,7 +26,8 @@ chattea
 ├── runner              # 管理 Gitea Actions 运行器和注册令牌
 ├── server              # 安装、初始化、启动和检查本机托管的 Gitea 服务
 ├── set-token           # 配置 ChatTea API token 和仓库本地 git 鉴权
-└── token               # 创建、列出、删除和引导配置 Gitea access token
+├── token               # 创建、列出、删除和引导配置 Gitea access token
+└── user                # 管理员创建和删除 Gitea 用户
 ```
 
 ## 原始 API
@@ -36,14 +39,7 @@ chattea api PATH        # 调用指定 Gitea API 路径
 └── --param KEY=VALUE   # 传入 query 参数
 ```
 
-当前实践中用 raw API 覆盖的部分：
-
-- `POST /orgs`：创建组织；
-- `POST /admin/users`：创建用户；
-- `GET /orgs/{org}/teams`：查看组织团队；
-- `PUT /teams/{id}/members/{username}`：把用户加入团队。
-
-这些是后续一等 ChatTea 封装的候选项。只有当实践流程继续依赖它们时，再补对应基础设施。
+当前仍保留 `chattea api` 作为兜底能力；一旦某条真实流程反复依赖某个 API，就提升成一等命令。组织任务账号实践中，`POST /orgs`、`POST /admin/users`、`POST /orgs/{org}/teams`、`PUT /teams/{id}/members/{username}` 和 `/notifications` 已经提升为 `user`、`org`、`notification` 命令。
 
 ## 认证和令牌
 
@@ -63,6 +59,33 @@ chattea token           # 管理 Gitea access token 生命周期
 ```
 
 实践校对点：`chattea set-token` 会同时写入远端 URL 带 `.git` 和不带 `.git` 两种 `extraHeader` key，避免 git remote 与 `http.<url>.extraHeader` key 不一致导致 `git push` 不带鉴权 header。
+
+## 用户、组织和通知
+
+```text
+chattea user            # 管理员管理 Gitea 用户
+├── create              # 通过 admin API 创建用户，支持 private visibility
+└── delete              # 通过 admin API 删除用户
+
+chattea org             # 管理组织和团队
+├── create              # 创建组织，默认 private visibility
+├── list                # 列出组织
+├── view                # 查看组织
+└── team                # 管理组织团队
+    ├── create          # 创建 team，默认 write + all repos + 常用 repo units
+    ├── list            # 列出组织团队
+    └── member          # 管理 team 成员
+        ├── add         # 把用户加入 team
+        └── remove      # 从 team 移除用户
+
+chattea notification    # 当前 token 对应用户的通知线程
+├── list                # 列出 notifications
+├── poll                # 轮询 unread issue/pull notifications
+├── view                # 查看 notification thread
+└── mark-read           # 标记 thread 为 read/unread/pinned
+```
+
+这些命令是从组织任务账号实践中补出来的最小 Infra：先支持创建 private 组织和普通任务账号，再通过 notification 轮询实现 `@任务账号` 的触发入口。
 
 ## 机器人账号与服务账号
 

@@ -27,6 +27,8 @@ ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦内部 Gitea 的安装
 | --- | --- |
 | 从空机器启动本地 Gitea | `docs/from-scratch-quickstart.md` |
 | 仓库、Issue、Project、PR、Release 协作 | `docs/repo-collaboration-quickstart.md` |
+| 内部账号、组织、任务账号协作闭环 | `docs/org-task-account-practice.md` |
+| 账号、组织与 private/internal 可见性 | `docs/account-organization-visibility.md` |
 | 机器人账号、服务账号和 `@bot` 唤醒 | `docs/bot-service-account-plan.md` |
 | Runner、Actions run/job/log/artifact | `docs/actions-flow-quickstart.md` |
 | 完整 CLI 树和截图示例 | `docs/cli-guide.md` |
