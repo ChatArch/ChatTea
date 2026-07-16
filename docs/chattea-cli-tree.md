@@ -288,6 +288,7 @@ Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<r
 - admin user create/view/list；
 - team list/add-member/remove-member；
 - 通过 admin create-as-user 路径创建 user-owned 仓库；
-- 继续实践 user-owned 仓库的 admin create-as-user 路径。
+- 继续实践 user-owned 仓库的 admin create-as-user 路径；
+- bot / service account：Gitea 底层和本机 admin CLI 已支持 bot 用户类型，但稳定 REST API 尚未完整暴露，第一版规划见 [机器人账号与服务账号规划](bot-service-account-plan.md)。
 
 这些都是实践暴露出的基础设施后续项。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。

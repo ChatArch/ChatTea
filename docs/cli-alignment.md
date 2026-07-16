@@ -180,7 +180,7 @@ chattea
 
 下面这些领域已从 `core/gitea/routers/api/v1/**` 的 Gitea Swagger annotation 中确认，可以作为真实命令实现。每个新增命令仍必须遵守上面的实现合约。
 
-- `user`：`/admin/users` 下的 admin user 创建、编辑、删除 路由；用于托管本地 引导。
+- `user`：`/admin/users` 下的普通 admin user 创建、编辑、删除 路由；用于托管本地 引导。注意 Gitea 稳定 REST API 目前没有完整暴露 `UserTypeBot` 创建、查询和 token 管理，机器人账号规划见 `bot-service-account-plan.md`。
 - `token`：`/users/{username}/tokens` list/create/delete；create 需要 BasicAuth 或反向代理 auth。
 - `issue`：`/repos/{owner}/{repo}/issues`、评论、标签、reactions、pin/lock、dependencies、attachments、time tracking。
 - `label`：`/repos/{owner}/{repo}/labels`，以及可选的 org 标签 路由。
@@ -204,7 +204,7 @@ chattea
 
 - `server bootstrap` 或 顶层 `bootstrap` 是本地托管 Gitea 流程：install、init、start、创建默认用户、生成 / 创建 令牌、运行 set-token，并验证 `/user`。
 - `token bootstrap` 是远程 / 已有 Gitea 流程：BasicAuth 创建 令牌、运行 set-token，并验证 `/user`。
-- 密码应从 prompt 或 `--password-env` 读取；原始密码不应存入 ChatEnv，也不应打印。
+- 密码应从 prompt、`--password-env` 或敏感 ChatEnv 引导字段读取；这些字段只服务一次性 bootstrap，不应作为长期业务凭据输出、提交或写入公开文档。
 - 生成的 访问令牌应通过 credential path 保存，并在正常输出中脱敏。
 
 ## 非目标
