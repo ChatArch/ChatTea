@@ -34,12 +34,7 @@ chattea runner registry ...   # 管 Gitea 服务器上的 runner 记录
 chattea runner local ...      # 管当前机器上的 runner 文件、配置和服务
 ```
 
-旧命令仍保留：
-
-```text
-chattea runner token/list/view/edit/delete  # 兼容 registry 操作
-chattea runner setup ...                    # 兼容默认单 runner 操作
-```
+多 runner 和 workflow 辅助则分别放在 `runner pool ...` 和 `runner workflow ...`。
 
 ## 本机安装环境
 

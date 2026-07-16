@@ -220,7 +220,6 @@ chattea artifact        # 管理 Gitea Actions 产物
 └── delete              # 删除产物
 
 chattea runner                    # 管理 Gitea Actions 运行器
-├── token/list/view/edit/delete   # 兼容入口：操作 Gitea registry 里的 runner 记录
 ├── registry                      # 管理 Gitea 服务器侧 runner 记录
 │   ├── token                     # 获取 repo/user/org/admin 注册令牌
 │   ├── list                      # 按 scope 列出 runner
@@ -253,11 +252,10 @@ chattea runner                    # 管理 Gitea Actions 运行器
 │   ├── stop                      # 停止 pool 内所有 runner
 │   ├── status                    # 查看 pool 摘要
 │   └── remove                    # 删除 pool 内本机 runner
-├── workflow                      # workflow 与 runner label 辅助
-│   ├── labels                    # 列出当前 scope 可用于 runs-on 的 labels
-│   ├── example                   # 输出 runs-on 示例
-│   └── check                     # 检查 workflow runs-on 是否有匹配 runner
-└── setup                         # 兼容入口：默认单 runner 安装和服务管理
+└── workflow                      # workflow 与 runner label 辅助
+    ├── labels                    # 列出当前 scope 可用于 runs-on 的 labels
+    ├── example                   # 输出 runs-on 示例
+    └── check                     # 检查 workflow runs-on 是否有匹配 runner
 ```
 
 这些命令覆盖第一版 Gitea Actions 面：运行器生命周期、PR 触发的 run、job、log 和产物。Runner 运行环境、注册、多实例维护和并发结论见 [Runner 运行环境与多实例](runner-environment-and-registration.md)，Actions / Runner 的端到端流程见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
@@ -280,7 +278,7 @@ chattea server          # 管理本机托管的 Gitea 服务
 └── serve               # 前台运行 Gitea，用于调试和本地实践
 ```
 
-Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner.service` 管理。
+Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<runner-name>.service` 管理。
 
 ## 当前封装缺口
 

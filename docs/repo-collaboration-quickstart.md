@@ -137,8 +137,8 @@ ChatTea 还包括下面这些 API 支撑的能力，单元测试、CLI 覆盖和
 - `chattea pr review list/create/submit`
 - `chattea release list/view/latest/by-tag/create/edit/delete`
 - `chattea release asset list/delete`
-- `chattea runner token/list/view/edit/delete`
-- `chattea runner setup install/register/start/stop/status/logs/doctor`
+- `chattea runner registry token/list/view/enable/disable/delete`
+- `chattea runner local install/register/start/stop/status/logs/doctor/remove`
 - `chattea run list/view/jobs/logs/rerun/rerun-failed/delete`
 - `chattea job view/logs/rerun`
 - `chattea artifact list/view/download/delete`

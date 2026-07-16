@@ -1,6 +1,6 @@
 # Runner 多实例第一版实现方案
 
-这篇文档记录 Runner 独立 PR 的第一版实现边界。目标是把现有偏单实例的 `chattea runner setup`，升级为可以管理多个本机 runner、多个注册 scope、多个 service，并且能在真实 Gitea 环境里调试和验收的基础设施。
+这篇文档记录 Runner 独立 PR 的第一版实现边界。目标是把 Runner CLI 收敛为 `registry`、`local`、`pool`、`workflow` 四个清晰子树，用它们管理多个本机 runner、多个注册 scope、多个 service，并且能在真实 Gitea 环境里调试和验收。
 
 ## 背景
 
@@ -10,14 +10,14 @@
 - 同一机器、同一 Unix 用户下可以启动多个 runner root 和多个 runner daemon；
 - 两个 repo-scope host runner 可以被同一个 PR workflow 的两个 job 并发调用；
 - user-scope、org-scope、admin-scope runner 都能通过 workflow `runs-on` label 被调用；
-- 现有 `chattea runner setup start` 只管理固定的 `chattea-runner.service`，适合默认单 runner，不适合长期维护多 runner。
+- 旧的单 runner `setup` 入口已经不再作为第一版目标接口；后续文档和实践统一使用 `runner local`。
 
 因此第一版重点不是再证明 runner 能跑，而是把已经跑通的方式固化成 ChatTea CLI 和可维护的本机状态模型。
 
 ## 设计原则
 
 - **Registry 和 Local 分层**：Gitea 服务器上的 runner 记录，和本机 runner root/service/log 是两层状态，CLI 需要分开表达。
-- **兼容旧命令**：现有 `chattea runner token/list/view/edit/delete/setup ...` 保留，作为兼容入口；新功能放到更清晰的子树下。
+- **直接收敛接口**：初版不保留重复旧入口，正式使用 `registry`、`local`、`pool`、`workflow`。
 - **按 name 管理本机实例**：每个 runner 有稳定 name、root、config、`.runner`、workdir 和 service。
 - **先支持 host 后端**：第一版把已实践的 host/native 后端做扎实；Docker 后端只保留配置入口和后续验证空间。
 - **真实环境调试**：接口实现后必须在真实 Gitea 服务上注册、启动、跑 workflow，并把结果回写到本地实践记录。
@@ -52,33 +52,19 @@ chattea runner
 │   │   ├── set-capacity             # 更新 capacity
 │   │   ├── set-workdir              # 更新 host.workdir_parent
 │   │   └── set-backend              # 更新 label backend 后缀
-│   ├── unregister                   # 删除服务器端注册记录，保留本地 root
-│   └── remove                       # 删除本地 runner root/service，需要确认
+│   └── remove                       # disable service 并删除本地 runner root
 │
 ├── pool                             # 多 runner 批量管理
 │   ├── create                       # 创建 N 个 runner，适合同机并发
-│   ├── scale                        # 调整 pool runner 数量
 │   ├── start                        # 启动整个 pool
 │   ├── stop                         # 停止整个 pool
 │   ├── status                       # 查看 pool 状态
-│   ├── logs                         # 查看或聚合 pool 日志
 │   └── remove                       # 删除整个 pool，需要确认
 │
 └── workflow                         # workflow 与 runner label 辅助
     ├── labels                       # 列出当前可用于 runs-on 的 labels
     ├── example                      # 输出 runs-on 示例
     └── check                        # 检查 workflow runs-on 是否有匹配 runner
-```
-
-兼容入口保留为：
-
-```text
-chattea runner token    -> chattea runner registry token
-chattea runner list     -> chattea runner registry list
-chattea runner view     -> chattea runner registry view
-chattea runner edit     -> chattea runner registry enable/disable
-chattea runner delete   -> chattea runner registry delete
-chattea runner setup    -> 默认单 runner 的兼容入口
 ```
 
 ## 本机状态模型
@@ -202,7 +188,7 @@ chattea runner pool stop lean
 
 第一版实现后按下面顺序验证：
 
-1. 本地单元测试：覆盖 runner root 计算、config 生成、service 名、registry alias、pool name 生成。
+1. 本地单元测试：覆盖 runner root 计算、config 生成、service 名、正式子树、pool name 生成。
 2. 文档构建：`mkdocs build --strict`。
 3. 真实 Gitea 调试：
    - 创建两个 repo-scope host runner；
@@ -220,5 +206,4 @@ chattea runner pool stop lean
 - 不把 Docker 后端作为已验证事实；
 - 不承诺不可信 workflow 的隔离安全；
 - 不把 token、`.runner`、真实服务 URL、机器本地路径写入公开文档；
-- 不移除旧的 `chattea runner setup` 命令；
 - 不一次性实现所有 org/user/team CLI 封装。

@@ -19,7 +19,6 @@ from chattea.commands.actions_shared import list_payload_items
 from chattea.config import load_config
 
 RUNNER_RELEASE_API = "https://gitea.com/api/v1/repos/gitea/act_runner/releases/latest"
-RUNNER_SERVICE = "chattea-runner.service"
 RUNNER_SERVICE_PREFIX = "chattea-runner"
 DEFAULT_RUNNER_NAME = "default"
 DEFAULT_RUNNER_LABEL = "ubuntu-latest"
@@ -302,23 +301,21 @@ def register_runner(
     return root_path / ".runner"
 
 
-def runner_service_name(name: str | None = None) -> str:
-    if not name:
-        return RUNNER_SERVICE
+def runner_service_name(name: str) -> str:
     return f"{RUNNER_SERVICE_PREFIX}@{validate_runner_name(name)}.service"
 
 
-def runner_service_path(name: str | None = None) -> Path:
+def runner_service_path(name: str) -> Path:
     return Path("~/.config/systemd/user").expanduser() / runner_service_name(name)
 
 
-def write_runner_service(root: Path | None = None, *, name: str | None = None) -> Path:
+def write_runner_service(root: Path | None = None, *, name: str) -> Path:
     root_path = runner_root(root)
     service_name = runner_service_name(name)
     path = runner_service_path(name)
     path.parent.mkdir(parents=True, exist_ok=True)
     content = f"""[Unit]
-Description=ChatTea managed Gitea Actions runner {name or 'default'}
+Description=ChatTea managed Gitea Actions runner {name}
 After=network.target chattea-gitea.service
 
 [Service]
@@ -336,14 +333,14 @@ WantedBy=default.target
     return path
 
 
-def start_runner_service(root: Path | None = None, *, name: str | None = None) -> Path:
+def start_runner_service(root: Path | None = None, *, name: str) -> Path:
     service = write_runner_service(root, name=name)
     subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
     subprocess.run(["systemctl", "--user", "enable", "--now", runner_service_name(name)], check=True)
     return service
 
 
-def stop_runner_service(name: str | None = None) -> None:
+def stop_runner_service(name: str) -> None:
     subprocess.run(["systemctl", "--user", "stop", runner_service_name(name)], check=False)
 
 
@@ -357,18 +354,18 @@ def disable_runner_service(name: str) -> None:
     subprocess.run(["systemctl", "--user", "reset-failed", service_name], check=False)
 
 
-def restart_runner_service(root: Path | None = None, *, name: str | None = None) -> Path:
+def restart_runner_service(root: Path | None = None, *, name: str) -> Path:
     service = write_runner_service(root, name=name)
     subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
     subprocess.run(["systemctl", "--user", "restart", runner_service_name(name)], check=True)
     return service
 
 
-def runner_service_status(name: str | None = None) -> subprocess.CompletedProcess[str]:
+def runner_service_status(name: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["systemctl", "--user", "--no-pager", "--full", "status", runner_service_name(name)], capture_output=True, text=True, check=False)
 
 
-def runner_service_logs(lines: int = 100, name: str | None = None) -> subprocess.CompletedProcess[str]:
+def runner_service_logs(lines: int = 100, *, name: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["journalctl", "--user", "-u", runner_service_name(name), "-n", str(lines), "--no-pager"], capture_output=True, text=True, check=False)
 
 
@@ -539,46 +536,6 @@ def _install_options(fn):
     return fn
 
 
-@runner_group.command(name="token")
-@_scope_options
-def token_command(scope: str, repo: str | None, org: str | None) -> None:
-    render_json(create_runner_token(scope, repo=repo, org=org))
-
-
-@runner_group.command(name="list")
-@_scope_options
-@click.option("--json-output", is_flag=True)
-def list_command(scope: str, repo: str | None, org: str | None, json_output: bool) -> None:
-    payload = list_registered_runners(scope, repo=repo, org=org)
-    if json_output:
-        render_json(payload)
-        return
-    render_items(list_payload_items(payload), "id", "name", "status", "active")
-
-
-@runner_group.command(name="view")
-@_scope_options
-@click.argument("runner_id", type=int)
-def view_command(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
-    render_json(view_registered_runner(runner_id, scope, repo=repo, org=org))
-
-
-@runner_group.command(name="edit")
-@_scope_options
-@click.argument("runner_id", type=int)
-@click.option("--disabled/--enabled", default=None, help="Set runner disabled flag.")
-def edit_command(scope: str, repo: str | None, org: str | None, runner_id: int, disabled: bool | None) -> None:
-    render_json(edit_registered_runner(runner_id, scope, repo=repo, org=org, disabled=disabled))
-
-
-@runner_group.command(name="delete")
-@_scope_options
-@click.argument("runner_id", type=int)
-def delete_command(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
-    delete_registered_runner(runner_id, scope, repo=repo, org=org)
-    click.echo(f"deleted: {runner_id}")
-
-
 @runner_group.group(name="registry")
 def registry_group() -> None:
     """Manage runner records stored in Gitea."""
@@ -594,7 +551,11 @@ def registry_token(scope: str, repo: str | None, org: str | None) -> None:
 @_scope_options
 @click.option("--json-output", is_flag=True)
 def registry_list(scope: str, repo: str | None, org: str | None, json_output: bool) -> None:
-    list_command.callback(scope=scope, repo=repo, org=org, json_output=json_output)  # type: ignore[attr-defined]
+    payload = list_registered_runners(scope, repo=repo, org=org)
+    if json_output:
+        render_json(payload)
+        return
+    render_items(list_payload_items(payload), "id", "name", "status", "active")
 
 
 @registry_group.command(name="view")
@@ -993,71 +954,3 @@ def workflow_check(workflow: Path, scope: str, repo: str | None, org: str | None
     render_json(payload)
     if missing:
         raise SystemExit(1)
-
-
-@runner_group.group(name="setup")
-def setup_group() -> None:
-    """Install, register, and manage the default local runner process."""
-
-
-@setup_group.command(name="install")
-@click.option("--root", type=click.Path(file_okay=False, path_type=Path), default=None)
-@click.option("--version", default="latest", show_default=True)
-@click.option("--force", is_flag=True)
-@click.option("--binary", "binary_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Copy an existing runner binary.")
-def setup_install(root: Path | None, version: str, force: bool, binary_path: Path | None) -> None:
-    path = install_runner(root, version=version, force=force, binary_path=binary_path)
-    ensure_runner_config(root, force=force)
-    click.echo(f"installed: {path}")
-
-
-@setup_group.command(name="register")
-@click.option("--root", type=click.Path(file_okay=False, path_type=Path), default=None)
-@_scope_options
-@click.option("--name", default="chattea-runner", show_default=True)
-@click.option("--labels", default=f"{DEFAULT_RUNNER_LABEL}:{DEFAULT_RUNNER_BACKEND}", show_default=True)
-def setup_register(root: Path | None, scope: str, repo: str | None, org: str | None, name: str, labels: str) -> None:
-    path = register_runner(root, scope=scope, repo=repo, org=org, name=name, labels=labels)
-    click.echo(f"registered: {path}")
-
-
-@setup_group.command(name="start")
-@click.option("--root", type=click.Path(file_okay=False, path_type=Path), default=None)
-def setup_start(root: Path | None) -> None:
-    path = start_runner_service(root)
-    click.echo(f"started: {RUNNER_SERVICE}")
-    click.echo(f"service: {path}")
-
-
-@setup_group.command(name="stop")
-def setup_stop() -> None:
-    stop_runner_service()
-    click.echo(f"stopped: {RUNNER_SERVICE}")
-
-
-@setup_group.command(name="status")
-def setup_status() -> None:
-    result = runner_service_status()
-    click.echo((result.stdout or result.stderr).rstrip())
-    raise SystemExit(result.returncode)
-
-
-@setup_group.command(name="logs")
-@click.option("--lines", default=100, show_default=True)
-def setup_logs(lines: int) -> None:
-    result = runner_service_logs(lines=lines)
-    click.echo((result.stdout or result.stderr).rstrip())
-    raise SystemExit(result.returncode)
-
-
-@setup_group.command(name="doctor")
-@click.option("--root", type=click.Path(file_okay=False, path_type=Path), default=None)
-def setup_doctor(root: Path | None) -> None:
-    root_path = runner_root(root)
-    checks = {
-        "root": root_path.exists(),
-        "binary": runner_binary(root_path).exists(),
-        "config": runner_config(root_path).exists(),
-        "registration": (root_path / ".runner").exists(),
-    }
-    render_json({"root": str(root_path), "checks": checks})

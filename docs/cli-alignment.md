@@ -187,7 +187,7 @@ chattea
 - `milestone`：`/repos/{owner}/{repo}/milestones`。
 - `pr`：`/repos/{owner}/{repo}/pulls`、diff/patch、files、commits、merge、update、reviews、requested reviewers。
 - `release`：`/repos/{owner}/{repo}/releases` 和 发布版本 附件。
-- `runner` / `run` / `job` / `artifact`：Gitea Actions MVP 能力面，用于 运行器注册和生命周期，以及 PR 触发的 run/job/log/产物 查看。API 支撑的命令映射到 `/repos/{owner}/{repo}/actions/...`；`runner setup` 是本地系统 辅助函数，负责 install/register/start `gitea-runner`。
+- `runner` / `run` / `job` / `artifact`：Gitea Actions MVP 能力面，用于 运行器注册和生命周期，以及 PR 触发的 run/job/log/产物 查看。API 支撑的命令映射到 `/repos/{owner}/{repo}/actions/...`；本机 runner 管理集中在 `runner local`，多实例批量操作集中在 `runner pool`。
 - `project`：只覆盖 仓库级 `/repos/{owner}/{repo}/projects`；不是 GitHub Projects v2。
 - `workflow`：`/repos/{owner}/{repo}/actions/workflows`。
 - `run`：`/repos/{owner}/{repo}/actions/runs`。

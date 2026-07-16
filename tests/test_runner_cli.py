@@ -32,8 +32,7 @@ def test_create_local_runner_writes_host_config(tmp_path):
     assert summary["workdir"] == str(root / "work")
 
 
-def test_runner_service_name_keeps_default_compatibility():
-    assert runner_service_name() == "chattea-runner.service"
+def test_runner_service_name_uses_runner_name():
     assert runner_service_name("lean-a") == "chattea-runner@lean-a.service"
 
 
@@ -74,10 +73,17 @@ def test_runner_subgroups_are_registered():
         ["runner", "local", "config", "--help"],
         ["runner", "pool", "--help"],
         ["runner", "workflow", "--help"],
-        ["runner", "setup", "--help"],
     ]:
         result = runner.invoke(main, args)
         assert result.exit_code == 0, result.output
+
+
+def test_runner_legacy_top_level_commands_are_removed():
+    runner = CliRunner()
+    help_result = runner.invoke(main, ["runner", "--help"])
+    assert help_result.exit_code == 0, help_result.output
+    for command in ["setup", "token", "list", "view", "edit", "delete"]:
+        assert f"  {command}" not in help_result.output
 
 
 def test_parse_workflow_runs_on_values(tmp_path):
