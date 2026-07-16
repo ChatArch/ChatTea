@@ -63,11 +63,33 @@ def parse_gitea_remote(remote_url: str) -> CredentialTarget | None:
     return None
 
 
+def credential_target_variants(target: CredentialTarget) -> list[CredentialTarget]:
+    """Return git URL variants that should share the same extraHeader."""
+    variants = [target]
+    clean_path = target.path.rstrip("/").removesuffix(".git")
+    if clean_path and clean_path != target.path:
+        variants.append(CredentialTarget(protocol=target.protocol, host=target.host, path=clean_path))
+    elif clean_path:
+        variants.append(CredentialTarget(protocol=target.protocol, host=target.host, path=f"{clean_path}.git"))
+    deduped: list[CredentialTarget] = []
+    seen: set[str] = set()
+    for variant in variants:
+        if variant.url not in seen:
+            seen.add(variant.url)
+            deduped.append(variant)
+    return deduped
+
+
 def credential_target_from_git_remote(cwd: str | Path | None = None, remote: str = "origin") -> CredentialTarget | None:
     result = _run_git(["remote", "get-url", remote], cwd=cwd)
     if result.returncode != 0:
         return None
     return parse_gitea_remote(result.stdout)
+
+
+def credential_target_matches_base_url(target: CredentialTarget, base_url: str) -> bool:
+    parsed = urlparse(normalize_base_url(base_url))
+    return target.protocol == parsed.scheme and target.host == parsed.netloc
 
 
 def git_extraheader_key(target: CredentialTarget) -> str:
@@ -100,14 +122,21 @@ def configure_git_token(target: CredentialTarget, token: str, cwd: str | Path | 
     return key
 
 
+def configure_git_token_variants(target: CredentialTarget, token: str, cwd: str | Path | None = None) -> list[str]:
+    return [configure_git_token(variant, token, cwd=cwd) for variant in credential_target_variants(target)]
+
+
 def read_git_token(target: CredentialTarget | None = None, cwd: str | Path | None = None) -> str | None:
     resolved = target or credential_target_from_git_remote(cwd)
     if resolved is None:
         return None
-    result = _run_git(["config", "--local", "--get", git_extraheader_key(resolved)], cwd=cwd)
-    if result.returncode != 0:
-        return None
-    return token_from_extraheader(result.stdout)
+    for variant in credential_target_variants(resolved):
+        result = _run_git(["config", "--local", "--get", git_extraheader_key(variant)], cwd=cwd)
+        if result.returncode == 0:
+            token = token_from_extraheader(result.stdout)
+            if token:
+                return token
+    return None
 
 
 def resolve_token(
@@ -121,8 +150,14 @@ def resolve_token(
     if token:
         return token
     loaded = config or load_config()
-    target = credential_target_from_repo(base_url or loaded.url, repo) if repo else None
-    git_token = read_git_token(target, cwd=cwd)
+    resolved_base_url = base_url or loaded.url
+    if repo:
+        target = credential_target_from_repo(resolved_base_url, repo)
+    else:
+        target = credential_target_from_git_remote(cwd)
+        if target and not credential_target_matches_base_url(target, resolved_base_url):
+            target = None
+    git_token = read_git_token(target, cwd=cwd) if target else None
     if git_token:
         return git_token
     return loaded.token
@@ -139,19 +174,28 @@ def configure_token(
 ) -> dict[str, object]:
     normalized_url = normalize_base_url(base_url)
     env_path = save_env_token(normalized_url, token) if save_env else None
-    target = credential_target_from_repo(normalized_url, repo) if repo else credential_target_from_git_remote(cwd)
+    if repo:
+        target = credential_target_from_repo(normalized_url, repo)
+    else:
+        target = credential_target_from_git_remote(cwd)
+        if target and not credential_target_matches_base_url(target, normalized_url):
+            target = None
     git_key = None
+    git_keys: list[str] = []
     if configure_git and target is not None:
-        git_key = configure_git_token(target, token, cwd=cwd)
-    return {"base_url": normalized_url, "env_path": env_path, "git_key": git_key, "git_configured": git_key is not None}
+        git_keys = configure_git_token_variants(target, token, cwd=cwd)
+        git_key = git_keys[0] if git_keys else None
+    return {"base_url": normalized_url, "env_path": env_path, "git_key": git_key, "git_keys": git_keys, "git_configured": git_key is not None}
 
 
 __all__ = [
     "CredentialTarget",
     "configure_git_token",
+    "configure_git_token_variants",
     "configure_token",
     "credential_target_from_git_remote",
     "credential_target_from_repo",
+    "credential_target_variants",
     "gitea_auth_extraheader",
     "git_extraheader_key",
     "normalize_repo_path",

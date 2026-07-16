@@ -155,6 +155,7 @@ def repo_view(repo: str | None, url: str | None, token: str | None, json_output:
 @click.option("--name", default=None, help="Repository name.")
 @click.option("--description", default=None)
 @click.option("--public", "public_repo", is_flag=True, help="Create a public repository. Defaults to private.")
+@click.option("--private", "private_repo", is_flag=True, help="Create a private repository explicitly.")
 @click.option("--default-branch", default="main", show_default=True)
 @click.option("--url", default=None, help="Gitea base URL override. Defaults to CHATTEA_BASE_URL.")
 @click.option("--token", default=None)
@@ -165,6 +166,7 @@ def repo_create(
     name: str | None,
     description: str | None,
     public_repo: bool,
+    private_repo: bool,
     default_branch: str,
     url: str | None,
     token: str | None,
@@ -172,6 +174,8 @@ def repo_create(
     interactive: bool | None,
 ) -> None:
     """Create a repository."""
+    if public_repo and private_repo:
+        raise click.ClickException("Use only one of --public or --private.")
     values = resolve_command_inputs(
         schema=REPO_CREATE_SCHEMA,
         provided={"name": name},
@@ -183,7 +187,7 @@ def repo_create(
             name=values["name"],
             owner=owner,
             description=description,
-            public_repo=public_repo,
+            public_repo=False if private_repo else public_repo,
             default_branch=default_branch,
             url=url,
             token=token,

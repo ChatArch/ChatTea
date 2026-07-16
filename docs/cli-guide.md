@@ -1,25 +1,25 @@
-# ChatTea CLI Guide
+# ChatTea CLI 指南
 
-This guide is the practical CLI map for the current ChatTea Gitea surface. It covers the implemented command tree, the REST API or local helper behind each major group, and real examples from a local ChatTea-managed Gitea server.
+这篇指南是当前 ChatTea Gitea 能力面的实用 CLI 地图。它覆盖已实现命令树、每个主要命令组背后的 REST API 或本地 辅助函数，以及来自本地 ChatTea 管理的 Gitea 服务的实践示例。
 
-## Current CLI Tree
+## 当前 CLI 树
 
 ```text
 chattea
 ├── set-token                 # ChatTea/Git token bootstrap helper
-├── server                    # local ChatArch Gitea lifecycle
-│   ├── config                # app.ini path/show/get/set helpers
-│   ├── install               # install ChatArch internal Gitea binary
-│   ├── init                  # initialize managed Gitea app.ini/work path
+├── server                    # 本地 ChatArch Gitea 生命周期
+│   ├── config                # app.ini path/show/get/set helper
+│   ├── install               # 安装 ChatArch internal Gitea binary
+│   ├── init                  # 初始化托管 Gitea app.ini/work path
 │   ├── bootstrap             # install + init + admin + token bootstrap
-│   ├── serve                 # foreground web process
-│   ├── start/stop/restart    # user systemd service lifecycle
-│   ├── status/logs           # user systemd inspection
-│   ├── version               # local Gitea binary version
+│   ├── serve                 # 前台 web 进程
+│   ├── start/stop/restart    # user systemd service 生命周期
+│   ├── status/logs           # user systemd 检查
+│   ├── version               # 本地 Gitea binary version
 │   └── health                # REST: GET /api/v1/version
-├── repo                      # repository REST API + git clone helper
+├── repo                      # 仓库 REST API + git clone helper
 │   ├── list/view/create
-│   ├── clone                 # local git helper
+│   ├── clone                 # 本地 git helper
 │   └── migrate
 ├── issue                     # REST: /repos/{owner}/{repo}/issues
 │   ├── list/view/create/edit/close/reopen/delete
@@ -38,12 +38,12 @@ chattea
 ├── release                   # REST: /repos/{owner}/{repo}/releases
 │   ├── list/view/latest/by-tag/create/edit/delete
 │   └── asset list/delete
-├── project                   # Gitea repository-scoped Project board
+├── project                   # Gitea repo-scoped 项目看板
 │   ├── list/view/create/edit/delete
 │   ├── column list/create/edit/delete
 │   ├── card list/add/remove/move
-│   └── issue list/add/remove/move   # compatibility alias for card
-├── runner                    # Gitea Actions runner API + local setup
+│   └── issue list/add/remove/move   # card 的兼容别名
+├── runner                    # Gitea Actions runner API + 本地 setup
 │   ├── token/list/view/edit/delete  # REST: /actions/runners
 │   └── setup install/register/start/stop/status/logs/doctor
 ├── run                       # REST: /repos/{owner}/{repo}/actions/runs
@@ -52,16 +52,16 @@ chattea
 │   └── view/logs/rerun
 ├── artifact                  # REST: /repos/{owner}/{repo}/actions/artifacts
 │   └── list/view/download/delete
-├── auth                      # auth/login/status/token convenience surface
+├── auth                      # auth/login/status/token 便利入口
 ├── token                     # Gitea access token create/list/delete/bootstrap
-└── api                       # raw Gitea API passthrough
+└── api                       # 原始 Gitea API passthrough
 ```
 
-## Implementation Contract
+## 实现合约
 
-ChatTea commands are thin Click wrappers. Each substantial command calls an importable Python function or a `GiteaClient` method.
+ChatTea 命令应是薄 Click 包装层。每个实质命令都调用一个可导入 Python 函数或 `GiteaClient` method。
 
-Examples:
+示例：
 
 ```python
 from chattea.api import GiteaClient
@@ -81,9 +81,9 @@ runs = list_runs("gitea_admin/demo")
 logs = job_logs("gitea_admin/demo", job_id=6)
 ```
 
-## Server And Token Flow
+## 服务和令牌流程
 
-A local development server starts from ChatEnv and Gitea server lifecycle commands:
+本地开发服务从 ChatEnv 和 Gitea server lifecycle 命令开始：
 
 ```bash
 chattea server bootstrap -I
@@ -91,7 +91,7 @@ chattea server health
 chattea token bootstrap --username gitea_admin --password-env GITEA_ADMIN_PASSWORD --scope all
 ```
 
-When Actions are needed, enable them in Gitea `app.ini` and restart the managed service:
+需要 Actions 时，先在 Gitea `app.ini` 中启用，然后重启托管服务：
 
 ```bash
 chattea server config set --section actions --key ENABLED --value true -I
@@ -99,27 +99,29 @@ chattea server restart
 chattea server health
 ```
 
-`server config set` edits `app.ini`; this is runtime configuration and requires restart to be reliable. By contrast, issue/PR/project/run/job/runner REST API commands operate against live Gitea state and do not require restarting Gitea.
+`server config set` 修改的是 `app.ini`；这是运行时配置，通常需要 restart 才可靠生效。相比之下，问题/PR/project/run/job/运行器 的 REST API 命令操作的是 live Gitea state，不需要重启 Gitea。
 
-## Repo, Issue, And Project Example
+Token 边界要分清楚：ChatTea 这个 Python 源码仓库的 remote 是 GitHub，push 和 PR 使用 `chatgh` / GitHub token；临时实践仓库的 remote 是自建 Gitea，仓库 API 和 git push 使用 `chattea` / Gitea token。`chattea set-token` 只应在 Gitea 仓库目录里写 repo-local git `extraHeader`，或者通过 `--repo OWNER/NAME` 明确指定 Gitea 仓库；不应把 Gitea token 写进 GitHub 源码仓库的 local git config。
 
-The following flow was run against a local ChatTea-managed Gitea server. It creates a repo, adds issue metadata, creates a repository-scoped Project board, then adds an issue as a Project card.
+## 仓库、问题和项目看板示例
 
-Gitea Web issue page:
+下面流程在本地 ChatTea 管理的 Gitea 服务上运行：创建 仓库，添加 问题 元数据，创建 仓库级 项目看板，然后把 问题 添加为 项目卡片。
 
-![Gitea issue page](assets/cli-guide/gitea-issue-page.png)
+Gitea Web 问题 页面：
 
-Gitea Web Project board page:
+![Gitea 问题 页面](assets/cli-guide/gitea-issue-page.png)
 
-![Gitea Project board](assets/cli-guide/gitea-project-board.png)
+Gitea Web 项目看板 页面：
 
-CLI transcript for the same flow:
+![Gitea 项目看板](assets/cli-guide/gitea-project-board.png)
 
-![Repo, Issue, and Project board CLI flow](assets/cli-guide/repo-issue-project.svg)
+同一流程的 CLI 记录：
 
-Important Gitea Project detail: `project card add` maps to Gitea's Project card API and expects the issue database `id`, not the issue number shown as `#1`. Use `chattea issue view --repo OWNER/REPO 1` and read the `id` field.
+![仓库、问题 和 项目看板 CLI 流程](assets/cli-guide/repo-issue-project.svg)
 
-Core route mapping:
+重要细节：`project card add` 映射到 Gitea 项目卡片 API，期望的是 问题 数据库 `id`，不是页面上显示的 问题编号 `#1`。可以运行 `chattea issue view --repo OWNER/REPO 1`，读取返回里的 `id` 字段。
+
+核心 路由 映射：
 
 ```text
 chattea issue create       -> POST /repos/{owner}/{repo}/issues
@@ -129,21 +131,21 @@ chattea project column     -> /repos/{owner}/{repo}/projects/{project_id}/column
 chattea project card add   -> POST /repos/{owner}/{repo}/projects/{project_id}/columns/{column_id}/issues/{issue_id}
 ```
 
-## Pull Request Example
+## 合并请求示例
 
-A PR is a repository REST API operation. The screenshot below is the Gitea Web pull request page created by `chattea pr create`.
+PR 是一个仓库 REST API 操作。下面截图是 `chattea pr create` 创建出的 Gitea Web 合并请求 页面。
 
-![Gitea pull request page](assets/cli-guide/gitea-pull-request.png)
+![Gitea 合并请求 页面](assets/cli-guide/gitea-pull-request.png)
 
-CLI commands:
+CLI 命令：
 
 ```bash
 chattea pr create \
   --repo gitea_admin/demo \
-  --title "Trigger Actions smoke" \
-  --head feature/pr-smoke \
+  --title "Trigger Actions practice" \
+  --head feature/practice \
   --base main \
-  --body "Created by ChatTea smoke"
+  --body "Created by ChatTea practice"
 
 chattea pr list --repo gitea_admin/demo --state all
 chattea pr view --repo gitea_admin/demo 1
@@ -151,7 +153,7 @@ chattea pr diff --repo gitea_admin/demo 1
 chattea pr files --repo gitea_admin/demo 1
 ```
 
-Route mapping:
+路由 映射：
 
 ```text
 chattea pr create      -> POST /repos/{owner}/{repo}/pulls
@@ -160,41 +162,47 @@ chattea pr diff/patch  -> GET /repos/{owner}/{repo}/pulls/{index}.diff/.patch
 chattea pr merge       -> POST /repos/{owner}/{repo}/pulls/{index}/merge
 ```
 
-Practical note: immediately creating a PR after pushing a new branch can race with Gitea branch visibility. Retry the same `head=feature/pr-smoke` payload after a short delay if Gitea returns `404` right after push.
+实践注意：推送新分支后立刻创建 PR，可能和 Gitea 分支可见性刷新产生竞态。如果刚 push 后 Gitea 返回 `404`，短暂等待后用同一个 `head=feature/practice` payload 重试即可。
 
-## Runner And Actions Flow
+## 运行器和 Actions 流程
 
-Runner support has two layers:
+运行器支持分两层：
 
-1. Gitea REST API layer:
-   - registration token
-   - runner list/view/edit/delete
-   - repo/org/user/admin scopes
-2. Local setup layer:
-   - install `gitea-runner`
-   - write runner config
-   - register runner with a Gitea token
-   - manage `chattea-runner.service`
+1. Gitea REST API 层：
+   - 注册令牌
+   - 运行器 list/view/edit/delete
+   - repo/user/org/admin scope
+2. 本地 setup 层：
+   - 安装 `gitea-runner`
+   - 写运行器 config
+   - 用 Gitea 注册令牌注册运行器
+   - 管理 `chattea-runner.service` 或手动启动多个 runner daemon
 
-The first implementation defaults to a host runner label:
+第一版实现默认使用 host 运行器标签：
 
 ```text
-ubuntu-latest:host
+<runner-label>:host
 ```
 
-This keeps the development smoke independent of Docker image pulls.
+workflow 中使用冒号前的 label：
 
-The Actions run and job pages below show the workflow that was picked up by the registered runner and completed successfully.
+```yaml
+runs-on: <runner-label>
+```
 
-![Gitea Actions run page](assets/cli-guide/gitea-actions-run.png)
+真实实践已经验证：repo-scope 两个 host runner 可以在同一台机器、同一 Unix 用户下并发处理同一个 PR workflow 的两个 job；user-scope、org-scope、admin-scope runner 也分别被对应仓库 workflow 调用成功。更完整的配置、运行目录、scope 和并发结论见 [Actions / Flow（动作 / 流程）快速开始](actions-flow-quickstart.md)。
 
-![Gitea Actions job log page](assets/cli-guide/gitea-actions-job-log.png)
+下面的 Actions run 和 job 页面展示工作流被注册运行器接收并成功完成。
 
-CLI transcript for runner setup and maintenance:
+![Gitea Actions run 页面](assets/cli-guide/gitea-actions-run.png)
 
-![Runner setup and maintenance CLI flow](assets/cli-guide/runner-lifecycle.svg)
+![Gitea Actions job log 页面](assets/cli-guide/gitea-actions-job-log.png)
 
-Route and helper mapping:
+运行器 setup 和维护的 CLI 记录：
+
+![运行器 setup 和维护 CLI 流程](assets/cli-guide/runner-lifecycle.svg)
+
+路由 和 辅助函数 映射：
 
 ```text
 chattea runner token       -> POST /repos/{owner}/{repo}/actions/runners/registration-token
@@ -204,21 +212,21 @@ chattea runner delete      -> DELETE /repos/{owner}/{repo}/actions/runners/{runn
 chattea runner setup *     -> local helper around ~/.chatarch/chattea/runner and user systemd
 ```
 
-`runner edit` uses Gitea's `disabled` field. The CLI exposes it as `--disabled` and `--enabled`.
+`runner edit` 使用 Gitea 的 `disabled` 字段。CLI 中暴露为 `--disabled` 和 `--enabled`。
 
-## Run, Job, And Log Example
+## 运行、任务和日志示例
 
-After a PR triggers a workflow, the operational surface is `run` and `job`. The Gitea run and job pages are shown in the Runner section above; the CLI transcript below shows the same state through ChatTea commands.
+PR 触发 工作流 后，主要操作面是 `run` 和 `job`。运行器 章节展示了 Gitea run/job 页面；下面的 CLI 记录 展示同一状态如何通过 ChatTea 命令查看。
 
-![PR-triggered Actions run, job, and logs CLI transcript](assets/cli-guide/actions-run-job-log.svg)
+![PR 触发的 Actions run、job 和 logs CLI 记录](assets/cli-guide/actions-run-job-log.svg)
 
-Route mapping:
+路由 映射：
 
 ```text
 chattea run list           -> GET /repos/{owner}/{repo}/actions/runs
 chattea run view           -> GET /repos/{owner}/{repo}/actions/runs/{run}
 chattea run jobs           -> GET /repos/{owner}/{repo}/actions/runs/{run}/jobs
-chattea run logs           -> composed helper over run jobs + job logs
+chattea run logs           -> 聚合 run jobs 和 job logs 的 helper
 chattea run rerun          -> POST /repos/{owner}/{repo}/actions/runs/{run}/rerun
 chattea run rerun-failed   -> POST /repos/{owner}/{repo}/actions/runs/{run}/rerun-failed-jobs
 chattea job view           -> GET /repos/{owner}/{repo}/actions/jobs/{job_id}
@@ -226,20 +234,20 @@ chattea job logs           -> GET /repos/{owner}/{repo}/actions/jobs/{job_id}/lo
 chattea job rerun          -> POST /repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun
 ```
 
-Verified local smoke:
+已验证的本地实践结果：
 
 ```text
-repo: gitea_admin/web-docs-smoke-20260708033919
-runner: chattea-runner-web-docs-smoke-20260708033919
+repository: gitea_admin/<actions-practice-repo>
+runner: <chattea-runner-name>
 pull_request run: 9
 job: 9
 result: success
-log marker: chattea web screenshot smoke
+log marker: workflow output marker appears in job logs
 ```
 
-## Artifact Commands
+## 产物命令
 
-Artifacts are available after workflows upload artifacts. The CLI wraps the repo Actions artifact API:
+工作流 上传 产物 后，可以通过 CLI 包装的 仓库 Actions 产物 API 查看、下载和删除：
 
 ```bash
 chattea artifact list --repo gitea_admin/demo
@@ -249,7 +257,7 @@ chattea artifact download --repo gitea_admin/demo 10 --output artifact.zip
 chattea artifact delete --repo gitea_admin/demo 10
 ```
 
-Route mapping:
+路由 映射：
 
 ```text
 chattea artifact list      -> GET /repos/{owner}/{repo}/actions/artifacts
@@ -258,9 +266,9 @@ chattea artifact download  -> GET /repos/{owner}/{repo}/actions/artifacts/{artif
 chattea artifact delete    -> DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}
 ```
 
-## What Is Still Intentionally Not First-Class
+## 当前刻意不做一等封装的部分
 
-The following can still be accessed with `chattea api`, but is not part of the first polished CLI surface:
+下面这些仍可通过 `chattea api` 访问，但不属于第一版 打磨后的 CLI 能力面：
 
 ```text
 chattea workflow list/view/dispatch/enable/disable
@@ -268,4 +276,4 @@ chattea secret list/set/delete
 chattea variable list/view/create/edit/delete
 ```
 
-Workflow definitions live in git as `.gitea/workflows/*.yml` files. For the first end-to-end flow, pushing workflow files plus runner/run/job/log commands gives the best validation signal.
+工作流 定义文件仍放在 git 中，例如 `.gitea/workflows/*.yml`。第一版端到端流程里，推送 工作流 文件，再配合 运行器/run/job/log 命令，是最直接的验证信号。
