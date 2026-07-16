@@ -16,7 +16,7 @@ nav:
   - Gitea 端到端快速开始: gitea-quickstart.md
   - Gitea 服务运维: gitea-service-operations.md
   - Gitea 权限与可见性: gitea-permissions-and-visibility.md
-  - 机器人账号与服务账号规划: bot-service-account-plan.md
+  - 机器人账号与服务账号: bot-service-account-plan.md
   - Actions / Flow（动作 / 流程）快速开始: actions-flow-quickstart.md
   - Runner 运行环境与多实例: runner-environment-and-registration.md
   - Runner 多实例第一版方案: runner-multi-instance-plan.md

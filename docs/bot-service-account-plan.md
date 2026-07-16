@@ -1,30 +1,116 @@
-# 机器人账号与服务账号 CLI 规划
+# 机器人账号与服务账号
 
-本文记录 Gitea 机器人账号能力的调研结论，以及 ChatTea 第一版 `bot`/服务账号 CLI 的规划。这里的“机器人”不是 Actions runner，而是用于自动化调用 Gitea API、Git over HTTPS、CI/CD 或仓库维护任务的账号主体。
+本文记录 Gitea 机器人账号能力、典型用途、交互模式、唤醒机制，以及 ChatTea 第一版 `bot` CLI 的真实实践结果。这里的“机器人”不是 Actions runner，而是一个用于自动化调用 Gitea API、Git over HTTPS、CI/CD 或仓库维护任务的账号主体。
 
-## 结论
+## 一句话结论
 
-Gitea 已经有底层 bot 用户类型，但稳定 REST API 还没有完整暴露 bot 管理能力。
+Gitea 已经有底层 bot 用户类型，本机 admin CLI 可以创建真正的 bot；但稳定 REST API 还没有完整暴露 bot 管理能力。所以 ChatTea 第一版先做 **本机托管 Gitea 的 local backend**，通过 `gitea admin user create --user-type bot` 创建 bot，再用 bot token 做真实 API 操作。
 
-- Gitea 模型层有 `UserTypeBot`，源码中 `models/user/user.go` 定义 `UserTypeBot // 4`。
-- Gitea 自带的系统账号 `gitea-actions` 是 bot 类型，源码中 `models/user/user_system.go` 用于 Actions。
-- 本机 Gitea admin CLI 已支持创建 bot：`gitea admin user create --user-type bot`。
-- 本机 admin CLI 创建用户时还能同时生成访问令牌：`--access-token --access-token-name --access-token-scopes`。
-- 当前托管 Gitea binary 还提供 `gitea admin user generate-access-token --username <user> --token-name <name> --scopes <scopes> --raw`，可用于后续给 bot 单独生成或轮换 token。
-- 稳定 REST API 的 `CreateUserOption`、`EditUserOption`、`User` schema 没有 `user_type`、`type`、`is_bot` 字段。
-- `/admin/users` 当前只按 individual user 搜索；API 返回也不能可靠区分 bot。
-- `/users/{username}/tokens` 能创建 token，但路由需要 self-or-admin + BasicAuth/reverse-proxy auth；不能只拿一个已有 API token 去给另一个 bot 账号发 token。
+## Bot 能做什么
 
-所以 ChatTea 第一版不能把 bot 做成完全 REST-backed 的远程通用能力。第一版应该明确分成两条路径：
+Bot 本质上是一个非交互式账号身份。它能做什么取决于三层条件：
 
-1. **本机托管 Gitea**：通过 ChatTea 管理的 Gitea binary/config/work-path 调用 `gitea admin user create --user-type bot`，这是当前能真实创建 bot 的路径。
-2. **远程 Gitea**：如果只能走稳定 REST API，则先只能创建受限的 individual machine user，不能声称是 Gitea bot 用户类型。
+1. **账号类型**：Gitea 的 `UserTypeBot` 不能像普通用户那样用密码登录 UI；它适合自动化，不适合人工交互。
+2. **token scope**：token 需要包含对应 API scope，例如 `write:issue`、`write:repository`、`write:notification`。
+3. **仓库 / 组织权限**：即使 token scope 足够，也仍需要账号对目标仓库或组织有访问权限。
+
+在这些条件满足时，bot 可以承担这些职责：
+
+- 创建、读取、评论 issue / PR；
+- 做 PR review、状态回写、自动标签、自动分派；
+- 创建 release、上传或管理发布附件；
+- 以固定身份执行仓库维护任务，例如同步、迁移、镜像、生成文档；
+- 用 Git over HTTPS 进行自动化 push / fetch；
+- 读取自己的通知流，响应别人 `@bot` 的请求；
+- 作为外部 bot 服务调用 Gitea API 的身份。
+
+Bot 不等于一个常驻进程。账号只是身份；真正“干活”的是外部进程、定时任务、webhook receiver、Actions job 或 ChatTea CLI。
+
+## 主要用途
+
+| 用途 | 说明 |
+| --- | --- |
+| Release bot | 创建 tag / release、补 changelog、上传发布附件 |
+| Issue triage bot | 根据评论或标签自动分派、补标签、关闭重复问题 |
+| PR assistant | 自动 review、跑检查后回写评论或状态 |
+| Docs bot | 文档生成、截图更新、文档 PR 自动同步 |
+| Mirror / sync bot | 在 Gitea 和外部 Git 服务之间同步仓库 |
+| ChatOps bot | 监听 `@bot` 指令，然后调用 Gitea API 执行动作 |
+| CI service account | 给外部 CI/CD 使用固定 Gitea 身份，而不是复用个人账号 |
+
+## 交互模式
+
+### 1. CLI 管理模式
+
+管理员在本机托管 Gitea 上创建 bot 和 token：
+
+```bash
+chattea bot plan
+chattea bot create \
+  --username release-bot \
+  --email release-bot@example.invalid \
+  --token-name release-bot \
+  --scope write:user,write:repository,write:issue,write:notification
+chattea bot token create release-bot --token-name release-bot-next
+```
+
+这类命令负责账号和 token 生命周期，不负责长期运行 bot 逻辑。
+
+### 2. 轮询通知模式
+
+外部 bot 进程保存 bot token，定时调用：
+
+```text
+GET /api/v1/notifications?status-types=unread
+GET /api/v1/repos/{owner}/{repo}/notifications?status-types=unread
+PATCH /api/v1/notifications/threads/{id}
+```
+
+当别人 `@bot`，Gitea 会把 mention 目标写入通知队列。bot 进程轮询到 unread thread 后，再读取 issue / PR / comment 详情并执行动作。
+
+这是最简单、最容易调试的模式。缺点是延迟取决于轮询间隔。
+
+### 3. Webhook 推送模式
+
+仓库或组织配置 webhook，把 `issues`、`issue_comment`、`pull_request`、`pull_request_review` 等事件推到外部 bot 服务。外部服务解析 payload，如果正文里包含 `@bot` 或符合命令格式，就用 bot token 调 Gitea API。
+
+这是真正接近“被唤醒”的模式：
+
+```text
+Gitea issue_comment event -> webhook receiver -> parse @bot -> call Gitea API as bot
+```
+
+优点是实时；缺点是需要额外部署 webhook receiver，并处理签名校验、重试和幂等。
+
+### 4. Actions / 定时任务模式
+
+如果任务本身不需要 `@bot` 唤醒，可以用 Gitea Actions 或 cron 定期运行脚本。脚本使用 bot token 调 API，适合定期同步、报表、检查和维护。
+
+## `@bot` 的唤醒机制
+
+Gitea 当前没有一个“bot 进程长连接事件流”。`@bot` 的可用唤醒机制主要有两种：
+
+1. **通知轮询**：Gitea 解析 issue / PR / comment / review 里的 mention，把目标用户写入 UI notification。bot 服务用自己的 token 轮询 `/notifications`。
+2. **Webhook 推送**：仓库或组织 webhook 收到事件后，由外部 bot 服务自己判断 payload 里是否 `@bot`。
+
+因此，如果只是“有人 @ 我的 bot，我怎么知道”，第一版最稳的答案是：
+
+```text
+先用 /notifications 轮询打通；需要低延迟时，再加 webhook receiver。
+```
+
+实践中已验证：管理员在 issue comment 中 `@临时bot` 后，临时 bot token 轮询 `/notifications` 能看到 unread `Issue` thread。
 
 ## 官方状态
 
 ### 已有能力
 
-Gitea admin CLI 当前已经包含这些 bot/service-account 相关能力：
+Gitea 模型层有 bot 类型：
+
+- `models/user/user.go`：`UserTypeBot // 4`。
+- `models/user/user_system.go`：Actions 使用 `gitea-actions` bot 系统账号。
+
+Gitea admin CLI 当前包含这些 bot/service-account 能力：
 
 ```bash
 gitea admin user create \
@@ -47,14 +133,6 @@ gitea admin user generate-access-token \
   --raw
 ```
 
-源码和运行时依据：
-
-- `cmd/admin_user_create.go`：`--user-type individual|bot`。
-- `cmd/admin_user_create.go`：bot 用户不能设置 password / random password。
-- `cmd/admin_user_create.go`：`--access-token`、`--access-token-name`、`--access-token-scopes`。
-- `cmd/admin_user_create.go`：创建用户后调用 `auth_model.NewAccessToken` 并只打印一次 token。
-- 运行中的托管 Gitea binary 暴露 `admin user generate-access-token`，可作为 ChatTea 本机 backend 的 token create/rotate 基础能力。
-
 ### REST API 缺口
 
 官方 OpenAPI 当前暴露的 schema 仍是普通用户形态：
@@ -72,7 +150,7 @@ gitea admin user generate-access-token \
 
 ### 上游讨论
 
-官方仓库已有长期讨论和正在推进的 PR，说明 bot 账号仍是一个演进中的能力面：
+官方仓库已有长期讨论和正在推进的 PR，说明 bot 账号仍是演进中的能力面：
 
 - `feat: manage bot accounts from the admin UI, API and CLI`：<https://github.com/go-gitea/gitea/pull/38181>
 - `[Proposal] Add "bot account" as a type of user`：<https://github.com/go-gitea/gitea/issues/13044>
@@ -80,92 +158,63 @@ gitea admin user generate-access-token \
 - `Organization and Repository level access token`：<https://github.com/go-gitea/gitea/issues/25900>
 - `API token: add bot type`：<https://github.com/go-gitea/gitea/issues/32359>
 
-其中 PR #38181 计划补 admin UI、API、CLI 上的一等 bot 管理，包括 bot token 面板、individual/bot 转换、bot auth hardening。ChatTea 应跟踪这个 PR；一旦上游发布包含这些 API 的版本，再把 ChatTea 的 bot 命令从本机 CLI backend 扩展到 REST backend。
+其中 PR #38181 计划补 admin UI、API、CLI 上的一等 bot 管理，包括 bot token 面板、individual/bot 转换、bot auth hardening。ChatTea 后续应跟踪这个 PR；一旦上游发布包含这些 API 的版本，再把 ChatTea 的 bot 命令从 local backend 扩展到 REST backend。
 
-## ChatTea 当前状态
+## ChatTea 第一版 CLI
 
-ChatTea `0.3.0` 已有的相关能力：
-
-- `chattea token create/list/delete/bootstrap`：通过 BasicAuth 调 Gitea `/users/{username}/tokens`。
-- `chattea server bootstrap`：本地托管 Gitea 时创建初始管理员、创建管理员 token、写入 ChatTea 凭据。
-- `chattea set-token` / `chattea auth login`：配置 `CHATTEA_BASE_URL`、`CHATTEA_TOKEN` 和 repo-local git credential。
-- `chattea api`：可临时调用还没有封装的 Gitea REST API。
-
-当前缺口：
-
-- 没有一等 `user`、`admin user`、`bot` 或 `service-account` 命令组。
-- `token` 命令把认证主体和 token 所属用户合在一个 `--username` 上；不适合“管理员给 bot 创建 token”。
-- 稳定 REST API 不能创建真正的 `UserTypeBot`，所以 ChatTea 不能只靠 `GiteaClient` 完成 bot 创建。
-- 文档没有定义“bot 用户”和“受限 machine user”的差异，容易把两者混用。
-
-## 第一版 CLI 规划
-
-第一版目标是把真实可做的路径封装出来，并把 API 缺口显式暴露给用户。
+当前 PR 中已实现第一版 local backend：
 
 ```text
 chattea bot
-├── create          # 本机 backend：创建 Gitea UserTypeBot，并可同时生成 token
-├── view            # 查看 bot 基本状态；REST 不返回 type 时标明“无法确认是否为 bot”
-├── list            # 本机 backend 可列出 bot；REST backend 只能列 individual 或标明不完整
-├── token
-│   ├── create      # 给 bot 生成 token；本机 backend 走 gitea admin user generate-access-token
-│   ├── list        # 列出 bot token；远程 REST 需要 admin BasicAuth 或后续上游 API
-│   ├── rotate      # 删除同名 token 后重新生成
-│   └── delete      # 删除 bot token
-└── plan            # 输出当前 Gitea backend 能力判断和推荐命令
+├── plan            # 检查本机 Gitea binary 是否支持 bot create / token generate / delete
+├── create          # 通过本机 admin CLI 创建 Gitea UserTypeBot，可同时生成 token
+├── delete          # 删除临时 bot；实践账号可配合 --purge 清理
+└── token
+    └── create      # 给已存在 bot 生成 scoped token
 ```
 
-建议参数：
+第一版只承诺本机托管 Gitea：
 
-```bash
-chattea bot create \
-  --username release-bot \
-  --email release-bot@example.invalid \
-  --restricted \
-  --token-name release-bot \
-  --scope write:repository,write:issue \
-  --show-token-once
-```
-
-本机 backend 的实现原则：
-
-- 使用 ChatTea 已解析出的 `CHATTEA_BINARY`、`CHATTEA_CONFIG`、`CHATTEA_WORK_PATH`。
+- 使用 ChatTea 解析出的 `CHATTEA_BINARY`、`CHATTEA_CONFIG`、`CHATTEA_WORK_PATH`。
 - 调用 `gitea admin user create --user-type bot`，不传 password。
-- 如果需要 token，传 `--access-token --access-token-name --access-token-scopes`。
-- 对已存在 bot 的 token 创建或轮换，优先调用 `gitea admin user generate-access-token --raw`。
-- 解析 stdout 时默认脱敏 token；只有显式 `--show-token-once` 才打印原始 token。
-- 允许 `--save-as-current` 把生成的 bot token 写入 ChatTea 凭据，但默认不覆盖当前管理员 token。
-- 所有真实 token、密码、服务 URL、本机路径都只进入本地受限记录，不进入公开文档。
+- 调用 `gitea admin user generate-access-token --raw` 生成 token。
+- 默认脱敏 token；只有显式 `--show-token-once` 才输出原始 token。
+- 远程 REST backend 暂不声称能创建真实 bot，只能规划为 restricted machine user。
 
-远程 REST backend 的实现原则：
+## 真实实践记录
 
-- 不把普通 `POST /admin/users` 创建的用户称为 bot。
-- 如果用户明确需要远程 API-only 方案，命令名应使用 `service-user` 或 `machine-user`，文档称为“受限普通用户”。
-- 只有上游 API 出现 `user_type` / `is_bot` / bot token management 后，才把 `chattea bot create --backend api` 标记为完整支持。
+本轮在真实 Gitea 环境完成了一次临时 bot 实践，过程写入本地受限记录，公开文档只保留脱敏结论。
 
-## 文档和实践要求
+实践步骤：
 
-新增 bot CLI 时必须同时更新：
+1. `chattea bot plan --json-output` 确认本机 Gitea binary 支持 bot create、token generate、user delete。
+2. `chattea bot create` 创建临时 bot，并生成 scoped token。
+3. 用 bot token 调 `/user`，确认返回主体就是临时 bot。
+4. 用 bot token 创建临时 public repo。
+5. 用 bot token 创建 issue。
+6. 用管理员 token 在 issue comment 里 `@临时bot`。
+7. 用 bot token 轮询 `/notifications`，收到 unread `Issue` thread。
+8. 用 headless Chrome 截取网页端 bot 用户页、仓库页、issue mention 页。
+9. `chattea bot delete --purge --yes` 清理临时 bot 和仓库。
 
-- CLI 树：`docs/chattea-cli-tree.md`。
-- CLI 实战指南：`docs/cli-guide.md`。
-- 权限与可见性文档：`docs/gitea-permissions-and-visibility.md`。
-- 从零开始快速开始：如果 bot 用于替换管理员 token，需要写清迁移步骤。
-- 本文：把“规划”改成“已实践路径”，附脱敏命令记录。
+实践发现：
 
-真实实践至少要覆盖：
+- 创建用户仓库时，当前 Gitea `/user/repos` 需要 `write:user` scope；只给 `write:repository` 会返回 403。
+- mention 通知需要 bot token 至少具备 notification 相关 scope；实践 token 使用 `write:user,write:repository,write:issue,write:notification`。
+- 本轮为了验证 bot 自己创建仓库，临时 bot 使用 `--unrestricted`。受限 bot 更适合生产服务账号，但需要先通过团队、协作者或仓库权限授予访问范围。
+- `@bot` 不会直接启动某个进程；它产生 Gitea notification。外部 bot 服务需要轮询 notifications 或接 webhook。
 
-1. 本机创建 bot 用户；
-2. 生成 scoped token；
-3. 用 bot token 调 `/user` 确认主体；
-4. 用 bot token 对一个临时仓库执行最小权限操作；
-5. 轮换 token；
-6. 删除临时 bot 或清理 token；
-7. 记录网页端能看到的 bot 标识或管理页面证据。
+网页端截图：
 
-## 待确认问题
+![Bot 用户页](assets/bot/bot-user-profile.png)
 
-- ChatTea 是否需要单独的 `service-user` 命令，还是把 API-only 受限普通用户放进 `bot create --backend api --mode restricted-user`。
-- bot token 是否应支持写入独立命名凭据，而不是覆盖 `CHATTEA_TOKEN`。
-- bot 与 repo/org 权限绑定是否先通过团队成员关系完成，还是等上游 repository/org token 能力。
-- 如果上游 PR #38181 合并，ChatTea 是否需要按 Gitea 版本自动选择 `api` backend。
+![Bot 创建的临时仓库](assets/bot/bot-repo-home.png)
+
+![Issue 中的 @bot mention](assets/bot/bot-repo-issue-mention.png)
+
+## 下一步
+
+- 增加 `chattea bot notifications poll`，封装 `/notifications` 轮询和 mark-read。
+- 增加 webhook 规划或最小 receiver 示例，验证 push 模式的 `@bot` 唤醒。
+- 增加 restricted bot 的仓库授权实践：先通过团队 / collaborator 授权，再验证 issue / PR 操作。
+- 等上游 PR #38181 或对应版本发布后，增加 REST backend 的 bot create/list/token 管理。

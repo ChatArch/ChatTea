@@ -36,6 +36,7 @@ src/chattea/
 ├── server.py                          # 本地 Gitea install/service/config primitives
 └── commands/
     ├── token.py                       # Click command group + token 函数薄 wrapper
+    ├── bot.py                         # Click command group + 本机 bot/service-account backend
     ├── repo.py                        # Click command group + repo 函数薄 wrapper
     ├── issue.py                       # Click command group + issue 函数薄 wrapper
     ├── pr.py                          # Click command group + pull request 函数薄 wrapper
@@ -86,6 +87,12 @@ chattea
 │   ├── list                          # GET /users/{username}/tokens -> `list_access_tokens`
 │   ├── delete                        # DELETE /users/{username}/tokens/{token} -> `delete_access_token`
 │   └── bootstrap                     # create token + configure ChatTea/Git credentials
+├── bot                               # 本机 Gitea bot / service-account local backend
+│   ├── plan                          # 检查 Gitea admin CLI bot/token/delete 能力
+│   ├── create                        # `create_bot_user_local` -> gitea admin user create --user-type bot
+│   ├── delete                        # `delete_bot_user_local` -> gitea admin user delete
+│   └── token
+│       └── create                    # `create_bot_token_local` -> gitea admin user generate-access-token
 ├── server                            # 本地 / 内部 Gitea 生命周期管理
 │   ├── install                       # `chattea.commands.server.install_gitea` -> `chattea.server.install_binary`
 │   ├── init                          # `chattea.commands.server.init_gitea_server`
@@ -180,7 +187,7 @@ chattea
 
 下面这些领域已从 `core/gitea/routers/api/v1/**` 的 Gitea Swagger annotation 中确认，可以作为真实命令实现。每个新增命令仍必须遵守上面的实现合约。
 
-- `user`：`/admin/users` 下的普通 admin user 创建、编辑、删除 路由；用于托管本地 引导。注意 Gitea 稳定 REST API 目前没有完整暴露 `UserTypeBot` 创建、查询和 token 管理，机器人账号规划见 `bot-service-account-plan.md`。
+- `user`：`/admin/users` 下的普通 admin user 创建、编辑、删除 路由；用于托管本地 引导。注意 Gitea 稳定 REST API 目前没有完整暴露 `UserTypeBot` 创建、查询和 token 管理；ChatTea 当前通过 `bot` local backend 走本机 Gitea admin CLI。
 - `token`：`/users/{username}/tokens` list/create/delete；create 需要 BasicAuth 或反向代理 auth。
 - `issue`：`/repos/{owner}/{repo}/issues`、评论、标签、reactions、pin/lock、dependencies、attachments、time tracking。
 - `label`：`/repos/{owner}/{repo}/labels`，以及可选的 org 标签 路由。

@@ -57,6 +57,9 @@ chattea
 │   └── list/view/download/delete
 ├── auth                      # auth/login/status/token 便利入口
 ├── token                     # Gitea access token create/list/delete/bootstrap
+├── bot                       # 本机 Gitea bot / 服务账号 local backend
+│   ├── plan/create/delete
+│   └── token create
 └── api                       # 原始 Gitea API passthrough
 ```
 
