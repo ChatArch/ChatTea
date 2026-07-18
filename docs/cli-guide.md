@@ -18,7 +18,7 @@ chattea
 │   ├── version               # 本地 Gitea binary version
 │   └── health                # REST: GET /api/v1/version
 ├── repo                      # 仓库 REST API + git clone helper
-│   ├── list/view/create
+│   ├── list/view/create/edit/generate
 │   ├── clone                 # 本地 git helper
 │   └── migrate
 ├── issue                     # REST: /repos/{owner}/{repo}/issues
@@ -80,6 +80,7 @@ from chattea.commands.job import job_logs
 
 client = GiteaClient()
 repo = create_repository(name="demo", owner="gitea_admin")
+template_repo = create_repository(name="template", owner="gitea_admin", template=True)
 issue = create_issue("gitea_admin/demo", title="Document CLI")
 add_card("gitea_admin/demo", project_id=1, column_id=1, issue_id=issue["id"])
 register_local_runner("demo", scope="repo", repo="gitea_admin/demo", labels="chattea-runner-demo")
@@ -111,7 +112,7 @@ Token 边界要分清楚：ChatTea 这个 Python 源码仓库的 remote 是 GitH
 
 ## 仓库、问题和项目看板示例
 
-下面流程在本地 ChatTea 管理的 Gitea 服务上运行：创建 仓库，添加 问题 元数据，创建 仓库级 项目看板，然后把 问题 添加为 项目卡片。
+下面流程在本地 ChatTea 管理的 Gitea 服务上运行：创建 仓库，添加 问题 元数据，创建 仓库级 项目看板，然后把 问题 添加为 项目卡片。模板仓库可以通过 `chattea repo create --template` 创建，通过 `chattea repo edit OWNER/NAME --template/--no-template` 切换，并通过 `chattea repo generate --template OWNER/TEMPLATE --owner OWNER --name NAME --copy-git-content` 生成新仓库；Gitea 要求生成时至少选择一个 `--copy-*` 项。
 
 Gitea Web 问题 页面：
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added repository template support: `repo create --template`, `repo edit --template/--no-template`, and `repo generate --template OWNER/REPO --owner OWNER --name NAME`.
+- Updated CLI documentation to align with the current command tree, organization/team workflow, official `tea` CLI coverage, and ChatTea's current repo/template boundary.
+
 ## 0.3.1
 
 - Added organization task-account workflow support: admin user creation, organization/team/member helpers, and user notification list/view/poll/mark-read commands.

@@ -14,6 +14,7 @@
 | `<gitea-public-base-url>` | 浏览器和 git 远端 使用的公网 HTTPS base URL |
 | `<restricted-env-file>` | 保存服务凭据的机器本地受限环境文件 |
 | `<chatarch-venv>` | 提供 `chattea` 的 Python 环境 |
+| `<project-playground>` | 当前实践 project 内部的 `playground/` 工作目录 |
 | `<demo-org>` | 示例组织名 |
 | `<demo-user>` | 示例用户名 |
 | `<demo-repo>` | 示例仓库名 |
@@ -47,27 +48,24 @@ $CHATTEA api /version --url "$GITEA_API"
 
 ## 1. 创建组织
 
-当前还没有一等 `chattea org create` 命令，所以先用 raw API：
+组织创建已经有一等 ChatTea 命令。内部实践默认使用 private organization，避免匿名或非成员看到组织信息：
 
 ```bash
 export DEMO_ORG=<demo-org>
 
-$CHATTEA api /orgs \
-  --method POST \
+$CHATTEA org create "$DEMO_ORG" \
+  --full-name 'Demo Organization' \
+  --description 'Temporary organization for a quickstart run.' \
+  --visibility private \
   --url "$GITEA_API" \
-  --data '{
-    "username": "<demo-org>",
-    "full_name": "Demo Organization",
-    "description": "Temporary organization for a quickstart run.",
-    "visibility": "public"
-  }'
+  --json-output
 ```
 
 常用检查：
 
 ```bash
-$CHATTEA api /orgs/$DEMO_ORG --url "$GITEA_API"
-$CHATTEA api /orgs/$DEMO_ORG/teams --url "$GITEA_API"
+$CHATTEA org view "$DEMO_ORG" --url "$GITEA_API"
+$CHATTEA org team list "$DEMO_ORG" --url "$GITEA_API" --json-output
 ```
 
 ## 2. 创建用户并加入组织
@@ -79,44 +77,37 @@ export DEMO_USER=<demo-user>
 export DEMO_USER_PASSWORD='[REDACTED]'
 ```
 
-用环境变量生成请求体，避免把密码硬编码到命令历史或文档里：
+用户创建也已经有一等 ChatTea 命令。密码通过环境变量传入，不写入命令行参数或文档：
 
 ```bash
-python3 - <<'PY' >/tmp/gitea-demo-user.json
-import json
-import os
-
-user = os.environ['DEMO_USER']
-payload = {
-    'username': user,
-    'email': f'{user}@example.invalid',
-    'full_name': 'Demo User',
-    'password': os.environ['DEMO_USER_PASSWORD'],
-    'must_change_password': False,
-    'send_notify': False,
-    'visibility': 'public',
-}
-print(json.dumps(payload))
-PY
-
-$CHATTEA api /admin/users \
-  --method POST \
+$CHATTEA user create \
+  --username "$DEMO_USER" \
+  --email "$DEMO_USER@example.invalid" \
+  --password-env DEMO_USER_PASSWORD \
+  --full-name 'Demo User' \
+  --visibility private \
+  --no-must-change-password \
   --url "$GITEA_API" \
-  --data "$(cat /tmp/gitea-demo-user.json)"
-
-rm -f /tmp/gitea-demo-user.json
+  --json-output
 ```
 
-把用户加入组织 team。`OWNERS_TEAM_ID` 从实际 team list 输出中读取：
+第一版推荐新建 `developers` team，再把普通用户加入该 team。`DEVELOPERS_TEAM_ID` 从 `org team list` 输出中读取：
 
 ```bash
-$CHATTEA api /orgs/$DEMO_ORG/teams --url "$GITEA_API"
+$CHATTEA org team create "$DEMO_ORG" \
+  --name developers \
+  --permission write \
+  --all-repos \
+  --can-create-repo \
+  --visibility private \
+  --url "$GITEA_API" \
+  --json-output
 
-export OWNERS_TEAM_ID=<team-id>
+$CHATTEA org team list "$DEMO_ORG" --url "$GITEA_API" --json-output
 
-$CHATTEA api /teams/$OWNERS_TEAM_ID/members/$DEMO_USER \
-  --method PUT \
-  --url "$GITEA_API"
+export DEVELOPERS_TEAM_ID=<team-id>
+
+$CHATTEA org team member add "$DEVELOPERS_TEAM_ID" "$DEMO_USER" --url "$GITEA_API"
 ```
 
 ## 3. 创建仓库
@@ -148,8 +139,8 @@ $CHATTEA repo list --owner "$DEMO_ORG" --limit 10 --url "$GITEA_API" --json-outp
 ## 4. 初始化本地 Git 并配置仓库本地令牌
 
 ```bash
-mkdir -p /tmp/chattea-quickstart
-cd /tmp/chattea-quickstart
+mkdir -p <project-playground>/chattea-quickstart
+cd <project-playground>/chattea-quickstart
 
 git init -b main
 git config user.name 'ChatTea Quickstart Bot'
@@ -359,8 +350,9 @@ $CHATTEA pr patch "$PR" --repo "$DEMO_FULL_REPO" --url "$GITEA_API"
 
 ## 本流程暴露的基础设施校对点
 
-这些不是本轮文档的主目标，但实践过程中已经明确暴露：
+这些不是本轮文档的主目标，但实践过程中已经明确暴露并部分补齐：
 
-- 仍待补：增加一等 `org`、`user`、`team` 命令，减少 raw `chattea api`；
-- 本轮已校对：`repo create --private`，让 public/private 选择更清楚；
-- 本轮已校对：`set-token` 同时支持 `https://host/owner/repo` 和 `https://host/owner/repo.git` 两种 远端 形态。
+- 已补齐：`org create/list/view`、`user create/delete`、`org team create/list/member add/remove`，快速开始不再依赖 raw `chattea api` 创建组织、用户和 team 成员关系；
+- 已校对：`repo create --private`，让 public/private 选择更清楚；
+- 已校对：`set-token` 同时支持 `https://host/owner/repo` 和 `https://host/owner/repo.git` 两种 远端 形态；
+- 仍待补：user view/list/edit、team 编辑/删除/selected-repos 仓库绑定、admin create-as-user 创建 user-owned 仓库等非第一版受管组织流程。

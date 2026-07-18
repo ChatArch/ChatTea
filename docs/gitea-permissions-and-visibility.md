@@ -83,12 +83,16 @@ Gitea 组织权限主要通过 team 管理：
 
 quick start 主要使用自动创建的 `Owners` team，它拥有 owner 权限并包含全部组织仓库。
 
-常用 team API 形态：
+常用 ChatTea 命令形态：
 
-```text
-GET /api/v1/orgs/<demo-org>/teams
-PUT /api/v1/teams/<team-id>/members/<demo-user>
+```bash
+chattea org team create <demo-org> --name developers --permission write --all-repos --can-create-repo
+chattea org team list <demo-org>
+chattea org team member add <team-id> <demo-user>
+chattea org team member remove <team-id> <demo-user>
 ```
+
+对应底层 API 仍可通过 `chattea api` 兜底，但第一版实践文档优先使用上面的一等命令。
 
 Team visibility 含义：
 
@@ -141,9 +145,15 @@ chattea token bootstrap --help
 
 ## 本流程暴露的基础设施校对点
 
-权限实践暴露出几个后续可补的点：
+权限实践暴露出的第一批管理命令已经补齐：
 
-- 增加一等 `org create/view/list`，避免组织创建依赖 raw API；
-- 增加一等 `user create/view/list` 或 admin-user 命令，用于受控本地 Gitea 实践环境；
-- 增加一等 `team list/add-member/remove-member`，覆盖组织成员流程；
-- 如果以后要支持 GitHub 风格的 `internal` 仓库，需要先单独确认当前 Gitea 源码/API 是否存在可用入口。
+- `chattea org create/list/view`：避免组织创建和查询依赖 raw API；
+- `chattea user create/delete`：用于受控本地 Gitea 实践环境中的管理员建号和清理；
+- `chattea org team create/list/member add/member remove`：覆盖组织 team 创建和成员维护；
+- `chattea notification list/view/poll/mark-read`：覆盖任务账号被 `@mention` 后的轮询入口。
+
+后续仍需单独确认或补齐的点：
+
+- 如果以后要支持 GitHub Enterprise 风格的 `internal` 仓库，需要先确认当前 Gitea 源码/API 是否存在稳定入口；
+- 如果要让普通用户完全自助创建“受管私有仓库”，需要在 `Organization + Team` 模型上增加 bot/CLI 创建流程，避免用户误建到个人 namespace；
+- 如果要管理 selected-repos team，还需要补 team 仓库绑定的增删命令。

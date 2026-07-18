@@ -38,6 +38,8 @@ chattea
 │   ├── list
 │   ├── view
 │   ├── create
+│   ├── edit
+│   ├── generate
 │   ├── clone
 │   └── migrate
 ├── issue
@@ -216,7 +218,7 @@ ChatTea 自有命令保留为：
 - `server start/stop/restart/status/logs`：管理固定的 用户级 systemd 服务 `chattea-gitea.service`。
 - `server version/health`：检查本地 二进制文件 或已配置的 Gitea HTTP 端点。
 - `server config path/show/get/set`：查看或更新托管 Gitea `app.ini`，与 ChatEnv 独立。
-- `repo list/view/create`：覆盖基础仓库列表、详情和创建 API。
+- `repo list/view/create/edit/generate`：覆盖基础仓库列表、详情、创建、编辑和从模板生成；`repo create --template` 可创建模板仓库。
 - `repo clone`：从已配置 Gitea 实例 clone 仓库，不额外配置 Git 鉴权 header。
 - `repo migrate`：从已有 Git clone URL 创建 Gitea 迁移。
 - `issue list/view/create/edit/close/reopen/delete`：通过 `/repos/{owner}/{repo}/issues` 路由 管理仓库 问题。
@@ -271,6 +273,8 @@ chattea server config set     -> chattea.commands.server.set_gitea_config_value
 chattea repo list             -> chattea.commands.repo.list_repositories
 chattea repo view             -> chattea.commands.repo.view_repository
 chattea repo create           -> chattea.commands.repo.create_repository
+chattea repo edit             -> chattea.commands.repo.edit_repository
+chattea repo generate         -> chattea.commands.repo.generate_repository
 chattea repo clone            -> chattea.commands.repo.clone_repository
 chattea repo migrate          -> chattea.commands.repo.migrate_repository
 chattea issue list            -> chattea.commands.issue.list_issues

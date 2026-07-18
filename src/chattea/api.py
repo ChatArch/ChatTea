@@ -154,6 +154,7 @@ class GiteaClient:
         private: bool = True,
         description: str | None = None,
         default_branch: str = "main",
+        template: bool = False,
     ) -> dict[str, Any]:
         payload = {
             "name": name,
@@ -161,6 +162,7 @@ class GiteaClient:
             "description": description or "",
             "default_branch": default_branch,
             "auto_init": False,
+            "template": template,
         }
         if owner:
             try:
@@ -170,6 +172,70 @@ class GiteaClient:
             if owner != me.get("login"):
                 return self.request("POST", f"/orgs/{quote(owner)}/repos", data=payload)
         return self.request("POST", "/user/repos", data=payload)
+
+    def edit_repo(
+        self,
+        owner: str,
+        repo: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        website: str | None = None,
+        private: bool | None = None,
+        template: bool | None = None,
+        archived: bool | None = None,
+        default_branch: str | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "PATCH",
+            f"/repos/{quote(owner)}/{quote(repo)}",
+            data=self._payload(
+                name=name,
+                description=description,
+                website=website,
+                private=private,
+                template=template,
+                archived=archived,
+                default_branch=default_branch,
+            ),
+        )
+
+    def generate_repo_from_template(
+        self,
+        template_owner: str,
+        template_repo: str,
+        *,
+        owner: str,
+        name: str,
+        private: bool = True,
+        description: str | None = None,
+        default_branch: str | None = None,
+        git_content: bool | None = None,
+        git_hooks: bool | None = None,
+        avatar: bool | None = None,
+        labels: bool | None = None,
+        topics: bool | None = None,
+        webhooks: bool | None = None,
+        protected_branch: bool | None = None,
+    ) -> dict[str, Any]:
+        return self.request(
+            "POST",
+            f"/repos/{quote(template_owner)}/{quote(template_repo)}/generate",
+            data=self._payload(
+                owner=owner,
+                name=name,
+                private=private,
+                description=description,
+                default_branch=default_branch,
+                git_content=git_content,
+                git_hooks=git_hooks,
+                avatar=avatar,
+                labels=labels,
+                topics=topics,
+                webhooks=webhooks,
+                protected_branch=protected_branch,
+            ),
+        )
 
     def list_orgs(self, *, limit: int = 50, page: int | None = None) -> list[dict[str, Any]]:
         return self.request("GET", "/orgs", params=self._params(limit=limit, page=page))
