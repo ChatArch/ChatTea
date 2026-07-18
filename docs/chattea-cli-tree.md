@@ -307,9 +307,9 @@ chattea runner                    # 管理 Gitea Actions 运行器
 ```text
 chattea server          # 管理本机托管的 Gitea 服务
 ├── backup              # 运行 Gitea dump，支持完整备份和 DB-only SQL 导出
-├── bootstrap           # 串起 install/init/admin/token/credential 首次引导流程
-├── install             # 下载 ChatArch Gitea 二进制文件
-├── init                # 创建最小 app.ini
+├── bootstrap           # 串起 install/init/admin/token/credential，可选择 sqlite3/mysql
+├── install             # 下载 ChatArch Gitea 二进制文件，可选准备 MySQL infra
+├── init                # 创建最小 app.ini，可选择 sqlite3/mysql 后端
 ├── start               # 安装并启动用户级 systemd 服务
 ├── stop                # 停止用户级 systemd 服务
 ├── restart             # 重启用户级 systemd 服务
@@ -322,7 +322,7 @@ chattea server          # 管理本机托管的 Gitea 服务
 └── serve               # 前台运行 Gitea，用于调试和本地实践
 ```
 
-Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<runner-name>.service` 管理。
+Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<runner-name>.service` 管理。新装实例默认仍使用 SQLite；需要 MySQL 时可以在 `server install`、`server init` 或 `server bootstrap` 加 `--database-backend mysql`，ChatTea 会通过 ChatData 准备本机 MySQL 二进制 runtime 和 user systemd service。
 
 ## 当前封装边界和后续项
 

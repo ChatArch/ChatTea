@@ -10,9 +10,9 @@ chattea
 ├── server                    # 本地 ChatArch Gitea 生命周期
 │   ├── backup                # gitea dump 备份 / DB-only SQL 导出
 │   ├── config                # app.ini path/show/get/set helper
-│   ├── install               # 安装 ChatArch internal Gitea binary
-│   ├── init                  # 初始化托管 Gitea app.ini/work path
-│   ├── bootstrap             # install + init + admin + token bootstrap
+│   ├── install               # 安装 Gitea binary，可选准备 MySQL 后端 infra
+│   ├── init                  # 初始化 app.ini/work path，可选择 sqlite3/mysql
+│   ├── bootstrap             # install + init + admin + token，可选择 sqlite3/mysql
 │   ├── serve                 # 前台 web 进程
 │   ├── start/stop/restart    # user systemd service 生命周期
 │   ├── migrate mysql         # SQLite -> ChatData MySQL backend 迁移
@@ -95,7 +95,12 @@ logs = job_logs("gitea_admin/demo", job_id=6)
 本地开发服务从 ChatEnv 和 Gitea server lifecycle 命令开始：
 
 ```bash
+# 默认 SQLite：
 chattea server bootstrap -I
+
+# 新装直接使用 ChatData-managed MySQL：
+chattea server bootstrap --database-backend mysql --admin-password-env GITEA_ADMIN_PASSWORD --start-service -I
+
 chattea server health
 chattea token bootstrap --username gitea_admin --password-env GITEA_ADMIN_PASSWORD --scope all
 ```

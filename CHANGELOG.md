@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added install-time database backend selection: `server install/init/bootstrap --database-backend sqlite3|mysql`, with ChatData-managed MySQL runtime preparation for new Gitea instances.
+- Added ChatData MySQL systemd dependency detection to the generated `chattea-gitea.service`.
 - Added `server backup dump` and `server migrate mysql` for SQLite-to-MySQL Gitea backend migration through ChatData-managed MySQL.
 - Documented the no-Docker MySQL backend migration workflow for ChatTea-managed Gitea.
 - Added repository template support: `repo create --template`, `repo edit --template/--no-template`, and `repo generate --template OWNER/REPO --owner OWNER --name NAME`.

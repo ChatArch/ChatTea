@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import os
-import platform
-import secrets
 import hashlib
 import json
 import lzma
+import os
+import platform
 import shutil
+import secrets
 import subprocess
 import urllib.request
 from pathlib import Path
@@ -29,6 +29,9 @@ DEFAULT_WORK_PATH = default_gitea_work_path(DEFAULT_PREFIX)
 CHATARCH_GITEA_REPO = "ChatArch/gitea"
 CHATARCH_GITEA_RELEASE_API = f"https://api.github.com/repos/{CHATARCH_GITEA_REPO}/releases/latest"
 CHATARCH_GITEA_RELEASE_BASE = f"https://github.com/{CHATARCH_GITEA_REPO}/releases/download"
+DATABASE_BACKEND_SQLITE = "sqlite3"
+DATABASE_BACKEND_MYSQL = "mysql"
+SUPPORTED_DATABASE_BACKENDS = (DATABASE_BACKEND_SQLITE, DATABASE_BACKEND_MYSQL)
 
 
 def detect_asset_arch() -> str:
@@ -100,18 +103,66 @@ def generate_secret(size: int = 48) -> str:
     return secrets.token_urlsafe(size)
 
 
+def render_database_section(
+    work_path: Path,
+    *,
+    backend: str = DATABASE_BACKEND_SQLITE,
+    host: str | None = None,
+    name: str = "gitea",
+    user: str = "root",
+    password: str = "",
+    ssl_mode: str = "disable",
+) -> str:
+    """Render the Gitea [database] section for a supported backend."""
+    work = work_path.expanduser()
+    if backend == DATABASE_BACKEND_SQLITE:
+        return f"""[database]
+DB_TYPE = sqlite3
+PATH = {work}/data/gitea.db
+LOG_SQL = false
+"""
+    if backend == DATABASE_BACKEND_MYSQL:
+        if not host:
+            raise ValueError("MySQL database backend requires a host or socket path")
+        return f"""[database]
+DB_TYPE = mysql
+HOST = {host}
+NAME = {name}
+USER = {user}
+PASSWD = {password}
+SSL_MODE = {ssl_mode}
+LOG_SQL = false
+"""
+    raise ValueError(f"Unsupported database backend: {backend}")
+
+
 def render_app_ini(
     work_path: Path,
     run_user: str,
     http_port: int = DEFAULT_HTTP_PORT,
     base_url: str = DEFAULT_BASE_URL,
     listen_addr: str = DEFAULT_LISTEN_ADDR,
+    database_backend: str = DATABASE_BACKEND_SQLITE,
+    database_host: str | None = None,
+    database_name: str = "gitea",
+    database_user: str = "root",
+    database_password: str = "",
+    database_ssl_mode: str = "disable",
 ) -> str:
     work = work_path.expanduser()
     root_url = normalize_base_url(base_url) + "/"
     domain = base_url_host(root_url)
     port = validate_http_port(http_port)
     http_addr = validate_listen_addr(listen_addr)
+    database_section = render_database_section(
+        work,
+        backend=database_backend,
+        host=database_host,
+        name=database_name,
+        user=database_user,
+        password=database_password,
+        ssl_mode=database_ssl_mode,
+    ).rstrip()
     return f"""APP_NAME = Gitea
 RUN_USER = {run_user}
 RUN_MODE = prod
@@ -130,10 +181,7 @@ ROOT_URL = {root_url}
 DISABLE_SSH = true
 LFS_START_SERVER = true
 
-[database]
-DB_TYPE = sqlite3
-PATH = {work}/data/gitea.db
-LOG_SQL = false
+{database_section}
 
 [session]
 PROVIDER = file
@@ -175,6 +223,12 @@ def init_instance(
     base_url: str = DEFAULT_BASE_URL,
     listen_addr: str = DEFAULT_LISTEN_ADDR,
     run_user: str | None = None,
+    database_backend: str = DATABASE_BACKEND_SQLITE,
+    database_host: str | None = None,
+    database_name: str = "gitea",
+    database_user: str = "root",
+    database_password: str = "",
+    database_ssl_mode: str = "disable",
     force: bool = False,
 ) -> Path:
     work = work_path.expanduser()
@@ -185,7 +239,19 @@ def init_instance(
         child.mkdir(parents=True, exist_ok=True)
     user = run_user or os.environ.get("USER") or "git"
     config.write_text(
-        render_app_ini(work, user, http_port=http_port, base_url=base_url, listen_addr=listen_addr),
+        render_app_ini(
+            work,
+            user,
+            http_port=http_port,
+            base_url=base_url,
+            listen_addr=listen_addr,
+            database_backend=database_backend,
+            database_host=database_host,
+            database_name=database_name,
+            database_user=database_user,
+            database_password=database_password,
+            database_ssl_mode=database_ssl_mode,
+        ),
         encoding="utf-8",
     )
     config.chmod(0o600)
@@ -214,6 +280,35 @@ def service_file_path(service_name: str = DEFAULT_SERVICE_NAME) -> Path:
     return Path("~/.config/systemd/user").expanduser() / service_name
 
 
+def _read_ini_value(config: Path, section: str, key: str) -> str | None:
+    current_section: str | None = None
+    for line in config.expanduser().read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            current_section = stripped[1:-1].strip()
+            continue
+        if current_section != section:
+            continue
+        existing_key, sep, value = line.partition("=")
+        if sep and existing_key.strip().upper() == key.upper():
+            return value.strip()
+    return None
+
+
+def chatdata_mysql_service_dependency(config: Path) -> str | None:
+    """Return the ChatData MySQL unit required by app.ini, when detectable."""
+    if (_read_ini_value(config, "database", "DB_TYPE") or "").lower() != DATABASE_BACKEND_MYSQL:
+        return None
+    host = _read_ini_value(config, "database", "HOST") or ""
+    parts = Path(host).parts
+    for index, part in enumerate(parts[:-1]):
+        if part == "mysql" and index > 0 and parts[index - 1] == "instances" and index + 1 < len(parts):
+            instance = parts[index + 1]
+            if instance:
+                return f"chatdata-mysql-{instance}.service"
+    return None
+
+
 def write_user_service(
     binary: Path,
     config: Path,
@@ -223,10 +318,13 @@ def write_user_service(
     path = service_file_path(service_name)
     path.parent.mkdir(parents=True, exist_ok=True)
     home = Path.home()
+    dependency = chatdata_mysql_service_dependency(config)
+    after_units = " ".join(["network.target", *([dependency] if dependency else [])])
+    requires_line = f"Requires={dependency}\n" if dependency else ""
     content = f"""[Unit]
 Description=ChatTea managed Gitea service
-After=network.target
-
+After={after_units}
+{requires_line}
 [Service]
 Type=simple
 WorkingDirectory={work_path.expanduser()}

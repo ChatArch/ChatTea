@@ -17,9 +17,30 @@ from chattea.credentials import configure_token as configure_credentials
 from chattea.commands.token import DEFAULT_TOKEN_NAME, DEFAULT_TOKEN_SCOPES
 
 
+SENSITIVE_CONFIG_KEYS = {"SECRET_KEY", "INTERNAL_TOKEN", "JWT_SECRET", "LFS_JWT_SECRET"}
+SENSITIVE_DATABASE_KEYS = {"PASSWD", "PASSWORD"}
+DEFAULT_DATABASE_BACKEND = server_ops.DATABASE_BACKEND_SQLITE
+DEFAULT_MYSQL_INSTANCE = "default"
+DEFAULT_MYSQL_VERSION = "8.4.6"
+DEFAULT_MYSQL_DATABASE = "gitea"
+DEFAULT_MYSQL_PORT = 3307
+DEFAULT_MYSQL_BIND_ADDRESS = "127.0.0.1"
+
+
 INSTALL_SCHEMA = CommandSchema(
     name="server install",
-    fields=(CommandField("version", prompt="ChatArch Gitea version", required=False, default="latest", prompt_if_missing=True),),
+    fields=(
+        CommandField("version", prompt="ChatArch Gitea version", required=False, default="latest", prompt_if_missing=True),
+        CommandField(
+            "database_backend",
+            prompt="Gitea database backend infra",
+            kind="select",
+            required=True,
+            default=DEFAULT_DATABASE_BACKEND,
+            choices=server_ops.SUPPORTED_DATABASE_BACKENDS,
+            prompt_if_missing=True,
+        ),
+    ),
 )
 
 INIT_SCHEMA = CommandSchema(
@@ -28,6 +49,15 @@ INIT_SCHEMA = CommandSchema(
         CommandField("base_url", prompt="Gitea base URL", required=True, default=DEFAULT_BASE_URL, prompt_if_missing=True),
         CommandField("listen_addr", prompt="Gitea listen address", required=True, default=DEFAULT_LISTEN_ADDR, prompt_if_missing=True),
         CommandField("http_port", prompt="Gitea HTTP port", kind="int", required=True, default=DEFAULT_HTTP_PORT, prompt_if_missing=True),
+        CommandField(
+            "database_backend",
+            prompt="Gitea database backend",
+            kind="select",
+            required=True,
+            default=DEFAULT_DATABASE_BACKEND,
+            choices=server_ops.SUPPORTED_DATABASE_BACKENDS,
+            prompt_if_missing=True,
+        ),
     ),
 )
 
@@ -40,6 +70,15 @@ BOOTSTRAP_SCHEMA = CommandSchema(
         CommandField("admin_password", prompt="Initial admin password", required=True, sensitive=True),
         CommandField("token_name", prompt="Initial token name", required=True, default=DEFAULT_TOKEN_NAME, prompt_if_missing=True),
         CommandField("token_scopes", prompt="Initial token scopes", required=True, default=",".join(DEFAULT_TOKEN_SCOPES), prompt_if_missing=True),
+        CommandField(
+            "database_backend",
+            prompt="Gitea database backend",
+            kind="select",
+            required=True,
+            default=DEFAULT_DATABASE_BACKEND,
+            choices=server_ops.SUPPORTED_DATABASE_BACKENDS,
+            prompt_if_missing=True,
+        ),
     ),
 )
 
@@ -59,10 +98,6 @@ CONFIG_SET_SCHEMA = CommandSchema(
         CommandField("value", prompt="Gitea app.ini value", required=True),
     ),
 )
-
-SENSITIVE_CONFIG_KEYS = {"SECRET_KEY", "INTERNAL_TOKEN", "JWT_SECRET", "LFS_JWT_SECRET"}
-SENSITIVE_DATABASE_KEYS = {"PASSWD", "PASSWORD"}
-
 
 def _required_path(value: Path | None, name: str) -> Path:
     if value is None:
@@ -165,6 +200,11 @@ def init_gitea_server(
     listen_addr: str | None = None,
     http_port: int | None = None,
     run_user: str | None = None,
+    database_backend: str = DEFAULT_DATABASE_BACKEND,
+    database_host: str | None = None,
+    database_name: str = DEFAULT_MYSQL_DATABASE,
+    database_user: str = "root",
+    database_password: str = "",
     force: bool = False,
 ) -> Path:
     """Create or reuse the managed Gitea app.ini."""
@@ -177,6 +217,11 @@ def init_gitea_server(
         listen_addr=listen_addr or DEFAULT_LISTEN_ADDR,
         http_port=http_port or DEFAULT_HTTP_PORT,
         run_user=run_user,
+        database_backend=database_backend,
+        database_host=database_host,
+        database_name=database_name,
+        database_user=database_user,
+        database_password=database_password,
         force=force,
     )
 
@@ -188,6 +233,78 @@ def _password_from_env(env_name: str | None) -> str | None:
     if not value:
         raise click.ClickException(f"Environment variable {env_name} is not set or is empty.")
     return value
+
+
+def _raise_for_completed_process(result: subprocess.CompletedProcess[str], action: str) -> None:
+    if result.returncode == 0:
+        return
+    detail = (result.stderr or result.stdout or f"{action} failed with exit code {result.returncode}").strip()
+    raise click.ClickException(detail)
+
+
+def _wait_for_mysql(mysql_ops, *, name: str, version: str, home: Path | None, timeout: int = 30) -> dict[str, object]:
+    deadline = time.time() + timeout
+    last_ping: dict[str, object] | None = None
+    while time.time() < deadline:
+        last_ping = mysql_ops.ping(name=name, version=version, home=home)
+        if last_ping.get("ok"):
+            return last_ping
+        time.sleep(1)
+    detail = last_ping.get("stderr") if last_ping else "MySQL did not become ready"
+    raise click.ClickException(str(detail or "MySQL did not become ready"))
+
+
+def prepare_database_backend(
+    *,
+    backend: str = DEFAULT_DATABASE_BACKEND,
+    mysql_instance: str = DEFAULT_MYSQL_INSTANCE,
+    mysql_version: str = DEFAULT_MYSQL_VERSION,
+    mysql_home: Path | None = None,
+    mysql_database: str = DEFAULT_MYSQL_DATABASE,
+    mysql_user: str = "root",
+    mysql_password: str = "",
+    mysql_port: int = DEFAULT_MYSQL_PORT,
+    mysql_bind_address: str = DEFAULT_MYSQL_BIND_ADDRESS,
+    install_mysql: bool = True,
+    install_mysql_service: bool = True,
+    start_mysql: bool = True,
+) -> dict[str, object]:
+    """Prepare the selected database backend and return app.ini database settings."""
+    if backend == server_ops.DATABASE_BACKEND_SQLITE:
+        return {"backend": backend, "gitea": {"database_backend": backend}, "mysql": None}
+    if backend != server_ops.DATABASE_BACKEND_MYSQL:
+        raise click.ClickException(f"Unsupported database backend: {backend}")
+
+    mysql_ops = _chatdata_mysql_module()
+    result: dict[str, object] = {"backend": backend}
+    if install_mysql:
+        result["install"] = mysql_ops.install_mysql(version=mysql_version, home=mysql_home)
+    result["instance"] = mysql_ops.init_instance(
+        name=mysql_instance,
+        version=mysql_version,
+        home=mysql_home,
+        port=mysql_port,
+        bind_address=mysql_bind_address,
+    )
+    if install_mysql_service:
+        result["service"] = mysql_ops.install_service(name=mysql_instance, version=mysql_version, home=mysql_home)
+    if start_mysql:
+        _raise_for_completed_process(mysql_ops.systemctl_user(mysql_instance, "start"), f"start {mysql_instance}")
+    result["ping"] = _wait_for_mysql(mysql_ops, name=mysql_instance, version=mysql_version, home=mysql_home)
+    mysql_ops.create_database(mysql_database, name=mysql_instance, version=mysql_version, home=mysql_home)
+    layout = mysql_ops.mysql_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
+    result["layout"] = mysql_ops.export_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
+    return {
+        "backend": backend,
+        "gitea": {
+            "database_backend": backend,
+            "database_host": str(layout.socket),
+            "database_name": mysql_database,
+            "database_user": mysql_user,
+            "database_password": mysql_password,
+        },
+        "mysql": result,
+    }
 
 
 def _gitea_admin_base_command(binary: Path, config_path: Path, work_path: Path) -> list[str]:
@@ -312,11 +429,37 @@ def bootstrap_gitea_server(
     binary: Path | None = None,
     listen_addr: str | None = None,
     http_port: int | None = None,
+    database_backend: str = DEFAULT_DATABASE_BACKEND,
+    mysql_instance: str = DEFAULT_MYSQL_INSTANCE,
+    mysql_version: str = DEFAULT_MYSQL_VERSION,
+    mysql_home: Path | None = None,
+    mysql_database: str = DEFAULT_MYSQL_DATABASE,
+    mysql_user: str = "root",
+    mysql_password: str = "",
+    mysql_port: int = DEFAULT_MYSQL_PORT,
+    mysql_bind_address: str = DEFAULT_MYSQL_BIND_ADDRESS,
+    install_mysql: bool = True,
+    install_mysql_service: bool = True,
+    start_mysql: bool = True,
     force: bool = False,
     start_service: bool = False,
 ) -> dict[str, object]:
     """Bootstrap a local ChatArch Gitea and configure ChatTea credentials."""
     installed_binary = binary or install_gitea(version, prefix=prefix, force=force)
+    database = prepare_database_backend(
+        backend=database_backend,
+        mysql_instance=mysql_instance,
+        mysql_version=mysql_version,
+        mysql_home=mysql_home,
+        mysql_database=mysql_database,
+        mysql_user=mysql_user,
+        mysql_password=mysql_password,
+        mysql_port=mysql_port,
+        mysql_bind_address=mysql_bind_address,
+        install_mysql=install_mysql,
+        install_mysql_service=install_mysql_service,
+        start_mysql=start_mysql,
+    )
     resolved_config = init_gitea_server(
         work_path=work_path,
         config_path=config_path,
@@ -324,6 +467,7 @@ def bootstrap_gitea_server(
         base_url=base_url,
         listen_addr=listen_addr,
         http_port=http_port,
+        **database["gitea"],
         force=force,
     )
     resolved = load_config()
@@ -353,6 +497,8 @@ def bootstrap_gitea_server(
         "token_name": token_name,
         "token_scopes": token_scopes,
         "token_source": token_source,
+        "database_backend": database["backend"],
+        "mysql": database["mysql"],
         "credentials": credentials,
         "service": service,
     }
@@ -516,7 +662,7 @@ def _chatdata_mysql_module():
     try:
         from chatdata import mysql as mysql_ops
     except ImportError as exc:
-        raise click.ClickException("ChatData is required for MySQL migration. Install it with `pip install -e /path/to/ChatData` first.") from exc
+        raise click.ClickException("ChatData is required for MySQL backend support. Install ChatData or use `pip install -e /path/to/ChatData` first.") from exc
     return mysql_ops
 
 
@@ -761,19 +907,70 @@ def config_set(section: str | None, key: str | None, value: str | None, config_p
 @click.option("--version", default=None, help="ChatArch Gitea version, for example 1.0.0. Defaults to latest.")
 @click.option("--prefix", type=click.Path(file_okay=False, path_type=Path), default=None, help="Install prefix. Defaults to CHATTEA_HOME.")
 @click.option("--arch", default=None, help="Asset architecture override, for example amd64 or arm64.")
+@click.option("--database-backend", type=click.Choice(server_ops.SUPPORTED_DATABASE_BACKENDS), default=None, help="Also prepare database backend infra. Defaults to sqlite3.")
+@click.option("--mysql-instance", default=DEFAULT_MYSQL_INSTANCE, show_default=True, help="ChatData MySQL instance name when --database-backend mysql.")
+@click.option("--mysql-version", default=DEFAULT_MYSQL_VERSION, show_default=True, help="ChatData MySQL runtime version.")
+@click.option("--mysql-home", type=click.Path(file_okay=False, path_type=Path), default=None, help="ChatData home override. Defaults to CHATDATA_HOME.")
+@click.option("--mysql-database", default=DEFAULT_MYSQL_DATABASE, show_default=True, help="MySQL database name to create for Gitea.")
+@click.option("--mysql-user", default="root", show_default=True, help="MySQL user for later Gitea app.ini generation.")
+@click.option("--mysql-password-env", default=None, help="Environment variable containing the MySQL password. Empty by default for local ChatData MySQL.")
+@click.option("--mysql-port", default=DEFAULT_MYSQL_PORT, show_default=True, type=int, help="ChatData MySQL port for a new instance.")
+@click.option("--mysql-bind-address", default=DEFAULT_MYSQL_BIND_ADDRESS, show_default=True, help="ChatData MySQL bind address for a new instance.")
+@click.option("--install-mysql/--no-install-mysql", default=True, show_default=True, help="Install/reuse ChatData MySQL runtime when selecting mysql.")
+@click.option("--mysql-service/--no-mysql-service", "install_mysql_service", default=True, show_default=True, help="Install/enable ChatData MySQL user service when selecting mysql.")
+@click.option("--start-mysql/--no-start-mysql", default=True, show_default=True, help="Start ChatData MySQL after install.")
 @click.option("--force", is_flag=True, help="Overwrite an existing binary.")
 @add_interactive_option
-def install(version: str | None, prefix: Path | None, arch: str | None, force: bool, interactive: bool | None) -> None:
-    """Download the ChatArch Gitea binary."""
-    provided = {"version": version if interactive is True else version or "latest"}
+def install(
+    version: str | None,
+    prefix: Path | None,
+    arch: str | None,
+    database_backend: str | None,
+    mysql_instance: str,
+    mysql_version: str,
+    mysql_home: Path | None,
+    mysql_database: str,
+    mysql_user: str,
+    mysql_password_env: str | None,
+    mysql_port: int,
+    mysql_bind_address: str,
+    install_mysql: bool,
+    install_mysql_service: bool,
+    start_mysql: bool,
+    force: bool,
+    interactive: bool | None,
+) -> None:
+    """Download Gitea and optionally prepare database backend infra."""
+    provided = {
+        "version": version if interactive is True else version or "latest",
+        "database_backend": database_backend if interactive is True else database_backend or DEFAULT_DATABASE_BACKEND,
+    }
     values = resolve_command_inputs(
         schema=INSTALL_SCHEMA,
         provided=provided,
         interactive=interactive,
-        usage="Usage: chattea server install [--version VERSION] [-i|-I]",
+        usage="Usage: chattea server install [--version VERSION] [--database-backend sqlite3|mysql] [-i|-I]",
     )
     binary = install_gitea(values.get("version") or "latest", prefix=prefix, arch=arch, force=force)
     click.echo(f"installed: {binary}")
+    database = prepare_database_backend(
+        backend=values["database_backend"],
+        mysql_instance=mysql_instance,
+        mysql_version=mysql_version,
+        mysql_home=mysql_home,
+        mysql_database=mysql_database,
+        mysql_user=mysql_user,
+        mysql_password=_password_from_env(mysql_password_env) or "",
+        mysql_port=mysql_port,
+        mysql_bind_address=mysql_bind_address,
+        install_mysql=install_mysql,
+        install_mysql_service=install_mysql_service,
+        start_mysql=start_mysql,
+    )
+    click.echo(f"database_backend: {database['backend']}")
+    if database["mysql"]:
+        layout = database["mysql"]["layout"]
+        click.echo(f"mysql_socket: {layout['socket']}")
 
 
 @server_group.command(name="init")
@@ -783,6 +980,18 @@ def install(version: str | None, prefix: Path | None, arch: str | None, force: b
 @click.option("--base-url", default=None, help="Gitea public website/API base URL. Defaults to CHATTEA_BASE_URL.")
 @click.option("--listen-addr", default=None, help="Gitea listen IP/host written to app.ini. Defaults to 127.0.0.1.")
 @click.option("--http-port", default=None, type=int, help="Gitea listen port written to app.ini. Defaults to 3000.")
+@click.option("--database-backend", type=click.Choice(server_ops.SUPPORTED_DATABASE_BACKENDS), default=None, help="Gitea database backend. Defaults to sqlite3.")
+@click.option("--mysql-instance", default=DEFAULT_MYSQL_INSTANCE, show_default=True, help="ChatData MySQL instance name when --database-backend mysql.")
+@click.option("--mysql-version", default=DEFAULT_MYSQL_VERSION, show_default=True, help="ChatData MySQL runtime version.")
+@click.option("--mysql-home", type=click.Path(file_okay=False, path_type=Path), default=None, help="ChatData home override. Defaults to CHATDATA_HOME.")
+@click.option("--mysql-database", default=DEFAULT_MYSQL_DATABASE, show_default=True, help="MySQL database name for Gitea.")
+@click.option("--mysql-user", default="root", show_default=True, help="MySQL user written to app.ini.")
+@click.option("--mysql-password-env", default=None, help="Environment variable containing the MySQL password. Empty by default for local ChatData MySQL.")
+@click.option("--mysql-port", default=DEFAULT_MYSQL_PORT, show_default=True, type=int, help="ChatData MySQL port for a new instance.")
+@click.option("--mysql-bind-address", default=DEFAULT_MYSQL_BIND_ADDRESS, show_default=True, help="ChatData MySQL bind address for a new instance.")
+@click.option("--install-mysql/--no-install-mysql", default=True, show_default=True, help="Install/reuse ChatData MySQL runtime when selecting mysql.")
+@click.option("--mysql-service/--no-mysql-service", "install_mysql_service", default=True, show_default=True, help="Install/enable ChatData MySQL user service when selecting mysql.")
+@click.option("--start-mysql/--no-start-mysql", default=True, show_default=True, help="Start ChatData MySQL before initializing Gitea.")
 @click.option("--run-user", default=None)
 @click.option("--force", is_flag=True)
 @add_interactive_option
@@ -793,6 +1002,18 @@ def init(
     base_url: str | None,
     listen_addr: str | None,
     http_port: int | None,
+    database_backend: str | None,
+    mysql_instance: str,
+    mysql_version: str,
+    mysql_home: Path | None,
+    mysql_database: str,
+    mysql_user: str,
+    mysql_password_env: str | None,
+    mysql_port: int,
+    mysql_bind_address: str,
+    install_mysql: bool,
+    install_mysql_service: bool,
+    start_mysql: bool,
     run_user: str | None,
     force: bool,
     interactive: bool | None,
@@ -803,18 +1024,34 @@ def init(
         "base_url": base_url,
         "listen_addr": listen_addr,
         "http_port": http_port,
+        "database_backend": database_backend,
     }
     if interactive is not True:
         provided = {
             "base_url": base_url or config.url,
             "listen_addr": listen_addr or DEFAULT_LISTEN_ADDR,
             "http_port": http_port or DEFAULT_HTTP_PORT,
+            "database_backend": database_backend or DEFAULT_DATABASE_BACKEND,
         }
     values = resolve_command_inputs(
         schema=INIT_SCHEMA,
         provided=provided,
         interactive=interactive,
-        usage="Usage: chattea server init [--base-url URL] [--listen-addr IP] [--http-port PORT] [-i|-I]",
+        usage="Usage: chattea server init [--base-url URL] [--database-backend sqlite3|mysql] [-i|-I]",
+    )
+    database = prepare_database_backend(
+        backend=values["database_backend"],
+        mysql_instance=mysql_instance,
+        mysql_version=mysql_version,
+        mysql_home=mysql_home,
+        mysql_database=mysql_database,
+        mysql_user=mysql_user,
+        mysql_password=_password_from_env(mysql_password_env) or "",
+        mysql_port=mysql_port,
+        mysql_bind_address=mysql_bind_address,
+        install_mysql=install_mysql,
+        install_mysql_service=install_mysql_service,
+        start_mysql=start_mysql,
     )
     resolved_config = init_gitea_server(
         work_path=work_path,
@@ -824,9 +1061,14 @@ def init(
         listen_addr=values["listen_addr"],
         http_port=values["http_port"],
         run_user=run_user,
+        **database["gitea"],
         force=force,
     )
     click.echo(f"config: {resolved_config}")
+    click.echo(f"database_backend: {database['backend']}")
+    if database["mysql"]:
+        layout = database["mysql"]["layout"]
+        click.echo(f"mysql_socket: {layout['socket']}")
 
 
 @server_group.command(name="bootstrap")
@@ -838,6 +1080,18 @@ def init(
 @click.option("--base-url", default=None, help="Gitea public website/API base URL. Defaults to CHATTEA_BASE_URL.")
 @click.option("--listen-addr", default=None, help="Gitea listen IP/host written to app.ini. Defaults to 127.0.0.1.")
 @click.option("--http-port", default=None, type=int, help="Gitea listen port written to app.ini. Defaults to 3000.")
+@click.option("--database-backend", type=click.Choice(server_ops.SUPPORTED_DATABASE_BACKENDS), default=None, help="Gitea database backend. Defaults to sqlite3.")
+@click.option("--mysql-instance", default=DEFAULT_MYSQL_INSTANCE, show_default=True, help="ChatData MySQL instance name when --database-backend mysql.")
+@click.option("--mysql-version", default=DEFAULT_MYSQL_VERSION, show_default=True, help="ChatData MySQL runtime version.")
+@click.option("--mysql-home", type=click.Path(file_okay=False, path_type=Path), default=None, help="ChatData home override. Defaults to CHATDATA_HOME.")
+@click.option("--mysql-database", default=DEFAULT_MYSQL_DATABASE, show_default=True, help="MySQL database name for Gitea.")
+@click.option("--mysql-user", default="root", show_default=True, help="MySQL user written to app.ini.")
+@click.option("--mysql-password-env", default=None, help="Environment variable containing the MySQL password. Empty by default for local ChatData MySQL.")
+@click.option("--mysql-port", default=DEFAULT_MYSQL_PORT, show_default=True, type=int, help="ChatData MySQL port for a new instance.")
+@click.option("--mysql-bind-address", default=DEFAULT_MYSQL_BIND_ADDRESS, show_default=True, help="ChatData MySQL bind address for a new instance.")
+@click.option("--install-mysql/--no-install-mysql", default=True, show_default=True, help="Install/reuse ChatData MySQL runtime when selecting mysql.")
+@click.option("--mysql-service/--no-mysql-service", "install_mysql_service", default=True, show_default=True, help="Install/enable ChatData MySQL user service when selecting mysql.")
+@click.option("--start-mysql/--no-start-mysql", default=True, show_default=True, help="Start ChatData MySQL before initializing Gitea.")
 @click.option("--admin-user", default=None, help="Initial admin username. Defaults to CHATTEA_BOOTSTRAP_ADMIN_USER.")
 @click.option("--admin-email", default=None, help="Initial admin email. Defaults to CHATTEA_BOOTSTRAP_ADMIN_EMAIL.")
 @click.option("--admin-password-env", default=None, help="Environment variable containing the initial admin password.")
@@ -856,6 +1110,18 @@ def bootstrap(
     base_url: str | None,
     listen_addr: str | None,
     http_port: int | None,
+    database_backend: str | None,
+    mysql_instance: str,
+    mysql_version: str,
+    mysql_home: Path | None,
+    mysql_database: str,
+    mysql_user: str,
+    mysql_password_env: str | None,
+    mysql_port: int,
+    mysql_bind_address: str,
+    install_mysql: bool,
+    install_mysql_service: bool,
+    start_mysql: bool,
     admin_user: str | None,
     admin_email: str | None,
     admin_password_env: str | None,
@@ -876,12 +1142,13 @@ def bootstrap(
         "admin_password": password,
         "token_name": token_name if interactive is True else token_name or config.bootstrap_token_name,
         "token_scopes": token_scopes if interactive is True else token_scopes or config.bootstrap_token_scopes,
+        "database_backend": database_backend if interactive is True else database_backend or DEFAULT_DATABASE_BACKEND,
     }
     values = resolve_command_inputs(
         schema=BOOTSTRAP_SCHEMA,
         provided=provided,
         interactive=interactive,
-        usage="Usage: chattea server bootstrap [--base-url URL] [--admin-user USER] [--admin-password-env ENV] [-i|-I]",
+        usage="Usage: chattea server bootstrap [--base-url URL] [--admin-user USER] [--database-backend sqlite3|mysql] [-i|-I]",
     )
     result = bootstrap_gitea_server(
         base_url=values["base_url"],
@@ -897,6 +1164,18 @@ def bootstrap(
         binary=binary,
         listen_addr=listen_addr,
         http_port=http_port,
+        database_backend=values["database_backend"],
+        mysql_instance=mysql_instance,
+        mysql_version=mysql_version,
+        mysql_home=mysql_home,
+        mysql_database=mysql_database,
+        mysql_user=mysql_user,
+        mysql_password=_password_from_env(mysql_password_env) or "",
+        mysql_port=mysql_port,
+        mysql_bind_address=mysql_bind_address,
+        install_mysql=install_mysql,
+        install_mysql_service=install_mysql_service,
+        start_mysql=start_mysql,
         force=force,
         start_service=start_service,
     )
@@ -906,6 +1185,10 @@ def bootstrap(
     click.echo(f"binary: {result['binary']}")
     click.echo(f"config: {result['config']}")
     click.echo(f"work_path: {result['work_path']}")
+    click.echo(f"database_backend: {result['database_backend']}")
+    if result.get("mysql"):
+        layout = result["mysql"]["layout"]
+        click.echo(f"mysql_socket: {layout['socket']}")
     click.echo(f"admin: {result['admin_user']}")
     click.echo(f"token: {result['token']}")
     if result.get("token_source"):

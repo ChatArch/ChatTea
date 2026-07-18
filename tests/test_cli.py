@@ -171,6 +171,8 @@ def test_server_bootstrap_reads_chatenv_and_masks_password(monkeypatch, tmp_path
             "work_path": tmp_path / "gitea",
             "admin_user": kwargs["admin_user"],
             "token": "generat...token",
+            "database_backend": kwargs["database_backend"],
+            "mysql": None,
             "credentials": {"env_path": tmp_path / "arch" / "envs" / "ChatTea" / ".env"},
             "service": None,
         }
@@ -188,6 +190,61 @@ def test_server_bootstrap_reads_chatenv_and_masks_password(monkeypatch, tmp_path
     assert captured["admin_email"] == "root@example.invalid"
     assert captured["token_name"] == "default"
     assert captured["token_scopes"] == "all"
+    assert captured["database_backend"] == "sqlite3"
+
+
+def test_server_init_mysql_prepares_backend(monkeypatch, tmp_path):
+    captured_prepare = {}
+    captured_init = {}
+
+    def fake_prepare(**kwargs):
+        captured_prepare.update(kwargs)
+        return {
+            "backend": "mysql",
+            "gitea": {
+                "database_backend": "mysql",
+                "database_host": str(tmp_path / "mysql.sock"),
+                "database_name": kwargs["mysql_database"],
+                "database_user": kwargs["mysql_user"],
+                "database_password": kwargs["mysql_password"],
+            },
+            "mysql": {"layout": {"socket": str(tmp_path / "mysql.sock")}},
+        }
+
+    def fake_init(**kwargs):
+        captured_init.update(kwargs)
+        return tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+
+    monkeypatch.setenv("MYSQL_PASSWORD", "mysql-secret")
+    monkeypatch.setattr("chattea.commands.server.prepare_database_backend", fake_prepare)
+    monkeypatch.setattr("chattea.commands.server.init_gitea_server", fake_init)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "server",
+            "init",
+            "--database-backend",
+            "mysql",
+            "--mysql-instance",
+            "dev",
+            "--mysql-database",
+            "gitea_dev",
+            "--mysql-password-env",
+            "MYSQL_PASSWORD",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "database_backend: mysql" in result.output
+    assert "mysql-secret" not in result.output
+    assert captured_prepare["backend"] == "mysql"
+    assert captured_prepare["mysql_instance"] == "dev"
+    assert captured_prepare["mysql_database"] == "gitea_dev"
+    assert captured_prepare["mysql_password"] == "mysql-secret"
+    assert captured_init["database_backend"] == "mysql"
+    assert captured_init["database_name"] == "gitea_dev"
 
 
 def test_repo_create_no_interactive_fails_fast_when_name_missing():
