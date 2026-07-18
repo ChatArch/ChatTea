@@ -31,10 +31,11 @@ chattea server bootstrap \
 3. 初始化 `default` MySQL 实例，写入 user-level systemd unit。
 4. 启动 `chatdata-mysql-default.service`，等待 `mysqladmin ping` 通过。
 5. 创建 `gitea` database，默认 `CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`。
-6. 生成 MySQL 版 Gitea `app.ini`。
-7. 运行 `gitea migrate` 初始化 schema。
-8. 创建初始管理员和 token，并写入 ChatTea 凭据。
-9. 启动 `chattea-gitea.service`。
+6. 如果传了 `--mysql-user` / `--mysql-password-env`，创建对应 MySQL 用户并授权该 database。
+7. 生成 MySQL 版 Gitea `app.ini`。
+8. 运行 `gitea migrate` 初始化 schema。
+9. 创建初始管理员和 token，并写入 ChatTea 凭据。
+10. 启动 `chattea-gitea.service`。
 
 生成的 Gitea service 会自动依赖 ChatData MySQL service：
 
@@ -95,6 +96,41 @@ LOG_SQL = false
 
 默认本机 ChatData MySQL 用 Unix socket 和本机 root 用户；如果需要密码，通过 `--mysql-password-env` 传入环境变量名，不要把密码写进命令行或文档。
 
+## 真实用例：本机 Gitea 切到 MySQL
+
+本轮真实环境使用的是已有 ChatTea-managed Gitea，所以走的是“先迁移，再把安装流程补进 CLI”的路线。最终状态可用以下证据复现：
+
+```bash
+chattea server config get --section database --key DB_TYPE -I
+# mysql
+
+chattea server health
+# ok: http://127.0.0.1:3000 (1.0.0)
+
+systemctl --user is-active chatdata-mysql-default.service
+# active
+
+systemctl --user is-active chattea-gitea.service
+# active
+```
+
+Gitea user service 已经能识别 MySQL socket，并依赖 ChatData MySQL service：
+
+```ini
+[Unit]
+Description=ChatTea managed Gitea service
+After=network.target chatdata-mysql-default.service
+Requires=chatdata-mysql-default.service
+```
+
+这个改动只影响后端和 service 依赖，Gitea Web 页面本身没有视觉变化，所以当前文档不放页面截图；验证以后端配置、服务依赖、health 和 MySQL 表数据为准。
+
+完整流程记录在 project 笔记中：
+
+```text
+/home/zhihong/Playground/projects/07-18-chattea-mysql-backend/progress.md
+```
+
 ## 已有 SQLite 实例的备份能力
 
 Gitea binary 自带这些相关命令：
@@ -152,11 +188,12 @@ chattea server migrate mysql \
 2. 运行 `gitea dump --database mysql --db-only` 生成 MySQL SQL。
 3. 从 dump zip 里抽取 `gitea-db.sql`。
 4. 通过 ChatData 创建 MySQL database。
-5. 导入 `gitea-db.sql`。
-6. 备份 `app.ini` 为 `app.ini.backup-<timestamp>`。
-7. 更新 `[database]` 为 MySQL。
-8. 运行 `gitea migrate` 验证并补齐 schema。
-9. 可选重启 `chattea-gitea.service`。
+5. 如果目标用户不是默认 root，创建 MySQL 用户并授权该 database。
+6. 导入 `gitea-db.sql`。
+7. 备份 `app.ini` 为 `app.ini.backup-<timestamp>`。
+8. 更新 `[database]` 为 MySQL。
+9. 运行 `gitea migrate` 验证并补齐 schema。
+10. 可选重启 `chattea-gitea.service`。
 
 命令默认要求 `--yes`，避免误切当前服务后端。
 

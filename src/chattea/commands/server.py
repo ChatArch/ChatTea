@@ -292,6 +292,10 @@ def prepare_database_backend(
         _raise_for_completed_process(mysql_ops.systemctl_user(mysql_instance, "start"), f"start {mysql_instance}")
     result["ping"] = _wait_for_mysql(mysql_ops, name=mysql_instance, version=mysql_version, home=mysql_home)
     mysql_ops.create_database(mysql_database, name=mysql_instance, version=mysql_version, home=mysql_home)
+    if hasattr(mysql_ops, "ensure_database_user"):
+        mysql_ops.ensure_database_user(mysql_database, user=mysql_user, password=mysql_password, name=mysql_instance, version=mysql_version, home=mysql_home)
+    elif mysql_user != "root" or mysql_password:
+        raise click.ClickException("This ChatData version cannot create MySQL users. Use --mysql-user root or upgrade ChatData.")
     layout = mysql_ops.mysql_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
     result["layout"] = mysql_ops.export_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
     return {
@@ -701,6 +705,10 @@ def migrate_sqlite_to_mysql(
     )
     sql_path = extract_gitea_dump_sql(dump_path, migration_dir)
     mysql_ops.create_database(database, name=mysql_instance, version=mysql_version, home=mysql_home)
+    if hasattr(mysql_ops, "ensure_database_user"):
+        mysql_ops.ensure_database_user(database, user=user, password=password, name=mysql_instance, version=mysql_version, home=mysql_home)
+    elif user != "root" or password:
+        raise click.ClickException("This ChatData version cannot create MySQL users. Use --user root or upgrade ChatData.")
     mysql_ops.query_file(sql_path, name=mysql_instance, version=mysql_version, home=mysql_home, database=database)
     layout = mysql_ops.mysql_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
     config_result = configure_gitea_mysql_database(

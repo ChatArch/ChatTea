@@ -317,6 +317,10 @@ def test_prepare_database_backend_installs_chatdata_mysql(monkeypatch, tmp_path)
             calls.append(("create-db", database, kwargs))
             return ""
 
+        def ensure_database_user(self, database, **kwargs):
+            calls.append(("ensure-user", database, kwargs))
+            return None
+
         def mysql_layout(self, **kwargs):
             calls.append(("layout", kwargs))
             return Layout(socket)
@@ -327,7 +331,14 @@ def test_prepare_database_backend_installs_chatdata_mysql(monkeypatch, tmp_path)
 
     monkeypatch.setattr("chattea.commands.server._chatdata_mysql_module", lambda: FakeMysqlOps())
 
-    result = prepare_database_backend(backend="mysql", mysql_instance="dev", mysql_database="gitea_dev", mysql_port=3308)
+    result = prepare_database_backend(
+        backend="mysql",
+        mysql_instance="dev",
+        mysql_database="gitea_dev",
+        mysql_user="gitea",
+        mysql_password="secret",
+        mysql_port=3308,
+    )
 
     assert result["backend"] == "mysql"
     assert result["gitea"]["database_host"] == str(socket)
@@ -336,6 +347,7 @@ def test_prepare_database_backend_installs_chatdata_mysql(monkeypatch, tmp_path)
     assert calls[0][0] == "install"
     assert ("systemctl", "dev", "start") in calls
     assert any(call[0] == "create-db" and call[1] == "gitea_dev" for call in calls)
+    assert any(call[0] == "ensure-user" and call[1] == "gitea_dev" and call[2]["user"] == "gitea" for call in calls)
 
 
 def test_internal_gitea_asset_urls_use_chatarch_release():
