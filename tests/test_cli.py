@@ -41,7 +41,7 @@ def test_repo_help_lists_basic_commands():
     result = CliRunner().invoke(main, ["repo", "--help"])
 
     assert result.exit_code == 0
-    for command in ["list", "view", "create", "clone", "migrate"]:
+    for command in ["list", "view", "create", "edit", "generate", "clone", "migrate"]:
         assert command in result.output
 
 
@@ -260,6 +260,7 @@ def test_repo_create_calls_api(monkeypatch):
     assert captured["owner"] == "gitea_admin"
     assert captured["name"] == "demo"
     assert captured["private"] is True
+    assert captured["template"] is False
 
 
 def test_repo_create_accepts_explicit_private(monkeypatch):
@@ -287,6 +288,104 @@ def test_repo_create_rejects_public_and_private_together():
 
     assert result.exit_code != 0
     assert "--public or --private" in result.output
+
+
+def test_repo_create_template_calls_api(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def create_repo(self, **kwargs):
+            captured.update(kwargs)
+            return {"full_name": "gitea_admin/template", "private": kwargs["private"], "template": kwargs["template"]}
+
+    monkeypatch.setattr("chattea.commands.repo.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(main, ["repo", "create", "--owner", "gitea_admin", "--name", "template", "--template"])
+
+    assert result.exit_code == 0, result.output
+    assert "created: gitea_admin/template (private)" in result.output
+    assert captured["template"] is True
+
+
+def test_repo_edit_template_calls_api(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def edit_repo(self, owner, repo, **kwargs):
+            captured.update({"owner": owner, "repo": repo, **kwargs})
+            return {"full_name": f"{owner}/{repo}", "template": kwargs["template"], "private": kwargs["private"]}
+
+    monkeypatch.setattr("chattea.commands.repo.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(main, ["repo", "edit", "gitea_admin/demo", "--template", "--public"])
+
+    assert result.exit_code == 0, result.output
+    assert "updated: gitea_admin/demo" in result.output
+    assert captured["owner"] == "gitea_admin"
+    assert captured["repo"] == "demo"
+    assert captured["template"] is True
+    assert captured["private"] is False
+
+
+def test_repo_edit_requires_update_field():
+    result = CliRunner().invoke(main, ["repo", "edit", "gitea_admin/demo"])
+
+    assert result.exit_code != 0
+    assert "at least one field" in result.output
+
+
+def test_repo_generate_calls_api(monkeypatch):
+    captured = {}
+
+    class FakeClient:
+        def __init__(self, url=None, token=None):
+            pass
+
+        def generate_repo_from_template(self, template_owner, template_repo, **kwargs):
+            captured.update({"template_owner": template_owner, "template_repo": template_repo, **kwargs})
+            return {"full_name": f"{kwargs['owner']}/{kwargs['name']}", "private": kwargs["private"]}
+
+    monkeypatch.setattr("chattea.commands.repo.GiteaClient", FakeClient)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "repo",
+            "generate",
+            "--template",
+            "gitea_admin/template",
+            "--owner",
+            "gitea_admin",
+            "--name",
+            "generated",
+            "--copy-git-content",
+            "--copy-labels",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "generated: gitea_admin/generated" in result.output
+    assert captured["template_owner"] == "gitea_admin"
+    assert captured["template_repo"] == "template"
+    assert captured["private"] is True
+    assert captured["git_content"] is True
+    assert captured["labels"] is True
+
+
+def test_repo_generate_requires_copy_item():
+    result = CliRunner().invoke(
+        main,
+        ["repo", "generate", "--template", "gitea_admin/template", "--owner", "gitea_admin", "--name", "generated"],
+    )
+
+    assert result.exit_code != 0
+    assert "at least one template item" in result.output
 
 
 def test_repo_clone_uses_configured_url_without_git_auth_header(monkeypatch, tmp_path):

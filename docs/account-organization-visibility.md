@@ -85,6 +85,59 @@ visibility: private
 repo.code, repo.issues, repo.pulls, repo.releases, repo.projects, repo.actions, repo.wiki
 ```
 
+## Owner 全局可见、普通用户相互隔离
+
+如果目标是“一个 Owner 能管理所有受管仓库，但普通用户之间默认互相看不到”，不要把仓库建到用户个人 namespace 下，而是统一放进 Organization，再用 team 做隔离。
+
+推荐层级：
+
+```text
+Organization: <org>
+  -> Team: Owners
+       members: owner / 管理账号
+       repos: all repositories
+       permission: owner/admin
+  -> Team: user-alice
+       members: alice
+       repos: alice 相关仓库
+       permission: write 或 admin
+  -> Team: user-bob
+       members: bob
+       repos: bob 相关仓库
+       permission: write 或 admin
+  -> Team: project-xxx
+       members: 多个协作者
+       repos: 共享项目仓库
+       permission: write
+```
+
+可视范围示例：
+
+| 人 | 所属 Organization | 所属 Team | 能看到哪些受管仓库 | 默认看不到哪些仓库 |
+| --- | --- | --- | --- | --- |
+| Owner / 管理账号 | `<org>` | `Owners` | `<org>` 下所有仓库 | 无 |
+| Alice | `<org>` | `user-alice` | `<org>/alice-*` | `<org>/bob-*`、其他用户仓库 |
+| Bob | `<org>` | `user-bob` | `<org>/bob-*` | `<org>/alice-*`、其他用户仓库 |
+| Alice + Bob 协作 | `<org>` | `project-xxx` | `<org>/project-xxx` | 各自仍看不到对方个人受管仓库 |
+
+仓库归属规则：
+
+| 仓库 | 归属 | Owner 是否可见 | 对应用户是否可见 | 其他用户是否可见 |
+| --- | --- | ---: | ---: | ---: |
+| `<org>/alice-notes` | Organization | 是 | Alice 是 | Bob 否 |
+| `<org>/bob-notes` | Organization | 是 | Bob 是 | Alice 否 |
+| `<org>/project-xxx` | Organization | 是 | 项目成员是 | 非项目成员否 |
+| `alice/private-test` | Alice 个人账号 | 默认否，除非 site admin 或 collaborator | Alice 是 | Bob 否 |
+
+因此，“Owner 可见所有受管内容”的前提是：受管仓库必须创建在 Organization 下。个人 namespace 的 private 仓库不属于组织权限模型，组织 Owner 默认管不到。
+
+用户创建仓库有两种入口：
+
+1. 允许用户直接在 Organization 下创建，然后用自动化补 team 绑定；
+2. 更推荐第一版用 bot/CLI 代建：用户提出创建请求，系统创建 `<org>/<user>-<repo>`、设置 private、绑定到对应 `user-<name>` team。
+
+第二种方式牺牲一点自由度，但更不容易把仓库误建成个人 private repo，也更容易保证 Owner 全局可见和用户之间隔离。
+
 ## Internal / External 边界
 
 这里的 internal / external 主要是平台使用约定：

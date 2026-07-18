@@ -2,7 +2,7 @@
 
 这篇文档是当前 ChatTea CLI 的简明能力地图，用来校对哪些 Gitea 流程已经有一等 ChatTea 命令，哪些流程还需要 `chattea api`。
 
-可导入 Python 函数映射见 [接口树](interface-tree.md)。更完整的路由映射和实践截图见 [CLI 指南](cli-guide.md)。
+可导入 Python 函数映射见 [接口树](interface-tree.md)。更完整的路由映射和实践截图见 [CLI 指南](cli-guide.md)。官方 `tea` CLI 与 ChatTea 覆盖范围对比见 [官方 tea CLI 对比](tea-cli-comparison.md)。
 
 ## 顶层命令
 
@@ -105,7 +105,9 @@ chattea bot             # 管理本机 Gitea bot / 服务账号
 ```text
 chattea repo            # 管理 Gitea 仓库
 ├── clone               # 从配置的 Gitea base URL clone 仓库
-├── create              # 创建用户或组织仓库
+├── create              # 创建用户或组织仓库；支持 --template 创建模板仓库
+├── edit                # 修改仓库元数据、public/private、archive 和 template 状态
+├── generate            # 从 template repository 生成新仓库
 ├── list                # 列出当前用户或指定 owner 的仓库
 ├── migrate             # 从已有 Git URL 迁移仓库到 Gitea
 └── view                # 查看 owner/name 仓库详情
@@ -116,6 +118,9 @@ chattea repo            # 管理 Gitea 仓库
 - `repo create --public` 创建 public 仓库；
 - `repo create --private` 显式创建 private 仓库；
 - 不传 `--public` / `--private` 时仍默认创建 private 仓库；
+- `repo create --template` 创建模板仓库；
+- `repo edit OWNER/NAME --template` / `--no-template` 可切换已有仓库的模板状态；
+- `repo generate --template OWNER/TEMPLATE --owner TARGET --name NAME --copy-git-content` 可从模板生成新仓库，且至少需要选择一个 `--copy-*` 项；
 - 当前普通仓库 create/edit 流程没有暴露仓库级 `internal` visibility 输入。
 
 ## 问题
@@ -317,15 +322,23 @@ chattea server          # 管理本机托管的 Gitea 服务
 
 Gitea 服务由 `chattea-gitea.service` 管理；运行器由 `chattea-runner@<runner-name>.service` 管理。
 
-## 当前封装缺口
+## 当前封装边界和后续项
 
-最近的端到端快速开始和权限实践仍需要 raw API 的部分：
+组织任务账号实践暴露出的 `org`、`user`、`team member` 和 `notification` 基础命令已经补成一等 CLI：
 
-- organization create/view/list；
-- admin user create/view/list；
-- team list/add-member/remove-member；
-- 通过 admin create-as-user 路径创建 user-owned 仓库；
-- 继续实践 user-owned 仓库的 admin create-as-user 路径；
-- bot / service account 的远程 REST backend：Gitea 底层和本机 admin CLI 已支持 bot 用户类型，但稳定 REST API 尚未完整暴露；当前已实现本机 local backend，后续再补通知轮询和 webhook receiver。
+- `chattea user create/delete`：管理员创建和删除普通用户；
+- `chattea org create/list/view`：创建、列出和查看组织；
+- `chattea org team create/list`：创建和列出组织 team；
+- `chattea org team member add/remove`：维护 team 成员；
+- `chattea notification list/view/poll/mark-read`：支撑 mention 驱动的任务账号轮询。
 
-这些都是实践暴露出的基础设施后续项。只有当后续实践继续需要它们时，才补对应一等命令；补完后同步更新本页。
+目前仍保留为后续项或 raw API 兜底的部分：
+
+- `user list/view/edit`：当前只封装了实践必须的 admin create/delete；
+- team 的编辑、删除、仓库绑定调整：当前只封装 create/list/member add/remove；
+- 通过 admin create-as-user 路径创建 user-owned 仓库：尚未作为第一版受管仓库模型的主路径；
+- GitHub Enterprise 风格的 `internal` 仓库可见性：当前普通 Gitea create/edit 路径没有作为稳定输入暴露；
+- release asset 上传：当前有 asset list/delete，上传等 HTTP client 支持 multipart 后再补；
+- bot / service account 的远程 REST backend：Gitea 底层和本机 admin CLI 已支持 bot 用户类型，但稳定 REST API 尚未完整暴露；当前 `bot` 命令只承诺本机 local backend。
+
+原则：真实流程反复依赖某条 raw API 时，再提升成一等命令；补完后同步更新本页和快速开始。

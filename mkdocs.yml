@@ -55,6 +55,7 @@ plugins:
             CLI / 接口: CLI / API
             CLI 实战指南: CLI Guide
             CLI 能力地图: CLI Capability Map
+            官方 tea CLI 对比: Official tea CLI Comparison
             接口树: Interface Tree
             CLI 对齐计划: CLI Alignment Plan
 extra:
@@ -87,5 +88,6 @@ nav:
   - CLI / 接口:
       - CLI 实战指南: cli-guide.md
       - CLI 能力地图: chattea-cli-tree.md
+      - 官方 tea CLI 对比: tea-cli-comparison.md
       - 接口树: interface-tree.md
       - CLI 对齐计划: cli-alignment.md

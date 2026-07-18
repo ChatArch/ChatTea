@@ -91,7 +91,7 @@ chattea org team member add <team-id> <task-account>
 命令模板：
 
 ```bash
-chattea repo create <repo> --owner <org> --private
+chattea repo create --owner <org> --name <repo> --private
 chattea issue create --repo <org>/<repo> --title "<task title>" --body "@<task-account> ..."
 ```
 

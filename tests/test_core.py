@@ -311,6 +311,26 @@ def test_create_repo_uses_orgs_endpoint_for_org_owner(monkeypatch):
     assert calls[0][1] == "/user"
     assert calls[1][0] == "POST"
     assert calls[1][1] == "/orgs/ChatArch/repos"
+    assert calls[1][2]["template"] is False
+
+
+def test_create_repo_can_mark_template(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None):
+        calls.append((method, path, data, params))
+        if path == "/user":
+            return {"login": "gitea_admin"}
+        return {"full_name": "ChatArch/template", "private": True, "template": data["template"]}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    payload = client.create_repo(name="template", owner="ChatArch", template=True)
+
+    assert payload["template"] is True
+    assert calls[1][0:2] == ("POST", "/orgs/ChatArch/repos")
+    assert calls[1][2]["template"] is True
 
 
 def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
@@ -330,6 +350,41 @@ def test_create_repo_uses_user_endpoint_for_current_user(monkeypatch):
     assert payload["full_name"] == "gitea_admin/demo"
     assert calls[1][0] == "POST"
     assert calls[1][1] == "/user/repos"
+
+
+def test_repo_template_api_methods_use_gitea_routes(monkeypatch):
+    calls = []
+    client = GiteaClient(url="http://gitea.local", token="token")
+
+    def fake_request(method, path, data=None, params=None):
+        calls.append((method, path, data, params))
+        return {"method": method, "path": path, "data": data}
+
+    monkeypatch.setattr(client, "request", fake_request)
+
+    client.edit_repo("owner", "repo", template=True, private=False, description="Template repo")
+    client.generate_repo_from_template(
+        "owner",
+        "template",
+        owner="target",
+        name="generated",
+        private=True,
+        git_content=True,
+        labels=True,
+    )
+
+    assert calls[0] == (
+        "PATCH",
+        "/repos/owner/repo",
+        {"description": "Template repo", "private": False, "template": True},
+        None,
+    )
+    assert calls[1] == (
+        "POST",
+        "/repos/owner/template/generate",
+        {"owner": "target", "name": "generated", "private": True, "git_content": True, "labels": True},
+        None,
+    )
 
 
 def test_access_token_api_methods_use_basic_auth(monkeypatch):
