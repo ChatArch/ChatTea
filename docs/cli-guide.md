@@ -8,12 +8,14 @@
 chattea
 ├── set-token                 # ChatTea/Git token bootstrap helper
 ├── server                    # 本地 ChatArch Gitea 生命周期
+│   ├── backup                # gitea dump 备份 / DB-only SQL 导出
 │   ├── config                # app.ini path/show/get/set helper
 │   ├── install               # 安装 ChatArch internal Gitea binary
 │   ├── init                  # 初始化托管 Gitea app.ini/work path
 │   ├── bootstrap             # install + init + admin + token bootstrap
 │   ├── serve                 # 前台 web 进程
 │   ├── start/stop/restart    # user systemd service 生命周期
+│   ├── migrate mysql         # SQLite -> ChatData MySQL backend 迁移
 │   ├── status/logs           # user systemd 检查
 │   ├── version               # 本地 Gitea binary version
 │   └── health                # REST: GET /api/v1/version

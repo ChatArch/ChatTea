@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
+import zipfile
 from pathlib import Path
 
 import click
@@ -59,6 +61,7 @@ CONFIG_SET_SCHEMA = CommandSchema(
 )
 
 SENSITIVE_CONFIG_KEYS = {"SECRET_KEY", "INTERNAL_TOKEN", "JWT_SECRET", "LFS_JWT_SECRET"}
+SENSITIVE_DATABASE_KEYS = {"PASSWD", "PASSWORD"}
 
 
 def _required_path(value: Path | None, name: str) -> Path:
@@ -85,7 +88,7 @@ def mask_gitea_config(text: str) -> str:
     lines: list[str] = []
     for line in text.splitlines():
         key, sep, _value = line.partition("=")
-        if sep and key.strip().upper() in SENSITIVE_CONFIG_KEYS:
+        if sep and key.strip().upper() in SENSITIVE_CONFIG_KEYS | SENSITIVE_DATABASE_KEYS:
             lines.append(f"{key.rstrip()} = <masked>")
             continue
         lines.append(line)
@@ -422,6 +425,163 @@ def check_gitea_health(url: str | None = None) -> dict:
     return {"ok": True, "url": target_url, "version": payload.get("version")}
 
 
+def _timestamp() -> str:
+    return time.strftime("%Y%m%d-%H%M%S")
+
+
+def dump_gitea_backup(
+    *,
+    output: Path | None = None,
+    database: str | None = None,
+    tempdir: Path | None = None,
+    binary: Path | None = None,
+    config_path: Path | None = None,
+    work_path: Path | None = None,
+    db_only: bool = False,
+) -> Path:
+    """Run `gitea dump` for backup or cross-database SQL export."""
+    resolved = load_config()
+    target_binary = binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY")
+    target_config = config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG")
+    target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
+    dump_database = database or get_gitea_config_value("database", "DB_TYPE", config_path=target_config)
+    backup_dir = target_work / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    target_output = (output or backup_dir / f"gitea-dump-{dump_database}-{_timestamp()}.zip").expanduser()
+    target_output.parent.mkdir(parents=True, exist_ok=True)
+    target_tempdir = (tempdir or backup_dir / "tmp").expanduser()
+    target_tempdir.mkdir(parents=True, exist_ok=True)
+    args = ["dump", "--file", str(target_output), "--tempdir", str(target_tempdir), "--database", dump_database]
+    if db_only:
+        args.extend([
+            "--skip-repository",
+            "--skip-log",
+            "--skip-custom-dir",
+            "--skip-lfs-data",
+            "--skip-attachment-data",
+            "--skip-package-data",
+            "--skip-index",
+        ])
+    server_ops.run_gitea(target_binary, args, config=target_config, work_path=target_work)
+    return target_output
+
+
+def extract_gitea_dump_sql(dump_path: Path, output_dir: Path | None = None) -> Path:
+    """Extract gitea-db.sql from a Gitea dump archive."""
+    target_dir = (output_dir or dump_path.with_suffix(".extract")).expanduser()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(dump_path.expanduser()) as archive:
+        sql_members = [name for name in archive.namelist() if name.endswith("gitea-db.sql")]
+        if not sql_members:
+            raise click.ClickException(f"No gitea-db.sql found in {dump_path}")
+        sql_name = sql_members[0]
+        target = target_dir / "gitea-db.sql"
+        target.write_bytes(archive.read(sql_name))
+        return target
+
+
+def _backup_file(path: Path) -> Path:
+    backup = path.with_name(f"{path.name}.backup-{_timestamp()}")
+    backup.write_bytes(path.read_bytes())
+    backup.chmod(0o600)
+    return backup
+
+
+def configure_gitea_mysql_database(
+    *,
+    config_path: Path | None = None,
+    host: str,
+    database: str,
+    user: str = "root",
+    password: str = "",
+    backup: bool = True,
+) -> dict[str, object]:
+    """Switch the managed Gitea app.ini [database] section to MySQL."""
+    target_config = resolve_gitea_config_path(config_path)
+    backup_path = _backup_file(target_config) if backup else None
+    for key, value in {
+        "DB_TYPE": "mysql",
+        "HOST": host,
+        "NAME": database,
+        "USER": user,
+        "PASSWD": password,
+        "SSL_MODE": "disable",
+        "LOG_SQL": "false",
+    }.items():
+        set_gitea_config_value("database", key, value, config_path=target_config)
+    return {"config": target_config, "backup": backup_path, "database": database, "host": host, "user": user}
+
+
+def _chatdata_mysql_module():
+    try:
+        from chatdata import mysql as mysql_ops
+    except ImportError as exc:
+        raise click.ClickException("ChatData is required for MySQL migration. Install it with `pip install -e /path/to/ChatData` first.") from exc
+    return mysql_ops
+
+
+def migrate_sqlite_to_mysql(
+    *,
+    mysql_instance: str = "default",
+    mysql_version: str = "8.4.6",
+    mysql_home: Path | None = None,
+    database: str = "gitea",
+    user: str = "root",
+    password: str = "",
+    dump_dir: Path | None = None,
+    binary: Path | None = None,
+    config_path: Path | None = None,
+    work_path: Path | None = None,
+    stop_service: bool = False,
+    restart_service: bool = False,
+    run_migrate: bool = True,
+) -> dict[str, object]:
+    """Migrate the managed Gitea database from SQLite to a ChatData MySQL instance."""
+    mysql_ops = _chatdata_mysql_module()
+    resolved = load_config()
+    target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")
+    migration_dir = (dump_dir or target_work / "backups" / f"sqlite-to-mysql-{_timestamp()}").expanduser()
+    migration_dir.mkdir(parents=True, exist_ok=True)
+    if stop_service:
+        server_ops.systemctl_user(["stop", server_ops.DEFAULT_SERVICE_NAME], check=False)
+    dump_path = dump_gitea_backup(
+        output=migration_dir / "gitea-dump-mysql.zip",
+        database="mysql",
+        tempdir=migration_dir / "tmp",
+        binary=binary,
+        config_path=config_path,
+        work_path=target_work,
+        db_only=True,
+    )
+    sql_path = extract_gitea_dump_sql(dump_path, migration_dir)
+    mysql_ops.create_database(database, name=mysql_instance, version=mysql_version, home=mysql_home)
+    mysql_ops.query_file(sql_path, name=mysql_instance, version=mysql_version, home=mysql_home, database=database)
+    layout = mysql_ops.mysql_layout(name=mysql_instance, version=mysql_version, home=mysql_home)
+    config_result = configure_gitea_mysql_database(
+        config_path=config_path,
+        host=str(layout.socket),
+        database=database,
+        user=user,
+        password=password,
+        backup=True,
+    )
+    if run_migrate:
+        resolved_config = config_result["config"]
+        server_ops.run_gitea(binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY"), ["migrate"], config=resolved_config, work_path=target_work)
+    if restart_service:
+        server_ops.systemctl_user(["start", server_ops.DEFAULT_SERVICE_NAME], check=False)
+    return {
+        "dump": dump_path,
+        "sql": sql_path,
+        "config": config_result["config"],
+        "config_backup": config_result["backup"],
+        "mysql_socket": layout.socket,
+        "database": database,
+        "stopped_service": stop_service,
+        "restarted_service": restart_service,
+    }
+
+
 @click.group(name="server")
 def server_group() -> None:
     """Install and manage a local Gitea server."""
@@ -430,6 +590,111 @@ def server_group() -> None:
 @server_group.group(name="config")
 def config_group() -> None:
     """Inspect and edit the managed Gitea app.ini."""
+
+
+@server_group.group(name="backup")
+def backup_group() -> None:
+    """Back up or export the managed Gitea instance."""
+
+
+@backup_group.command(name="dump")
+@click.option("--output", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Dump archive path. Defaults to CHATTEA_WORK_PATH/backups.")
+@click.option("--database", default=None, type=click.Choice(["sqlite3", "mysql", "postgres", "mssql"]), help="SQL syntax for database dump. Defaults to app.ini database.DB_TYPE.")
+@click.option("--tempdir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Temporary directory for gitea dump.")
+@click.option("--db-only", is_flag=True, help="Skip repositories, custom dir, logs, packages, attachments and indexes.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
+@click.option("--json-output", is_flag=True)
+def backup_dump(
+    output: Path | None,
+    database: str | None,
+    tempdir: Path | None,
+    db_only: bool,
+    binary: Path | None,
+    config_path: Path | None,
+    work_path: Path | None,
+    json_output: bool,
+) -> None:
+    """Run Gitea dump for backup or cross-database SQL export."""
+    try:
+        dump_path = dump_gitea_backup(output=output, database=database, tempdir=tempdir, binary=binary, config_path=config_path, work_path=work_path, db_only=db_only)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    payload = {"dump": dump_path, "database": database or "auto", "db_only": db_only}
+    click.echo(json.dumps(payload, indent=2, default=str) if json_output else f"dump: {dump_path}")
+
+
+@server_group.group(name="migrate")
+def migrate_group() -> None:
+    """Migrate the managed Gitea backend."""
+
+
+@migrate_group.command(name="mysql")
+@click.option("--mysql-instance", default="default", show_default=True, help="ChatData MySQL instance name.")
+@click.option("--mysql-version", default="8.4.6", show_default=True, help="ChatData MySQL runtime version.")
+@click.option("--mysql-home", type=click.Path(file_okay=False, path_type=Path), default=None, help="ChatData home override. Defaults to CHATDATA_HOME.")
+@click.option("--database", default="gitea", show_default=True, help="Target MySQL database name.")
+@click.option("--user", default="root", show_default=True, help="Target MySQL user for Gitea app.ini.")
+@click.option("--password-env", default=None, help="Environment variable containing the MySQL password. Empty by default for local insecure dev instance.")
+@click.option("--dump-dir", type=click.Path(file_okay=False, path_type=Path), default=None, help="Directory for migration dump and extracted SQL.")
+@click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
+@click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
+@click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
+@click.option("--stop-service", is_flag=True, help="Stop the managed Gitea user service before dumping.")
+@click.option("--restart-service", is_flag=True, help="Start the managed Gitea user service after migration.")
+@click.option("--gitea-migrate/--skip-gitea-migrate", "run_migrate", default=True, show_default=True, help="Run `gitea migrate` after switching app.ini.")
+@click.option("--yes", is_flag=True, help="Confirm app.ini migration to MySQL.")
+@click.option("--json-output", is_flag=True)
+def migrate_mysql(
+    mysql_instance: str,
+    mysql_version: str,
+    mysql_home: Path | None,
+    database: str,
+    user: str,
+    password_env: str | None,
+    dump_dir: Path | None,
+    binary: Path | None,
+    config_path: Path | None,
+    work_path: Path | None,
+    stop_service: bool,
+    restart_service: bool,
+    run_migrate: bool,
+    yes: bool,
+    json_output: bool,
+) -> None:
+    """Migrate the managed Gitea SQLite database into a ChatData MySQL instance."""
+    if not yes:
+        raise click.ClickException("This changes the managed Gitea app.ini database backend. Re-run with --yes after taking a backup.")
+    password = _password_from_env(password_env) or ""
+    try:
+        result = migrate_sqlite_to_mysql(
+            mysql_instance=mysql_instance,
+            mysql_version=mysql_version,
+            mysql_home=mysql_home,
+            database=database,
+            user=user,
+            password=password,
+            dump_dir=dump_dir,
+            binary=binary,
+            config_path=config_path,
+            work_path=work_path,
+            stop_service=stop_service,
+            restart_service=restart_service,
+            run_migrate=run_migrate,
+        )
+    except (OSError, subprocess.CalledProcessError, click.ClickException) as exc:
+        raise click.ClickException(str(exc)) from exc
+    if json_output:
+        safe = {key: value for key, value in result.items() if key != "password"}
+        click.echo(json.dumps(safe, indent=2, default=str))
+        return
+    click.echo(f"dump: {result['dump']}")
+    click.echo(f"sql: {result['sql']}")
+    click.echo(f"config: {result['config']}")
+    click.echo(f"config_backup: {result['config_backup']}")
+    click.echo(f"mysql_socket: {result['mysql_socket']}")
+    click.echo(f"database: {result['database']}")
 
 
 @config_group.command(name="path")

@@ -2,12 +2,13 @@ from pathlib import Path
 import hashlib
 import lzma
 import subprocess
+import zipfile
 
 from chattea import server as server_ops
 from chattea.api import GiteaAPIError, GiteaClient
 from chattea.commands.api import call_api, parse_json_data, parse_query_params
 from chattea.commands.project import add_card, list_cards, move_card, remove_card
-from chattea.commands.server import bootstrap_gitea_server
+from chattea.commands.server import bootstrap_gitea_server, configure_gitea_mysql_database, extract_gitea_dump_sql, mask_gitea_config
 from chattea.commands.token import bootstrap_access_token
 from chattea.credentials import configure_token, git_extraheader_key, read_git_token, resolve_token, token_from_extraheader
 from chattea.config import (
@@ -97,6 +98,42 @@ def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_p
 
     assert config.url == "http://legacy.local"
     assert config.token == "legacy-token"
+
+
+def test_mask_gitea_config_masks_database_password():
+    text = "[database]\nDB_TYPE = mysql\nPASSWD = secret\n\n[security]\nSECRET_KEY = secret-key\n"
+
+    masked = mask_gitea_config(text)
+
+    assert "PASSWD = <masked>" in masked
+    assert "SECRET_KEY = <masked>" in masked
+    assert "secret" not in masked
+
+
+def test_configure_gitea_mysql_database_updates_app_ini(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    config_path = tmp_path / "app.ini"
+    config_path.write_text("[database]\nDB_TYPE = sqlite3\nPATH = /old/gitea.db\n", encoding="utf-8")
+
+    result = configure_gitea_mysql_database(config_path=config_path, host="/run/mysql.sock", database="gitea", user="root", password="", backup=True)
+    text = config_path.read_text(encoding="utf-8")
+
+    assert "DB_TYPE = mysql" in text
+    assert "HOST = /run/mysql.sock" in text
+    assert "NAME = gitea" in text
+    assert "USER = root" in text
+    assert "PASSWD = " in text
+    assert Path(result["backup"]).exists()
+
+
+def test_extract_gitea_dump_sql(tmp_path):
+    dump = tmp_path / "dump.zip"
+    with zipfile.ZipFile(dump, "w") as archive:
+        archive.writestr("gitea-db.sql", "SELECT 1;\n")
+
+    sql = extract_gitea_dump_sql(dump, tmp_path / "extract")
+
+    assert sql.read_text(encoding="utf-8") == "SELECT 1;\n"
 
 
 def test_bootstrap_values_are_read_from_chatenv(monkeypatch, tmp_path):

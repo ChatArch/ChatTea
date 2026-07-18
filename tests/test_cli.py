@@ -33,7 +33,7 @@ def test_server_help_lists_lifecycle_commands():
     result = CliRunner().invoke(main, ["server", "--help"])
 
     assert result.exit_code == 0
-    for command in ["install", "init", "bootstrap", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config"]:
+    for command in ["install", "init", "bootstrap", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config", "backup", "migrate"]:
         assert command in result.output
 
 
@@ -221,6 +221,58 @@ def test_server_config_commands_read_and_update_app_ini(tmp_path):
     assert set_result.exit_code == 0
     assert "updated:" in set_result.output
     assert "HTTP_PORT = 3001" in config_path.read_text(encoding="utf-8")
+
+
+def test_server_backup_dump_calls_gitea_dump(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_dump(**kwargs):
+        captured.update(kwargs)
+        return tmp_path / "dump.zip"
+
+    monkeypatch.setattr("chattea.commands.server.dump_gitea_backup", fake_dump)
+
+    result = CliRunner().invoke(main, ["server", "backup", "dump", "--database", "mysql", "--db-only", "--json-output"])
+
+    assert result.exit_code == 0, result.output
+    assert '"database": "mysql"' in result.output
+    assert captured["database"] == "mysql"
+    assert captured["db_only"] is True
+
+
+def test_server_migrate_mysql_requires_confirmation():
+    result = CliRunner().invoke(main, ["server", "migrate", "mysql"])
+
+    assert result.exit_code != 0
+    assert "Re-run with --yes" in result.output
+
+
+def test_server_migrate_mysql_calls_migration(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_migrate(**kwargs):
+        captured.update(kwargs)
+        return {
+            "dump": tmp_path / "dump.zip",
+            "sql": tmp_path / "gitea-db.sql",
+            "config": tmp_path / "app.ini",
+            "config_backup": tmp_path / "app.ini.backup",
+            "mysql_socket": tmp_path / "mysql.sock",
+            "database": kwargs["database"],
+        }
+
+    monkeypatch.setattr("chattea.commands.server.migrate_sqlite_to_mysql", fake_migrate)
+
+    result = CliRunner().invoke(
+        main,
+        ["server", "migrate", "mysql", "--yes", "--database", "gitea_test", "--mysql-instance", "default", "--skip-gitea-migrate"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "database: gitea_test" in result.output
+    assert captured["database"] == "gitea_test"
+    assert captured["mysql_instance"] == "default"
+    assert captured["run_migrate"] is False
 
 
 def test_repo_list_renders_table(monkeypatch):

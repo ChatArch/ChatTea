@@ -18,6 +18,8 @@ chattea
 │   ├── delete
 │   └── bootstrap
 ├── server
+│   ├── backup
+│   │   └── dump
 │   ├── install
 │   ├── init
 │   ├── bootstrap
@@ -27,6 +29,8 @@ chattea
 │   ├── restart
 │   ├── status
 │   ├── logs
+│   ├── migrate
+│   │   └── mysql
 │   ├── version
 │   ├── health
 │   └── config
@@ -212,6 +216,8 @@ ChatTea 自有命令保留为：
 - `token create/list/delete/bootstrap`：通过 BasicAuth 创建、列出、删除 Gitea 访问令牌；引导 会创建或轮换托管 令牌，然后配置 ChatTea/Git 凭据。
 - `auth login/status/token`：同一套凭据状态上的辅助命名空间。
 - `api`：对尚未一等封装的 路由 提供原始 Gitea API passthrough。
+- `server backup dump`：封装 Gitea `dump`，支持完整备份和 `--database mysql --db-only` 迁移 SQL 导出。
+- `server migrate mysql`：通过 ChatData-managed MySQL 把当前 SQLite Gitea backend 迁移到 MySQL，并备份/更新 `app.ini`。
 - `server install`：默认安装最新 ChatArch 内部 Gitea；`--version` 可固定 发布版本。
 - `server init`：为本地 SQLite 支撑的 Gitea 实例创建最小 `app.ini`；监听地址 和 HTTP port 是 CLI init 参数，不是 Env 字段。
 - `server serve`：前台运行 Gitea，用于调试或一次性会话。
@@ -255,6 +261,8 @@ chattea token create          -> chattea.commands.token.create_access_token
 chattea token list            -> chattea.commands.token.list_access_tokens
 chattea token delete          -> chattea.commands.token.delete_access_token
 chattea token bootstrap       -> chattea.commands.token.bootstrap_access_token
+chattea server backup dump    -> chattea.commands.server.dump_gitea_backup
+chattea server migrate mysql  -> chattea.commands.server.migrate_sqlite_to_mysql
 chattea server install        -> chattea.commands.server.install_gitea
 chattea server bootstrap      -> chattea.commands.server.bootstrap_gitea_server
 chattea server init           -> chattea.commands.server.init_gitea_server
