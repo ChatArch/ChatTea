@@ -384,6 +384,12 @@ def repo_generate(
     """Generate a repository from an existing template repository."""
     if public_repo and private_repo:
         raise click.ClickException("Use only one of --public or --private.")
+    values = resolve_command_inputs(
+        schema=REPO_GENERATE_SCHEMA,
+        provided={"template": template_repo, "owner": owner, "name": name},
+        interactive=interactive,
+        usage="Usage: chattea repo generate --template OWNER/TEMPLATE --owner OWNER --name NAME [-i|-I]",
+    )
     copy_flags = (
         copy_git_content,
         copy_git_hooks,
@@ -395,12 +401,6 @@ def repo_generate(
     )
     if not any(copy_flags):
         raise click.ClickException("Select at least one template item with a --copy-* option.")
-    values = resolve_command_inputs(
-        schema=REPO_GENERATE_SCHEMA,
-        provided={"template": template_repo, "owner": owner, "name": name},
-        interactive=interactive,
-        usage="Usage: chattea repo generate --template OWNER/TEMPLATE --owner OWNER --name NAME [-i|-I]",
-    )
     try:
         payload = generate_repository(
             template_repo=values["template"],
