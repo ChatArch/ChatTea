@@ -230,8 +230,11 @@ def test_server_init_mysql_prepares_backend(monkeypatch, tmp_path):
             "dev",
             "--mysql-database",
             "gitea_dev",
+            "--mysql-user",
+            "gitea",
             "--mysql-password-env",
             "MYSQL_PASSWORD",
+            "--skip-gitea-migrate",
             "-I",
         ],
     )
@@ -242,9 +245,27 @@ def test_server_init_mysql_prepares_backend(monkeypatch, tmp_path):
     assert captured_prepare["backend"] == "mysql"
     assert captured_prepare["mysql_instance"] == "dev"
     assert captured_prepare["mysql_database"] == "gitea_dev"
+    assert captured_prepare["mysql_user"] == "gitea"
     assert captured_prepare["mysql_password"] == "mysql-secret"
     assert captured_init["database_backend"] == "mysql"
     assert captured_init["database_name"] == "gitea_dev"
+    assert captured_init["run_migrate"] is False
+
+
+def test_server_start_accepts_custom_service_name(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_start(**kwargs):
+        captured.update(kwargs)
+        return tmp_path / kwargs["service_name"]
+
+    monkeypatch.setattr("chattea.commands.server.start_gitea_service", fake_start)
+
+    result = CliRunner().invoke(main, ["server", "start", "--service-name", "chattea-gitea-shadow.service"])
+
+    assert result.exit_code == 0, result.output
+    assert captured["service_name"] == "chattea-gitea-shadow.service"
+    assert "started: chattea-gitea-shadow.service" in result.output
 
 
 def test_repo_create_no_interactive_fails_fast_when_name_missing():

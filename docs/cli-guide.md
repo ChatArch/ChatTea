@@ -11,10 +11,10 @@ chattea
 │   ├── backup                # gitea dump 备份 / DB-only SQL 导出
 │   ├── config                # app.ini path/show/get/set helper
 │   ├── install               # 安装 Gitea binary，可选准备 MySQL 后端 infra
-│   ├── init                  # 初始化 app.ini/work path，可选择 sqlite3/mysql
+│   ├── init                  # 初始化 app.ini/work path，可选择 sqlite3/mysql，可跳过 migrate
 │   ├── bootstrap             # install + init + admin + token，可选择 sqlite3/mysql
 │   ├── serve                 # 前台 web 进程
-│   ├── start/stop/restart    # user systemd service 生命周期
+│   ├── start/stop/restart    # user systemd service 生命周期，可指定 service name
 │   ├── migrate mysql         # SQLite -> ChatData MySQL backend 迁移
 │   ├── status/logs           # user systemd 检查
 │   ├── version               # 本地 Gitea binary version

@@ -8,6 +8,7 @@
 - Added `server backup dump` and `server migrate mysql` for SQLite-to-MySQL Gitea backend migration through ChatData-managed MySQL.
 - Documented the no-Docker MySQL backend setup/migration workflow with a real verification case and screenshot rationale.
 - Tightened the optional MySQL dependency to `ChatData>=0.1.1,<0.2.0` and rejected root+password MySQL backend configs that would not match the local ChatData root account.
+- Added side-by-side migration support with custom Gitea service names and `server init --skip-gitea-migrate`, so a shadow instance can load the latest dump before nginx cutover.
 - Added repository template support: `repo create --template`, `repo edit --template/--no-template`, and `repo generate --template OWNER/REPO --owner OWNER --name NAME`.
 - Updated CLI documentation to align with the current command tree, organization/team workflow, official `tea` CLI coverage, and ChatTea's current repo/template boundary.
 

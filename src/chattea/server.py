@@ -230,6 +230,7 @@ def init_instance(
     database_password: str = "",
     database_ssl_mode: str = "disable",
     force: bool = False,
+    run_migrate: bool = True,
 ) -> Path:
     work = work_path.expanduser()
     config = (config_path or work / "custom" / "conf" / "app.ini").expanduser()
@@ -255,7 +256,7 @@ def init_instance(
         encoding="utf-8",
     )
     config.chmod(0o600)
-    if binary:
+    if binary and run_migrate:
         run_gitea(binary, ["migrate"], config=config, work_path=work, check=False)
     return config
 

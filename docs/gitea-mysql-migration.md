@@ -133,6 +133,71 @@ Requires=chatdata-mysql-default.service
 /home/zhihong/Playground/projects/07-18-chattea-mysql-backend/progress.md
 ```
 
+## 低停机 side-by-side 迁移
+
+更稳的生产迁移不是直接改当前 `app.ini`，而是在独立目录先起一个 shadow Gitea：
+
+```text
+旧服务：127.0.0.1:3000 / chattea-gitea.service / 当前 work path
+新服务：127.0.0.1:3001 / chattea-gitea-shadow.service / 独立 work path
+入口：nginx proxy_pass 最后从 3000 切到 3001
+```
+
+第一轮可以在线预热：
+
+```bash
+export NEW_HOME="$HOME/.chatarch/chattea-shadow"
+export NEW_WORK="$NEW_HOME/gitea"
+export NEW_CONFIG="$NEW_WORK/custom/conf/app.ini"
+export NEW_SERVICE="chattea-gitea-shadow.service"
+export NEW_DB="gitea_shadow"
+export MYSQL_PASSWORD='[REDACTED]'
+
+# 先写 shadow app.ini 和 MySQL database/user，但暂不跑 gitea migrate，避免导入 dump 前创建空 schema。
+chattea server init \
+  --work-path "$NEW_WORK" \
+  --config "$NEW_CONFIG" \
+  --base-url https://gitea.local.wzhecnu.cn \
+  --http-port 3001 \
+  --database-backend mysql \
+  --mysql-database "$NEW_DB" \
+  --mysql-user gitea \
+  --mysql-password-env MYSQL_PASSWORD \
+  --skip-gitea-migrate \
+  --force \
+  -I
+
+# 复制仓库和附件类文件。保留 shadow app.ini，不复制旧 SQLite DB、日志和备份。
+rsync -a --delete \
+  --exclude 'custom/conf/app.ini' \
+  --exclude 'data/gitea.db' \
+  --exclude 'log/' \
+  --exclude 'backups/' \
+  "$CHATTEA_WORK_PATH/" "$NEW_WORK/"
+
+# 导出当前 DB 为 MySQL SQL，并导入 shadow database。
+chattea server backup dump --database mysql --db-only --output "$NEW_WORK/backups/preheat-db.zip"
+unzip -p "$NEW_WORK/backups/preheat-db.zip" '*gitea-db.sql' > "$NEW_WORK/backups/gitea-db.sql"
+chatdata mysql client import --database "$NEW_DB" --file "$NEW_WORK/backups/gitea-db.sql"
+
+# 对 shadow config 指向的新库跑 schema migration，然后启动 shadow service。
+"$CHATTEA_BINARY" --config "$NEW_CONFIG" --work-path "$NEW_WORK" migrate
+chattea server start --config "$NEW_CONFIG" --work-path "$NEW_WORK" --service-name "$NEW_SERVICE"
+chattea server health --url http://127.0.0.1:3001
+```
+
+最终切换窗口只做增量和入口切换：
+
+1. 停旧服务或进入维护窗口，阻止新写入。
+2. 对旧 work path 再做一次 `rsync -a --delete` 到 shadow work path。
+3. 对旧实例再做一次最新 `chattea server backup dump --database mysql --db-only`。
+4. 导入到一个新的空目标库，或清空 shadow 目标库后重新导入。
+5. 对 shadow 跑 `gitea migrate`，确认 `chattea server health --url http://127.0.0.1:3001` 正常。
+6. 修改 nginx `proxy_pass`，把 `127.0.0.1:3000` 切到 `127.0.0.1:3001`，`nginx -t` 后 reload。
+7. 保留旧服务、旧目录和旧数据库一段时间；回滚就是把 nginx upstream 切回 3000。
+
+这个方案不能保证真正 0 停机，因为 SQLite 或旧 Gitea 写入期间没有可靠双写到新 MySQL 的链路；但可以把停写窗口压缩到“最终增量 rsync + 最新 DB dump/import + nginx reload”的时间。
+
 ## 已有 SQLite 实例的备份能力
 
 Gitea binary 自带这些相关命令：

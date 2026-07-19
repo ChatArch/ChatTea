@@ -206,6 +206,7 @@ def init_gitea_server(
     database_user: str = "root",
     database_password: str = "",
     force: bool = False,
+    run_migrate: bool = True,
 ) -> Path:
     """Create or reuse the managed Gitea app.ini."""
     config = load_config()
@@ -223,6 +224,7 @@ def init_gitea_server(
         database_user=database_user,
         database_password=database_password,
         force=force,
+        run_migrate=run_migrate,
     )
 
 
@@ -453,6 +455,7 @@ def bootstrap_gitea_server(
     start_mysql: bool = True,
     force: bool = False,
     start_service: bool = False,
+    service_name: str = server_ops.DEFAULT_SERVICE_NAME,
 ) -> dict[str, object]:
     """Bootstrap a local ChatArch Gitea and configure ChatTea credentials."""
     installed_binary = binary or install_gitea(version, prefix=prefix, force=force)
@@ -497,7 +500,7 @@ def bootstrap_gitea_server(
             ) from exc
         token_source = "reused"
     credentials = configure_credentials(base_url, token)
-    service = start_gitea_service(binary=installed_binary, config_path=resolved_config, work_path=resolved_work) if start_service else None
+    service = start_gitea_service(binary=installed_binary, config_path=resolved_config, work_path=resolved_work, service_name=service_name) if start_service else None
     return {
         "binary": installed_binary,
         "config": resolved_config,
@@ -525,37 +528,43 @@ def serve_gitea(binary: Path | None = None, config_path: Path | None = None, wor
     )
 
 
-def start_gitea_service(binary: Path | None = None, config_path: Path | None = None, work_path: Path | None = None) -> Path:
+def start_gitea_service(
+    binary: Path | None = None,
+    config_path: Path | None = None,
+    work_path: Path | None = None,
+    service_name: str = server_ops.DEFAULT_SERVICE_NAME,
+) -> Path:
     """Install and start the managed user-level systemd service."""
     resolved = load_config()
     service_file = server_ops.write_user_service(
         binary or _required_path(resolved.gitea_binary, "CHATTEA_BINARY"),
         config_path or _required_path(resolved.gitea_config, "CHATTEA_CONFIG"),
         work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH"),
+        service_name=service_name,
     )
     server_ops.systemctl_user(["daemon-reload"])
-    server_ops.systemctl_user(["enable", "--now", server_ops.DEFAULT_SERVICE_NAME])
+    server_ops.systemctl_user(["enable", "--now", service_name])
     return service_file
 
 
-def stop_gitea_service() -> None:
+def stop_gitea_service(service_name: str = server_ops.DEFAULT_SERVICE_NAME) -> None:
     """Stop the managed user-level systemd service."""
-    server_ops.systemctl_user(["stop", server_ops.DEFAULT_SERVICE_NAME])
+    server_ops.systemctl_user(["stop", service_name])
 
 
-def restart_gitea_service() -> None:
+def restart_gitea_service(service_name: str = server_ops.DEFAULT_SERVICE_NAME) -> None:
     """Restart the managed user-level systemd service."""
-    server_ops.systemctl_user(["restart", server_ops.DEFAULT_SERVICE_NAME])
+    server_ops.systemctl_user(["restart", service_name])
 
 
-def status_gitea_service():
+def status_gitea_service(service_name: str = server_ops.DEFAULT_SERVICE_NAME):
     """Return the managed user-level systemd service status."""
-    return server_ops.systemctl_user(["--no-pager", "--full", "status", server_ops.DEFAULT_SERVICE_NAME], check=False)
+    return server_ops.systemctl_user(["--no-pager", "--full", "status", service_name], check=False)
 
 
-def logs_gitea_service(follow: bool = False, lines: int = 100):
+def logs_gitea_service(service_name: str = server_ops.DEFAULT_SERVICE_NAME, follow: bool = False, lines: int = 100):
     """Return journalctl output for the managed user-level systemd service."""
-    return server_ops.journalctl_user(server_ops.DEFAULT_SERVICE_NAME, follow=follow, lines=lines)
+    return server_ops.journalctl_user(service_name, follow=follow, lines=lines)
 
 
 def gitea_version(binary: Path | None = None, url: str | None = None) -> dict | None:
@@ -1008,6 +1017,7 @@ def install(
 @click.option("--mysql-service/--no-mysql-service", "install_mysql_service", default=True, show_default=True, help="Install/enable ChatData MySQL user service when selecting mysql.")
 @click.option("--start-mysql/--no-start-mysql", default=True, show_default=True, help="Start ChatData MySQL before initializing Gitea.")
 @click.option("--run-user", default=None)
+@click.option("--gitea-migrate/--skip-gitea-migrate", "run_migrate", default=True, show_default=True, help="Run `gitea migrate` after writing app.ini.")
 @click.option("--force", is_flag=True)
 @add_interactive_option
 def init(
@@ -1030,6 +1040,7 @@ def init(
     install_mysql_service: bool,
     start_mysql: bool,
     run_user: str | None,
+    run_migrate: bool,
     force: bool,
     interactive: bool | None,
 ) -> None:
@@ -1078,6 +1089,7 @@ def init(
         run_user=run_user,
         **database["gitea"],
         force=force,
+        run_migrate=run_migrate,
     )
     click.echo(f"config: {resolved_config}")
     click.echo(f"database_backend: {database['backend']}")
@@ -1114,6 +1126,7 @@ def init(
 @click.option("--token-scopes", default=None, help="Initial access token scopes. Defaults to CHATTEA_BOOTSTRAP_TOKEN_SCOPES or all.")
 @click.option("--force", is_flag=True, help="Overwrite app.ini and binary when applicable.")
 @click.option("--start-service", is_flag=True, help="Start the user-level systemd service after bootstrap.")
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name when --start-service is used.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @add_interactive_option
 def bootstrap(
@@ -1144,6 +1157,7 @@ def bootstrap(
     token_scopes: str | None,
     force: bool,
     start_service: bool,
+    service_name: str,
     json_output: bool,
     interactive: bool | None,
 ) -> None:
@@ -1193,6 +1207,7 @@ def bootstrap(
         start_mysql=start_mysql,
         force=force,
         start_service=start_service,
+        service_name=service_name,
     )
     if json_output:
         click.echo(json.dumps(result, indent=2, default=str))
@@ -1228,31 +1243,35 @@ def serve(binary: Path | None, config_path: Path | None, work_path: Path | None)
 @click.option("--binary", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea binary path. Defaults to CHATTEA_BINARY.")
 @click.option("--config", "config_path", type=click.Path(dir_okay=False, path_type=Path), default=None, help="Gitea app.ini path. Defaults to CHATTEA_CONFIG.")
 @click.option("--work-path", type=click.Path(file_okay=False, path_type=Path), default=None, help="Gitea work path. Defaults to CHATTEA_WORK_PATH.")
-def start(binary: Path | None, config_path: Path | None, work_path: Path | None) -> None:
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name to write/start.")
+def start(binary: Path | None, config_path: Path | None, work_path: Path | None, service_name: str) -> None:
     """Install and start a user systemd service."""
-    service_file = start_gitea_service(binary=binary, config_path=config_path, work_path=work_path)
-    click.echo(f"started: {server_ops.DEFAULT_SERVICE_NAME}")
+    service_file = start_gitea_service(binary=binary, config_path=config_path, work_path=work_path, service_name=service_name)
+    click.echo(f"started: {service_name}")
     click.echo(f"service: {service_file}")
 
 
 @server_group.command(name="stop")
-def stop() -> None:
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name to stop.")
+def stop(service_name: str) -> None:
     """Stop the user systemd service."""
-    stop_gitea_service()
-    click.echo(f"stopped: {server_ops.DEFAULT_SERVICE_NAME}")
+    stop_gitea_service(service_name=service_name)
+    click.echo(f"stopped: {service_name}")
 
 
 @server_group.command(name="restart")
-def restart() -> None:
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name to restart.")
+def restart(service_name: str) -> None:
     """Restart the user systemd service."""
-    restart_gitea_service()
-    click.echo(f"restarted: {server_ops.DEFAULT_SERVICE_NAME}")
+    restart_gitea_service(service_name=service_name)
+    click.echo(f"restarted: {service_name}")
 
 
 @server_group.command(name="status")
-def status() -> None:
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name to inspect.")
+def status(service_name: str) -> None:
     """Show the user systemd service status."""
-    result = status_gitea_service()
+    result = status_gitea_service(service_name=service_name)
     if result.stdout:
         click.echo(result.stdout.rstrip())
     if result.stderr:
@@ -1261,11 +1280,12 @@ def status() -> None:
 
 
 @server_group.command(name="logs")
+@click.option("--service-name", default=server_ops.DEFAULT_SERVICE_NAME, show_default=True, help="Systemd user service name to inspect.")
 @click.option("--follow", "follow", is_flag=True)
 @click.option("--lines", default=100, show_default=True)
-def logs(follow: bool, lines: int) -> None:
+def logs(service_name: str, follow: bool, lines: int) -> None:
     """Show service logs."""
-    result = logs_gitea_service(follow=follow, lines=lines)
+    result = logs_gitea_service(service_name=service_name, follow=follow, lines=lines)
     raise SystemExit(result.returncode)
 
 

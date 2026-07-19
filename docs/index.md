@@ -399,11 +399,11 @@ chattea server stop
 chattea server restart
 ```
 
-systemd unit 名固定为 `chattea-gitea.service`。它是内部实现细节，不作为 Env 暴露。
+默认 systemd unit 名为 `chattea-gitea.service`。常规安装可以不用关心；做 side-by-side 迁移或 shadow 实例时，可以用 `--service-name` 指定另一个用户级 service。
 
 ## 自启动和运行维护
 
-ChatTea 使用 用户级 systemd 管理 Gitea。`chattea server start` 会写入 用户级 unit、执行 `systemctl --user daemon-reload`，并 `enable --now` 固定的 `chattea-gitea.service`。
+ChatTea 使用 用户级 systemd 管理 Gitea。`chattea server start` 会写入 用户级 unit、执行 `systemctl --user daemon-reload`，并 `enable --now` 对应 service。
 
 首次启用：
 

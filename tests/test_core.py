@@ -248,6 +248,26 @@ def test_render_app_ini_can_use_mysql_backend():
     assert "PATH = /srv/gitea/data/gitea.db" not in rendered
 
 
+def test_init_instance_can_skip_gitea_migrate(monkeypatch, tmp_path):
+    calls = []
+    binary = tmp_path / "bin" / "gitea"
+    binary.parent.mkdir()
+    binary.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    monkeypatch.setattr(server_ops, "run_gitea", lambda *args, **kwargs: calls.append((args, kwargs)))
+
+    config = server_ops.init_instance(
+        work_path=tmp_path / "gitea",
+        binary=binary,
+        config_path=tmp_path / "gitea" / "custom" / "conf" / "app.ini",
+        run_migrate=False,
+        force=True,
+    )
+
+    assert config.exists()
+    assert calls == []
+
+
 def test_write_user_service(tmp_path, monkeypatch):
     service_dir = tmp_path / "systemd" / "user"
     config = tmp_path / "gitea" / "custom" / "conf" / "app.ini"
