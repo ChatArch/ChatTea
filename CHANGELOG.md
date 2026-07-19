@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.2
 
 - Added install-time database backend selection: `server install/init/bootstrap --database-backend sqlite3|mysql`, with ChatData-managed MySQL runtime preparation for new Gitea instances.
 - Added ChatData MySQL systemd dependency detection to the generated `chattea-gitea.service`.
