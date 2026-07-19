@@ -235,6 +235,11 @@ def _password_from_env(env_name: str | None) -> str | None:
     return value
 
 
+def _validate_mysql_auth(user: str, password: str) -> None:
+    if user.strip().lower() == "root" and password:
+        raise click.ClickException("Do not set a MySQL password for the local root user. Use the default passwordless root user or choose a non-root --mysql-user/--user.")
+
+
 def _raise_for_completed_process(result: subprocess.CompletedProcess[str], action: str) -> None:
     if result.returncode == 0:
         return
@@ -275,6 +280,7 @@ def prepare_database_backend(
     if backend != server_ops.DATABASE_BACKEND_MYSQL:
         raise click.ClickException(f"Unsupported database backend: {backend}")
 
+    _validate_mysql_auth(mysql_user, mysql_password)
     mysql_ops = _chatdata_mysql_module()
     result: dict[str, object] = {"backend": backend}
     if install_mysql:
@@ -687,6 +693,7 @@ def migrate_sqlite_to_mysql(
     run_migrate: bool = True,
 ) -> dict[str, object]:
     """Migrate the managed Gitea database from SQLite to a ChatData MySQL instance."""
+    _validate_mysql_auth(user, password)
     mysql_ops = _chatdata_mysql_module()
     resolved = load_config()
     target_work = work_path or _required_path(resolved.gitea_work_path, "CHATTEA_WORK_PATH")

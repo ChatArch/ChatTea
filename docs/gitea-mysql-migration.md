@@ -94,7 +94,9 @@ SSL_MODE = disable
 LOG_SQL = false
 ```
 
-默认本机 ChatData MySQL 用 Unix socket 和本机 root 用户；如果需要密码，通过 `--mysql-password-env` 传入环境变量名，不要把密码写进命令行或文档。
+默认本机 ChatData MySQL 用 Unix socket 和无密码的本机 root 用户。需要 service user 时，请同时传 `--mysql-user gitea --mysql-password-env MYSQL_PASSWORD`；不要给默认 root 用户配置密码，因为 ChatData 本地开发实例的 root 用户已经存在，ChatTea 不会隐式修改 root 密码。
+
+MySQL backend 需要 ChatData `0.1.1` 或更新版本；`0.1.1` 提供了 ChatTea 依赖的 database user 创建/授权能力。
 
 ## 真实用例：本机 Gitea 切到 MySQL
 
@@ -188,7 +190,7 @@ chattea server migrate mysql \
 2. 运行 `gitea dump --database mysql --db-only` 生成 MySQL SQL。
 3. 从 dump zip 里抽取 `gitea-db.sql`。
 4. 通过 ChatData 创建 MySQL database。
-5. 如果目标用户不是默认 root，创建 MySQL 用户并授权该 database。
+5. 创建并授权目标 MySQL 用户；默认 root 用户必须保持无密码，带密码时请使用非 root service user。
 6. 导入 `gitea-db.sql`。
 7. 备份 `app.ini` 为 `app.ini.backup-<timestamp>`。
 8. 更新 `[database]` 为 MySQL。

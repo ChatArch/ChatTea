@@ -208,6 +208,7 @@ def test_pyproject_registers_chatenv_provider():
 
     assert '[project.entry-points."chatenv.configs"]' in text
     assert 'chattea = "chattea.config"' in text
+    assert 'ChatData>=0.1.1,<0.2.0' in text
 
 
 def test_render_app_ini_contains_core_settings():
@@ -282,6 +283,15 @@ def test_write_user_service_requires_chatdata_mysql_when_config_uses_socket(tmp_
     text = path.read_text(encoding="utf-8")
     assert "After=network.target chatdata-mysql-default.service" in text
     assert "Requires=chatdata-mysql-default.service" in text
+
+
+def test_prepare_database_backend_rejects_root_password():
+    try:
+        prepare_database_backend(backend="mysql", mysql_user="root", mysql_password="secret")
+    except Exception as exc:
+        assert "Do not set a MySQL password for the local root user" in str(exc)
+    else:
+        raise AssertionError("root password was accepted")
 
 
 def test_prepare_database_backend_installs_chatdata_mysql(monkeypatch, tmp_path):
