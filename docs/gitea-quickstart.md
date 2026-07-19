@@ -46,6 +46,24 @@ $CHATTEA auth status
 $CHATTEA api /version --url "$GITEA_API"
 ```
 
+如果这台机器还没有 ChatTea-managed Gitea，可以先选择数据库后端再初始化服务：
+
+```bash
+# 默认轻量 SQLite：
+$CHATTEA server bootstrap -I
+
+# 长期实例建议直接选择 ChatData-managed MySQL：
+$CHATTEA server bootstrap \
+  --database-backend mysql \
+  --mysql-instance default \
+  --mysql-version 8.4.6 \
+  --admin-password-env GITEA_ADMIN_PASSWORD \
+  --start-service \
+  -I
+```
+
+MySQL 模式不使用 Docker；MySQL 二进制、实例数据和 socket 默认都放在 `~/.chatarch/chatdata/` 下。
+
 ## 1. 创建组织
 
 组织创建已经有一等 ChatTea 命令。内部实践默认使用 private organization，避免匿名或非成员看到组织信息：

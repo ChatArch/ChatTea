@@ -40,6 +40,7 @@ plugins:
             Gitea 端到端快速开始: Gitea End-to-End
             Gitea 服务: Gitea Service
             服务运维: Service Operations
+            MySQL 后端迁移: MySQL Backend Migration
             账号、组织与可见性模型: Accounts, Organizations, and Visibility
             权限与可见性: Permissions and Visibility
             仓库协作: Repository Collaboration
@@ -73,6 +74,7 @@ nav:
       - Gitea 端到端快速开始: gitea-quickstart.md
   - Gitea 服务:
       - 服务运维: gitea-service-operations.md
+      - MySQL 后端迁移: gitea-mysql-migration.md
       - 账号、组织与可见性模型: account-organization-visibility.md
       - 权限与可见性: gitea-permissions-and-visibility.md
   - 仓库协作:

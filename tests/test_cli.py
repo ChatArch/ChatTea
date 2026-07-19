@@ -33,7 +33,7 @@ def test_server_help_lists_lifecycle_commands():
     result = CliRunner().invoke(main, ["server", "--help"])
 
     assert result.exit_code == 0
-    for command in ["install", "init", "bootstrap", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config"]:
+    for command in ["install", "init", "bootstrap", "serve", "start", "stop", "restart", "status", "logs", "version", "health", "config", "backup", "migrate"]:
         assert command in result.output
 
 
@@ -171,6 +171,8 @@ def test_server_bootstrap_reads_chatenv_and_masks_password(monkeypatch, tmp_path
             "work_path": tmp_path / "gitea",
             "admin_user": kwargs["admin_user"],
             "token": "generat...token",
+            "database_backend": kwargs["database_backend"],
+            "mysql": None,
             "credentials": {"env_path": tmp_path / "arch" / "envs" / "ChatTea" / ".env"},
             "service": None,
         }
@@ -188,6 +190,82 @@ def test_server_bootstrap_reads_chatenv_and_masks_password(monkeypatch, tmp_path
     assert captured["admin_email"] == "root@example.invalid"
     assert captured["token_name"] == "default"
     assert captured["token_scopes"] == "all"
+    assert captured["database_backend"] == "sqlite3"
+
+
+def test_server_init_mysql_prepares_backend(monkeypatch, tmp_path):
+    captured_prepare = {}
+    captured_init = {}
+
+    def fake_prepare(**kwargs):
+        captured_prepare.update(kwargs)
+        return {
+            "backend": "mysql",
+            "gitea": {
+                "database_backend": "mysql",
+                "database_host": str(tmp_path / "mysql.sock"),
+                "database_name": kwargs["mysql_database"],
+                "database_user": kwargs["mysql_user"],
+                "database_password": kwargs["mysql_password"],
+            },
+            "mysql": {"layout": {"socket": str(tmp_path / "mysql.sock")}},
+        }
+
+    def fake_init(**kwargs):
+        captured_init.update(kwargs)
+        return tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+
+    monkeypatch.setenv("MYSQL_PASSWORD", "mysql-secret")
+    monkeypatch.setattr("chattea.commands.server.prepare_database_backend", fake_prepare)
+    monkeypatch.setattr("chattea.commands.server.init_gitea_server", fake_init)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "server",
+            "init",
+            "--database-backend",
+            "mysql",
+            "--mysql-instance",
+            "dev",
+            "--mysql-database",
+            "gitea_dev",
+            "--mysql-user",
+            "gitea",
+            "--mysql-password-env",
+            "MYSQL_PASSWORD",
+            "--skip-gitea-migrate",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "database_backend: mysql" in result.output
+    assert "mysql-secret" not in result.output
+    assert captured_prepare["backend"] == "mysql"
+    assert captured_prepare["mysql_instance"] == "dev"
+    assert captured_prepare["mysql_database"] == "gitea_dev"
+    assert captured_prepare["mysql_user"] == "gitea"
+    assert captured_prepare["mysql_password"] == "mysql-secret"
+    assert captured_init["database_backend"] == "mysql"
+    assert captured_init["database_name"] == "gitea_dev"
+    assert captured_init["run_migrate"] is False
+
+
+def test_server_start_accepts_custom_service_name(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_start(**kwargs):
+        captured.update(kwargs)
+        return tmp_path / kwargs["service_name"]
+
+    monkeypatch.setattr("chattea.commands.server.start_gitea_service", fake_start)
+
+    result = CliRunner().invoke(main, ["server", "start", "--service-name", "chattea-gitea-shadow.service"])
+
+    assert result.exit_code == 0, result.output
+    assert captured["service_name"] == "chattea-gitea-shadow.service"
+    assert "started: chattea-gitea-shadow.service" in result.output
 
 
 def test_repo_create_no_interactive_fails_fast_when_name_missing():
@@ -221,6 +299,58 @@ def test_server_config_commands_read_and_update_app_ini(tmp_path):
     assert set_result.exit_code == 0
     assert "updated:" in set_result.output
     assert "HTTP_PORT = 3001" in config_path.read_text(encoding="utf-8")
+
+
+def test_server_backup_dump_calls_gitea_dump(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_dump(**kwargs):
+        captured.update(kwargs)
+        return tmp_path / "dump.zip"
+
+    monkeypatch.setattr("chattea.commands.server.dump_gitea_backup", fake_dump)
+
+    result = CliRunner().invoke(main, ["server", "backup", "dump", "--database", "mysql", "--db-only", "--json-output"])
+
+    assert result.exit_code == 0, result.output
+    assert '"database": "mysql"' in result.output
+    assert captured["database"] == "mysql"
+    assert captured["db_only"] is True
+
+
+def test_server_migrate_mysql_requires_confirmation():
+    result = CliRunner().invoke(main, ["server", "migrate", "mysql"])
+
+    assert result.exit_code != 0
+    assert "Re-run with --yes" in result.output
+
+
+def test_server_migrate_mysql_calls_migration(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_migrate(**kwargs):
+        captured.update(kwargs)
+        return {
+            "dump": tmp_path / "dump.zip",
+            "sql": tmp_path / "gitea-db.sql",
+            "config": tmp_path / "app.ini",
+            "config_backup": tmp_path / "app.ini.backup",
+            "mysql_socket": tmp_path / "mysql.sock",
+            "database": kwargs["database"],
+        }
+
+    monkeypatch.setattr("chattea.commands.server.migrate_sqlite_to_mysql", fake_migrate)
+
+    result = CliRunner().invoke(
+        main,
+        ["server", "migrate", "mysql", "--yes", "--database", "gitea_test", "--mysql-instance", "default", "--skip-gitea-migrate"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "database: gitea_test" in result.output
+    assert captured["database"] == "gitea_test"
+    assert captured["mysql_instance"] == "default"
+    assert captured["run_migrate"] is False
 
 
 def test_repo_list_renders_table(monkeypatch):

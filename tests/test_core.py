@@ -2,12 +2,13 @@ from pathlib import Path
 import hashlib
 import lzma
 import subprocess
+import zipfile
 
 from chattea import server as server_ops
 from chattea.api import GiteaAPIError, GiteaClient
 from chattea.commands.api import call_api, parse_json_data, parse_query_params
 from chattea.commands.project import add_card, list_cards, move_card, remove_card
-from chattea.commands.server import bootstrap_gitea_server
+from chattea.commands.server import bootstrap_gitea_server, configure_gitea_mysql_database, extract_gitea_dump_sql, mask_gitea_config, prepare_database_backend
 from chattea.commands.token import bootstrap_access_token
 from chattea.credentials import configure_token, git_extraheader_key, read_git_token, resolve_token, token_from_extraheader
 from chattea.config import (
@@ -99,6 +100,42 @@ def test_legacy_json_config_is_read_when_chatenv_has_no_value(monkeypatch, tmp_p
     assert config.token == "legacy-token"
 
 
+def test_mask_gitea_config_masks_database_password():
+    text = "[database]\nDB_TYPE = mysql\nPASSWD = secret\n\n[security]\nSECRET_KEY = secret-key\n"
+
+    masked = mask_gitea_config(text)
+
+    assert "PASSWD = <masked>" in masked
+    assert "SECRET_KEY = <masked>" in masked
+    assert "secret" not in masked
+
+
+def test_configure_gitea_mysql_database_updates_app_ini(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
+    config_path = tmp_path / "app.ini"
+    config_path.write_text("[database]\nDB_TYPE = sqlite3\nPATH = /old/gitea.db\n", encoding="utf-8")
+
+    result = configure_gitea_mysql_database(config_path=config_path, host="/run/mysql.sock", database="gitea", user="root", password="", backup=True)
+    text = config_path.read_text(encoding="utf-8")
+
+    assert "DB_TYPE = mysql" in text
+    assert "HOST = /run/mysql.sock" in text
+    assert "NAME = gitea" in text
+    assert "USER = root" in text
+    assert "PASSWD = " in text
+    assert Path(result["backup"]).exists()
+
+
+def test_extract_gitea_dump_sql(tmp_path):
+    dump = tmp_path / "dump.zip"
+    with zipfile.ZipFile(dump, "w") as archive:
+        archive.writestr("gitea-db.sql", "SELECT 1;\n")
+
+    sql = extract_gitea_dump_sql(dump, tmp_path / "extract")
+
+    assert sql.read_text(encoding="utf-8") == "SELECT 1;\n"
+
+
 def test_bootstrap_values_are_read_from_chatenv(monkeypatch, tmp_path):
     monkeypatch.setenv("CHATARCH_HOME", str(tmp_path / "arch"))
     monkeypatch.setenv("CHATTEA_BOOTSTRAP_ADMIN_USER", "root")
@@ -171,6 +208,7 @@ def test_pyproject_registers_chatenv_provider():
 
     assert '[project.entry-points."chatenv.configs"]' in text
     assert 'chattea = "chattea.config"' in text
+    assert 'ChatData>=0.1.1,<0.2.0' in text
 
 
 def test_render_app_ini_contains_core_settings():
@@ -191,13 +229,55 @@ def test_render_app_ini_contains_core_settings():
     assert "DB_TYPE = sqlite3" in rendered
 
 
+def test_render_app_ini_can_use_mysql_backend():
+    rendered = server_ops.render_app_ini(
+        Path("/srv/gitea"),
+        "git",
+        database_backend="mysql",
+        database_host="/run/mysql.sock",
+        database_name="gitea",
+        database_user="root",
+        database_password="",
+    )
+
+    assert "DB_TYPE = mysql" in rendered
+    assert "HOST = /run/mysql.sock" in rendered
+    assert "NAME = gitea" in rendered
+    assert "USER = root" in rendered
+    assert "SSL_MODE = disable" in rendered
+    assert "PATH = /srv/gitea/data/gitea.db" not in rendered
+
+
+def test_init_instance_can_skip_gitea_migrate(monkeypatch, tmp_path):
+    calls = []
+    binary = tmp_path / "bin" / "gitea"
+    binary.parent.mkdir()
+    binary.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    monkeypatch.setattr(server_ops, "run_gitea", lambda *args, **kwargs: calls.append((args, kwargs)))
+
+    config = server_ops.init_instance(
+        work_path=tmp_path / "gitea",
+        binary=binary,
+        config_path=tmp_path / "gitea" / "custom" / "conf" / "app.ini",
+        run_migrate=False,
+        force=True,
+    )
+
+    assert config.exists()
+    assert calls == []
+
+
 def test_write_user_service(tmp_path, monkeypatch):
     service_dir = tmp_path / "systemd" / "user"
+    config = tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+    config.parent.mkdir(parents=True)
+    config.write_text("[database]\nDB_TYPE = sqlite3\n", encoding="utf-8")
     monkeypatch.setattr(server_ops, "service_file_path", lambda service_name=server_ops.DEFAULT_SERVICE_NAME: service_dir / service_name)
 
     path = server_ops.write_user_service(
         tmp_path / "bin" / "gitea",
-        tmp_path / "gitea" / "custom" / "conf" / "app.ini",
+        config,
         tmp_path / "gitea",
     )
 
@@ -206,6 +286,98 @@ def test_write_user_service(tmp_path, monkeypatch):
     assert "ExecStart=" in text
     assert "gitea web" in text
     assert "--config" in text
+
+
+def test_write_user_service_requires_chatdata_mysql_when_config_uses_socket(tmp_path, monkeypatch):
+    service_dir = tmp_path / "systemd" / "user"
+    config = tmp_path / "gitea" / "custom" / "conf" / "app.ini"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "[database]\nDB_TYPE = mysql\nHOST = /home/me/.chatarch/chatdata/instances/mysql/default/run/mysql.sock\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(server_ops, "service_file_path", lambda service_name=server_ops.DEFAULT_SERVICE_NAME: service_dir / service_name)
+
+    path = server_ops.write_user_service(tmp_path / "bin" / "gitea", config, tmp_path / "gitea")
+
+    text = path.read_text(encoding="utf-8")
+    assert "After=network.target chatdata-mysql-default.service" in text
+    assert "Requires=chatdata-mysql-default.service" in text
+
+
+def test_prepare_database_backend_rejects_root_password():
+    try:
+        prepare_database_backend(backend="mysql", mysql_user="root", mysql_password="secret")
+    except Exception as exc:
+        assert "Do not set a MySQL password for the local root user" in str(exc)
+    else:
+        raise AssertionError("root password was accepted")
+
+
+def test_prepare_database_backend_installs_chatdata_mysql(monkeypatch, tmp_path):
+    calls = []
+    socket = tmp_path / "chatdata" / "instances" / "mysql" / "dev" / "run" / "mysql.sock"
+
+    class Layout:
+        def __init__(self, socket_path: Path):
+            self.socket = socket_path
+
+    class FakeMysqlOps:
+        def install_mysql(self, **kwargs):
+            calls.append(("install", kwargs))
+            return {"runtime": str(tmp_path / "runtime")}
+
+        def init_instance(self, **kwargs):
+            calls.append(("init", kwargs))
+            return {"config": str(tmp_path / "my.cnf")}
+
+        def install_service(self, **kwargs):
+            calls.append(("service", kwargs))
+            return {"unit": "chatdata-mysql-dev.service"}
+
+        def systemctl_user(self, name, action):
+            calls.append(("systemctl", name, action))
+            return subprocess.CompletedProcess(["systemctl"], 0, "", "")
+
+        def ping(self, **kwargs):
+            calls.append(("ping", kwargs))
+            return {"ok": True}
+
+        def create_database(self, database, **kwargs):
+            calls.append(("create-db", database, kwargs))
+            return ""
+
+        def ensure_database_user(self, database, **kwargs):
+            calls.append(("ensure-user", database, kwargs))
+            return None
+
+        def mysql_layout(self, **kwargs):
+            calls.append(("layout", kwargs))
+            return Layout(socket)
+
+        def export_layout(self, **kwargs):
+            calls.append(("export-layout", kwargs))
+            return {"socket": str(socket)}
+
+    monkeypatch.setattr("chattea.commands.server._chatdata_mysql_module", lambda: FakeMysqlOps())
+
+    result = prepare_database_backend(
+        backend="mysql",
+        mysql_instance="dev",
+        mysql_database="gitea_dev",
+        mysql_user="gitea",
+        mysql_password="secret",
+        mysql_port=3308,
+    )
+
+    assert result["backend"] == "mysql"
+    assert result["gitea"]["database_host"] == str(socket)
+    assert result["gitea"]["database_name"] == "gitea_dev"
+    assert result["mysql"]["layout"]["socket"] == str(socket)
+    assert calls[0][0] == "install"
+    assert ("systemctl", "dev", "start") in calls
+    assert any(call[0] == "create-db" and call[1] == "gitea_dev" for call in calls)
+    assert any(call[0] == "ensure-user" and call[1] == "gitea_dev" and call[2]["user"] == "gitea" for call in calls)
 
 
 def test_internal_gitea_asset_urls_use_chatarch_release():
@@ -284,9 +456,23 @@ def test_bootstrap_gitea_server_composes_local_admin_and_credentials(monkeypatch
     assert result["admin_user"] == "root"
     assert result["token"] == "generat...token"
     assert result["token_source"] == "generated"
+    assert result["database_backend"] == "sqlite3"
+    assert result["mysql"] is None
     assert calls == [
         ("install", "latest", None, False),
-        ("init", {"work_path": work, "config_path": None, "binary": binary, "base_url": "http://gitea.local:3000", "listen_addr": None, "http_port": None, "force": False}),
+        (
+            "init",
+            {
+                "work_path": work,
+                "config_path": None,
+                "binary": binary,
+                "base_url": "http://gitea.local:3000",
+                "listen_addr": None,
+                "http_port": None,
+                "database_backend": "sqlite3",
+                "force": False,
+            },
+        ),
         ("create-user", "root", "pw", "root@example.invalid", {"binary": binary, "config_path": config, "work_path": work}),
         ("generate-token", "root", {"token_name": "default", "token_scopes": "all", "binary": binary, "config_path": config, "work_path": work}),
         ("configure", "http://gitea.local:3000", "generated-token"),
