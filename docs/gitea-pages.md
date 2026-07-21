@@ -80,8 +80,8 @@ v0.1 的主路径是 Actions 直接发布到 Pages root：
 
 ```text
 1. 用户 push main
-2. Gitea 创建 workflow run / job
-3. runner daemon 领取 job
+2. Gitea 读取 .gitea/workflows/*.yml，创建 workflow run / job
+3. runner daemon 按 scope + runs-on label 领取 job
 4. workflow 在 runner workdir 中 checkout 代码
 5. workflow 构建 site/ 或 public/
 6. workflow 调用 chattea pages publish --repo <owner>/<repo> --source site
@@ -91,6 +91,159 @@ v0.1 的主路径是 Actions 直接发布到 Pages root：
 ```
 
 这里不要求用户手动维护 `pages` 分支。`pages` 分支可以作为后续可选镜像或审计历史，但不是 v0.1 的主发布路径。
+
+## 完整打通流程
+
+### 1. 在仓库里添加 workflow YAML
+
+仓库只要在默认分支提交 `.gitea/workflows/pages.yml`，Gitea push 后就会把它识别为 Actions workflow。下面是当前验证链路使用的结构：
+
+```yaml
+name: ChatTea Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show action context
+        run: |
+          echo "repo=$GITHUB_REPOSITORY"
+          echo "sha=$GITHUB_SHA"
+          echo "run=$GITHUB_RUN_ID"
+          pwd
+
+      - name: Clone repository
+        run: |
+          rm -rf source site
+          git clone "<gitea-loopback-url>/$GITHUB_REPOSITORY.git" source
+          cd source
+          git checkout "$GITHUB_SHA"
+
+      - name: Build MkDocs site
+        run: |
+          mkdocs build \
+            --clean \
+            -f source/mkdocs.yml \
+            --site-dir "$PWD/site"
+
+      - name: Publish Pages
+        run: |
+          chattea pages publish \
+            --repo "$GITHUB_REPOSITORY" \
+            --source "$PWD/site" \
+            --commit "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID"
+```
+
+关键点：
+
+- `on.push.branches` 决定什么分支触发 Pages 构建；
+- `runs-on: ubuntu-latest` 必须能匹配一个在线 runner 的 label；
+- `GITHUB_REPOSITORY` 是 Gitea runner 注入的 `owner/repo`；
+- `GITHUB_SHA` 是触发本次 run 的 commit；
+- `GITHUB_RUN_ID` 用于写入 Pages 发布元数据；
+- 正式 CLI 落地前，验证环境可以把 `chattea pages publish` 替换成受管 Pages publisher 脚本；接口参数保持一致。
+
+如果 runner 环境可以稳定使用 checkout action，也可以把 `Clone repository` 换成 `uses: actions/checkout@v4`。内网或离线环境建议显式从本机 Gitea loopback clone，避免依赖外部 marketplace。
+
+### 2. Gitea 如何找到并执行这个 Action
+
+当 `pages.yml` 被 push 到默认分支后：
+
+```text
+Git push
+  -> Gitea 收到 refs/heads/main 更新
+  -> Gitea 读取 .gitea/workflows/pages.yml
+  -> 创建 workflow run 和 job
+  -> 查找 scope 覆盖该仓库、label 匹配 runs-on 的 runner
+  -> runner 领取 pages job 并执行 steps
+```
+
+可以用 Web UI 看：
+
+```text
+<gitea-domain>/<owner>/<repo>/actions
+<gitea-domain>/<owner>/<repo>/actions/runs/<run-id>
+```
+
+也可以用 CLI 查：
+
+```bash
+chattea runner registry list --scope repo --repo <owner>/<repo> --json-output
+chattea run list --repo <owner>/<repo> --json-output
+chattea run jobs --repo <owner>/<repo> <run-id> --json-output
+chattea job logs --repo <owner>/<repo> <job-id>
+```
+
+当前验证中的 Actions run 页面如下：
+
+![Gitea Actions run 成功执行页面](assets/pages/chattea-actions-run.png)
+
+### 3. Pages 部署到哪里
+
+`chattea pages publish` 不负责构建，只负责把已构建好的静态目录发布到 Pages service 的 root 下：
+
+```text
+source site/
+  -> <chattea-home>/pages/staging/<tmp>/
+  -> atomic replace
+  -> <chattea-home>/pages/sites/<owner>/<repo>/
+```
+
+发布后的目录形态：
+
+```text
+<chattea-home>/pages/sites/<owner>/<repo>/
+├── index.html
+├── assets/
+├── en/
+└── .chattea-pages.json
+```
+
+`.chattea-pages.json` 记录最后一次发布来源：
+
+```json
+{
+  "repo": "<owner>/<repo>",
+  "commit": "<commit-sha>",
+  "run_id": "<actions-run-id>",
+  "published_at": "<timestamp>",
+  "source": "gitea-actions"
+}
+```
+
+Pages service 长驻运行，只 serve `<chattea-home>/pages/sites`。因此 publish 完不需要重启服务，站点路径会立即生效。
+
+### 4. 怎么访问发布后的站点
+
+默认访问路径：
+
+```text
+https://<pages-domain>/<owner>/<repo>/
+```
+
+仓库 metadata 的 website 字段也应指向同一个地址：
+
+```bash
+chattea repo edit <owner>/<repo> \
+  --website https://<pages-domain>/<owner>/<repo>/
+```
+
+验证命令：
+
+```bash
+curl -I https://<pages-domain>/<owner>/<repo>/
+curl https://<pages-domain>/<owner>/<repo>/ | grep -i '<title>'
+```
+
+当前验证中的 Pages 页面如下：
+
+![ChatTea Pages 发布页面](assets/pages/chattea-pages-published.png)
 
 ## Pages service 目录
 
