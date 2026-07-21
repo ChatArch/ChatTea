@@ -205,6 +205,8 @@ chattea
 - `variable`：仓库/org/user scoped `/actions/variables` 路由。
 - `status`：`/repos/{owner}/{repo}/statuses/{sha}` 和 combined status 路由。
 
+当前未把 Pages 列入 API-backed 领域：当前 Gitea 实例没有官方 Pages REST 路由。Pages 应作为 ChatTea local backend 设计：管理 `chattea-pages.service`、发布目录、发布元数据和 Actions workflow 模板，默认 URL 为 `<pages-domain>/<owner>/<repo>/`。
+
 ## 引导流程方向
 
 初始配置应实现为真实工作流组合，不应只是 占位命令。
@@ -219,6 +221,7 @@ chattea
 - 不声称完整兼容 GitHub API 或 GitHub CLI。
 - 不把 Gitea 仓库 Project boards 建模成 GitHub Projects v2。
 - 不把 `checkout` 加入正式 REST-backed tree。如果之后需要，应明确设计为本地 git 辅助函数，并提供证据和测试。
+- 不添加空的 `pages` 占位命令。`chattea pages` 可以进入正式树，但必须作为真实 local backend 实现，至少覆盖 Pages service 文件根、user-level service、`publish` 原子发布、`status` 验证和 workflow 模板。
 - 不添加 `runner install/start/stop/logs` 这类 运行器生命周期 命令，除非已有真实本地 运行器生命周期 设计。
 - 不把业务逻辑只放在 Click command body 里。
 - 不把 仓库/project/问题/运行器 ID 作为 ChatEnv 字段；它们是请求参数。

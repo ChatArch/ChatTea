@@ -40,6 +40,8 @@ plugins:
             Gitea 端到端快速开始: Gitea End-to-End
             Gitea 服务: Gitea Service
             服务运维: Service Operations
+            运行时文件系统与服务边界: Runtime Filesystem and Service Boundaries
+            Pages 机制与静态站点发布: Pages and Static Site Publishing
             MySQL 后端迁移: MySQL Backend Migration
             账号、组织与可见性模型: Accounts, Organizations, and Visibility
             权限与可见性: Permissions and Visibility
@@ -74,6 +76,8 @@ nav:
       - Gitea 端到端快速开始: gitea-quickstart.md
   - Gitea 服务:
       - 服务运维: gitea-service-operations.md
+      - 运行时文件系统与服务边界: runtime-filesystem-layout.md
+      - Pages 机制与静态站点发布: gitea-pages.md
       - MySQL 后端迁移: gitea-mysql-migration.md
       - 账号、组织与可见性模型: account-organization-visibility.md
       - 权限与可见性: gitea-permissions-and-visibility.md

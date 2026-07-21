@@ -324,6 +324,8 @@ chattea server          # 管理本机托管的 Gitea 服务
 
 Gitea 服务默认由 `chattea-gitea.service` 管理；side-by-side 迁移或 shadow 实例可以通过 `--service-name` 使用独立 service。运行器由 `chattea-runner@<runner-name>.service` 管理。新装实例默认仍使用 SQLite；需要 MySQL 时可以在 `server install`、`server init` 或 `server bootstrap` 加 `--database-backend mysql`，ChatTea 会通过 ChatData 准备本机 MySQL 二进制 runtime 和 user systemd service。
 
+Pages 静态站点发布规划为本地 backend 能力，不是 Gitea REST API 命令。目标是用 `chattea pages service ...` 管理第二个 Web 服务，用 `chattea pages publish` 让 Actions job 直接发布到 `<chattea-home>/pages/sites/<owner>/<repo>/`；机制见 [Gitea Pages 机制与静态站点发布](gitea-pages.md)，文件边界见 [ChatTea 运行时文件系统与服务边界](runtime-filesystem-layout.md)。
+
 ## 当前封装边界和后续项
 
 组织任务账号实践暴露出的 `org`、`user`、`team member` 和 `notification` 基础命令已经补成一等 CLI：
@@ -341,6 +343,7 @@ Gitea 服务默认由 `chattea-gitea.service` 管理；side-by-side 迁移或 sh
 - 通过 admin create-as-user 路径创建 user-owned 仓库：尚未作为第一版受管仓库模型的主路径；
 - GitHub Enterprise 风格的 `internal` 仓库可见性：当前普通 Gitea create/edit 路径没有作为稳定输入暴露；
 - release asset 上传：当前有 asset list/delete，上传等 HTTP client 支持 multipart 后再补；
+- Pages 静态站点发布：当前 Gitea 实例没有官方 Pages REST 路由；计划作为 ChatTea local backend 实现 `pages service/publish/status/workflow`，默认 path URL 为 `<pages-domain>/<owner>/<repo>/`，resolver/custom domain 不在 v0.1；
 - bot / service account 的远程 REST backend：Gitea 底层和本机 admin CLI 已支持 bot 用户类型，但稳定 REST API 尚未完整暴露；当前 `bot` 命令只承诺本机 local backend。
 
 原则：真实流程反复依赖某条 raw API 时，再提升成一等命令；补完后同步更新本页和快速开始。

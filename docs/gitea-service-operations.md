@@ -2,6 +2,8 @@
 
 这篇文档记录 ChatTea 管理 Gitea 服务时的运维模式。正文面向公开仓库，因此只使用占位符，不写真实域名、机器路径、账号、密码、令牌、证书私钥路径或内部部署地址。
 
+Pages 静态站点发布的服务边界、Actions 发布流和 URI 约定见 [Gitea Pages 机制与静态站点发布](gitea-pages.md)。Git、MySQL、Actions Runner 和 Pages 的 user-level 文件系统边界见 [ChatTea 运行时文件系统与服务边界](runtime-filesystem-layout.md)。
+
 真实值应保存在机器本地项目记录或受限环境文件中，不应进入仓库文档、截图、PR 描述或 CI 日志。
 
 ## 占位符约定
@@ -44,6 +46,8 @@
 Gitea binary:          <chatarch-home>/chattea/bin/gitea
 Gitea work path:       <chatarch-home>/chattea/gitea
 Gitea config:          <chatarch-home>/chattea/gitea/custom/conf/app.ini
+Pages service root:    <chatarch-home>/chattea/pages
+Pages published sites: <chatarch-home>/chattea/pages/sites/<owner>/<repo>/
 Runner binary:         <chatarch-home>/chattea/runners/<runner-name>/bin/gitea-runner
 Runner config:         <chatarch-home>/chattea/runners/<runner-name>/config/config.yaml
 Credential env file:   <restricted-env-file>

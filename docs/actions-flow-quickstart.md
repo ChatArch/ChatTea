@@ -61,6 +61,34 @@ chattea artifact delete    -> DELETE /repos/{owner}/{repo}/actions/artifacts/{ar
 
 `runner local` 系列命令是本地系统辅助函数：安装或定位 `gitea-runner`，在每个 runner root 下写运行器配置，用 Gitea 注册令牌注册运行器，并管理对应的用户级 systemd 服务。
 
+## Actions 文件视角
+
+Actions 本身跨三层状态：
+
+```text
+Gitea database:
+  workflow run、job、artifact metadata、runner registry。
+
+Gitea repository:
+  .gitea/workflows/*.yml 保存 workflow 定义。
+
+Runner root:
+  config、.runner 身份、workdir 和 job 执行现场。
+```
+
+从运行链路看：
+
+```text
+push / pull_request
+  -> Gitea 读取仓库里的 .gitea/workflows/*.yml
+  -> Gitea 在数据库里创建 run / job
+  -> 匹配 scope + label 的 runner 领取 job
+  -> runner 在 <runner-root>/work/<task-id>/hostexecutor 执行步骤
+  -> job 日志、状态和 artifacts 回传给 Gitea
+```
+
+如果 workflow 用来发布 Pages，则最后一步是调用 Pages 发布命令，把构建产物从 runner workdir 发布到 `<chattea-home>/pages/sites/<owner>/<repo>/`。完整运行时文件边界见 [ChatTea 运行时文件系统与服务边界](runtime-filesystem-layout.md)，Pages 发布流见 [Gitea Pages 机制与静态站点发布](gitea-pages.md)。
+
 ## 运行器配置和运行环境
 
 一次运行器注册至少涉及四类本地状态：

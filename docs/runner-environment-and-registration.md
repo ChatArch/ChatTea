@@ -2,7 +2,7 @@
 
 这篇文档专门整理 Gitea Actions Runner 的运行环境、操作空间、状态维护、注册流程和并发方式。它基于 ChatTea Runner 独立 PR 中的真实机器实践：用新 `chattea runner local` CLI 注册两个 repo-scope host runner，通过 PR workflow 同时触发两个 job，并用 `run/job/logs` 命令确认执行结果。
 
-公开文档只保留脱敏命令和结论：真实服务 URL、机器本地路径、token、`.runner` 内容不会写入这里。完整实践日志保存在本地 project 记录中。
+公开文档只保留脱敏命令和结论：真实服务 URL、机器本地路径、token、`.runner` 内容不会写入这里。完整实践日志保存在本地 project 记录中。Git、MySQL、Runner 和 Pages 的整体文件系统边界见 [ChatTea 运行时文件系统与服务边界](runtime-filesystem-layout.md)。
 
 ## 两层状态：Gitea registry 和本机 local
 
