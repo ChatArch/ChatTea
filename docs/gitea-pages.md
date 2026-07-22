@@ -147,6 +147,7 @@ jobs:
 - `GITHUB_REPOSITORY` 是 Gitea runner 注入的 `owner/repo`；
 - `GITHUB_SHA` 是触发本次 run 的 commit；
 - `GITHUB_RUN_ID` 用于写入 Pages 发布元数据；
+- Gitea Actions 为兼容 GitHub Actions 生态，沿用 `GITHUB_*` 环境变量名；这里的值仍然来自当前 Gitea 实例，不表示任务跑在 GitHub 上；
 - 正式 CLI 落地前，验证环境可以把 `chattea pages publish` 替换成受管 Pages publisher 脚本；接口参数保持一致。
 
 如果 runner 环境可以稳定使用 checkout action，也可以把 `Clone repository` 换成 `uses: actions/checkout@v4`。内网或离线环境建议显式从本机 Gitea loopback clone，避免依赖外部 marketplace。
