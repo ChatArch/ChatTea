@@ -198,7 +198,35 @@ gitea admin user generate-access-token \
 
 Stable workflow 在 main 更新时调用 `chattea pages publish --channel stable`。实现上应保证 stable 发布不会删除 `dev/pr-*` preview 目录，否则 PR preview 链接会在 main 部署后失效。
 
-### 3. Gitea 如何找到并执行这个 Action
+### 3. 内网验收截图
+
+下面的截图来自一个保持 open 的内网验收 PR，用来确认 Gitea 可以完成 GitHub-like preview flow：
+
+```text
+PR opened
+  -> pull_request workflow
+  -> runner build
+  -> publish dev/pr-N
+  -> Gitea native bot comment
+```
+
+Workflow 文件本身说明这不是人工触发，而是 Gitea `pull_request` 事件触发 preview job：
+
+![Gitea workflow pull_request 触发配置](assets/pages/gitea-pr-preview-workflow-trigger.png)
+
+Actions run 页面显示本次任务由 `pull_request` 触发，runner 完成 preview job：
+
+![Gitea pull_request preview workflow run](assets/pages/gitea-pr-preview-action-run.png)
+
+Job 日志展示关键产物和 comment 创建结果：先发布 preview channel，再通过 Gitea API 创建 PR 评论：
+
+![Gitea preview job 日志与评论创建结果](assets/pages/gitea-pr-preview-job-log-comment.png)
+
+PR timeline 中的 preview 评论由 Gitea 原生 bot 用户发出，评论里包含 `dev/pr-N` 链接：
+
+![Gitea 原生 bot 用户评论 preview 链接](assets/pages/gitea-pr-preview-bot-comment.png)
+
+### 4. Gitea 如何找到并执行这个 Action
 
 当 `pages.yml` 被 push 到默认分支后：
 
@@ -231,7 +259,7 @@ chattea job logs --repo <owner>/<repo> <job-id>
 
 ![Gitea Actions run 成功执行页面](assets/pages/chattea-actions-run.png)
 
-### 4. Pages 部署到哪里
+### 5. Pages 部署到哪里
 
 `chattea pages publish` 不负责构建，只负责把已构建好的静态目录发布到 Pages service 的 root 下：
 
@@ -271,7 +299,7 @@ source site/
 
 Pages service 长驻运行，只 serve `<chattea-home>/pages/sites`。因此 publish 完不需要重启服务，站点路径会立即生效。
 
-### 5. 怎么访问发布后的站点
+### 6. 怎么访问发布后的站点
 
 默认访问路径：
 
@@ -293,9 +321,7 @@ curl -I https://<pages-domain>/<owner>/<repo>/
 curl https://<pages-domain>/<owner>/<repo>/ | grep -i '<title>'
 ```
 
-当前验证中的 Pages 页面如下：
-
-![ChatTea Pages 发布页面](assets/pages/chattea-pages-published.png)
+Pages 是否可访问用 HTTP 状态、HTML title 或 metadata 校验即可，不需要在教程里放最终站点截图。
 
 ## Pages service 目录
 
