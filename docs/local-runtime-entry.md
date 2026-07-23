@@ -178,27 +178,78 @@ control API
 
 第一版不要开放无确认的 restore API。恢复流程应保留 CLI 或本地显式确认门槛。
 
-## Backup CLI 分层
+## Local capability service 与 Backup CLI 分层
 
-备份相关命令要区分“本机 backend”和“服务化 control API”，避免把 Gitea 官方 dump、ChatTea 本地备份和远程管理入口混在一起：
+完整备份仍然需要机器侧能力，不能只靠 Gitea Web API 完成。但 backup 不应该是唯一特殊服务；它应该是 ChatTea local capability service 里的一个 job type。目标形态是：
 
 ```text
-chattea backup local create
+目标机器：
+chattea local serve --listen 127.0.0.1:<control-port>
+
+客户端机器：
+chattea <command> ... --backend service --endpoint https://<entry-host>/control/
+```
+
+CLI 的一级用法保持一致，区别只在 backend：
+
+```text
+chattea backup create --backend local
   -> 在当前机器执行
   -> 可调用 gitea dump、数据库 dump、文件归档、checksum
-  -> 适合 cron、SSH、维护窗口、restore 前置检查
 
-chattea backup service create --base-url <entry-url>
-  -> 通过 /control/backups 发起任务
-  -> 适合从外部控制台、Bot 或 Web UI 管理
-  -> 实际重活仍由服务器本地 job 执行
+chattea backup create --backend service --endpoint https://<entry-host>/control/
+  -> 通过 control service 发起远端 job
+  -> 目标机器上的 local backend 执行同一类操作
+  -> CLI 轮询 job 状态并渲染同样的输出结构
 
-chattea backup gitea dump
+chattea backup gitea dump --backend local
   -> 显式暴露 Gitea 官方 dump 能力
   -> 作为底层原语或诊断命令，不代表完整 ChatTea runtime 备份
 ```
 
-服务化备份走网络，因此第一版必须有确认头、身份校验和只读查询默认值。本机 backup 可以执行更强的机器侧操作，但需要本地权限和维护窗口。两者共享同一份 manifest schema，方便 UI、Bot 和 CLI 展示一致的备份状态。
+这个二级接口可以统一包装所有“Gitea REST API 做不到、但部署机器本地能做到”的能力：
+
+| Job type | 本地能力 | 远端服务化价值 |
+| --- | --- | --- |
+| `backup.create` | `gitea dump`、DB dump、文件归档、checksum | 外部控制台 / CLI / Bot 触发受控备份 |
+| `backup.list/status/logs/download` | 读取 manifest、logs、artifact | 统一展示备份状态 |
+| `pages.publish` | 写入 `<chattea-home>/pages/sites` | Actions 或远端 CLI 发布 Pages，不直接开放文件系统 |
+| `server.status/logs` | systemd、journalctl、health check | 远程诊断本机服务 |
+| `server.restart` | user systemd restart | 显式确认后远程维护 |
+| `bot.create/token` | Gitea admin CLI native bot user/token | REST API 缺口的服务化补齐 |
+| `runner.local.status/logs` | runner root、systemd、journalctl | 查看部署机 runner 状态 |
+
+Control service 需要提供通用 job envelope，而不是只提供 backup 专用路由：
+
+```text
+POST /control/v1/jobs
+GET  /control/v1/jobs/<job-id>
+GET  /control/v1/jobs/<job-id>/logs
+GET  /control/v1/capabilities
+```
+
+请求中包含 `type` 和脱敏后的参数：
+
+```json
+{
+  "type": "backup.create",
+  "params": {
+    "mode": "full",
+    "include_database": true,
+    "include_repositories": true
+  }
+}
+```
+
+服务化本地能力必须有清晰边界：
+
+- 只开放 allowlist job type，不开放任意 shell；
+- 所有 job 记录操作者、参数摘要、开始/结束时间、结果 manifest；
+- destructive job 需要确认头、维护窗口或本地二次确认；
+- token、password、registration token、私钥永远不写入 manifest 或日志；
+- `restore.apply` 第一版不开放远端直接执行，只允许本地确认流程。
+
+这样 backup、Pages publish、native bot 创建、runner local 状态等能力都可以走同一个二级接口，而不是每个功能单独做一套 serve。
 
 ## 当前机器实践结果
 

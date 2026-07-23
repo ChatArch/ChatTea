@@ -30,6 +30,170 @@ chattea
 └── user                # 管理员创建和删除 Gitea 用户
 ```
 
+## CLI backend 分层
+
+ChatTea CLI 需要同时覆盖两类能力：一类是 Gitea 已经提供的 REST API，另一类是只有部署机器本地才具备的能力，例如 `gitea dump`、`app.ini`、systemd、runner root、native bot admin CLI、Pages publish 目录等。
+
+因此当前命令可以按 backend 分成三类：
+
+| Backend | 执行位置 | 典型命令 | 说明 |
+| --- | --- | --- | --- |
+| `gitea-rest` | 任意能访问 Gitea API 的机器 | `repo`、`issue`、`pr`、`release`、`run`、`job` | 只调用 Gitea REST API |
+| `local` | 当前执行 CLI 的机器 | `server`、`server backup`、`bot`、`runner local` | 需要本机 binary、文件、systemd 或 admin CLI |
+| `hybrid` | 当前机器 + Gitea API | `auth`、`set-token`、`repo clone`、`artifact download`、`runner local register` | 既调远端 API，也修改当前机器状态 |
+
+目标不是让用户记住两套命令，而是保持同一套 CLI 语义，只让 backend 决定在哪里执行：
+
+```text
+chattea <command> ... --backend local
+chattea <command> ... --backend service --endpoint <entry-url>
+```
+
+`local` backend 直接在当前机器执行；`service` backend 通过 ChatTea control service 的二级接口，把请求发送到托管 Gitea 的机器执行。这样备份、server 管理、bot 创建、Pages publish 等原本只能本机操作的命令，可以在远端控制机上用同样的 CLI 形态发起。
+
+目标形态：
+
+```text
+目标机器：chattea local serve --listen 127.0.0.1:<control-port>
+客户端：  chattea <command> ... --backend service --endpoint https://<entry-host>/control/
+```
+
+二级接口不是替代 Gitea REST API。它只包装 Gitea REST API 没有覆盖、但 ChatTea 运行时需要的本地能力：
+
+```text
+CLI command
+  -> backend resolver
+  -> gitea-rest backend    -> Gitea /api/v1
+  -> local backend         -> current machine files / systemd / binaries
+  -> service backend       -> /control/v1/jobs -> remote local backend
+```
+
+第一版建议只把明确需要本地权限、且可以审计为 job 的能力放进 `service` backend。纯 Gitea 对象继续直连 Gitea REST API，不绕 control service。
+
+## REST API、Local 和 Hybrid 命令清单
+
+### 走 Gitea REST API 的命令
+
+这些命令主要操作 Gitea 业务对象，只要有 base URL 和 token，就可以从远端执行：
+
+```text
+chattea api
+chattea repo list/view/create/edit/generate/migrate
+chattea issue ...
+chattea pr ...
+chattea label ...
+chattea milestone ...
+chattea release ...
+chattea project ...
+chattea org list/view/create/team/...
+chattea user create/delete
+chattea notification list/view/mark-read/poll
+chattea runner registry ...
+chattea run list/view/jobs/logs/rerun/rerun-failed/delete
+chattea job view/logs/rerun
+chattea artifact list/view/delete
+```
+
+`user create/delete` 是 admin API，不是本机 admin CLI；它能创建普通 user，但不能完整表达 native bot user。
+
+### 必须本地执行的命令
+
+这些命令需要访问部署机器或 runner 机器上的本地资源：
+
+```text
+chattea server install/init/bootstrap/serve
+chattea server start/stop/restart/status/logs/health/version
+chattea server config path/show/get/set
+chattea server backup dump
+chattea server migrate mysql
+
+chattea bot plan/create/delete/token create
+
+chattea runner local install/create/register/list/view/start/stop/restart/status/logs/doctor/remove/config/...
+chattea runner pool create/start/stop/status/remove
+```
+
+原因分别是：
+
+| 能力 | 本地依赖 |
+| --- | --- |
+| server install/init | Gitea binary、work path、`app.ini`、数据库初始化 |
+| server start/logs | user systemd、journalctl、本机 service name |
+| server backup dump | `gitea dump`、repo data、attachments、database、checksums |
+| server migrate mysql | 本机 SQLite、ChatData/MySQL runtime、维护窗口 |
+| bot create/token | `gitea admin user create --user-type bot`、`generate-access-token` |
+| runner local/pool | runner binary、`.runner`、`config.yaml`、runner workdir、systemd |
+
+这些能力是二级接口服务化的主要候选。
+
+### Hybrid 命令
+
+这些命令既调用 Gitea API，也修改当前执行机器的本地状态：
+
+```text
+chattea auth login/status/token
+chattea set-token
+chattea token bootstrap
+chattea repo clone
+chattea artifact download
+chattea runner local register
+chattea runner workflow labels/example/check
+```
+
+其中 `runner local register` 会向 Gitea 注册 runner，同时写本机 runner root 和 config；`artifact download` 调 API，但结果写到当前文件系统。
+
+## 本地能力服务化：二级接口
+
+服务化目标是把 local backend 抽象成可远程触发的 job，而不是为每个能力重新设计一套 CLI。用户面对的一级命令保持一致，二级接口只负责选择执行后端：
+
+```text
+chattea backup create --backend local
+chattea backup create --backend service --endpoint https://<entry-host>
+
+chattea bot create --username chattea-pages-bot --backend local
+chattea bot create --username chattea-pages-bot --backend service --endpoint https://<entry-host>
+
+chattea pages publish --repo <owner>/<repo> --source site/ --backend local
+chattea pages publish --repo <owner>/<repo> --source site/ --backend service --endpoint https://<entry-host>
+```
+
+`--backend service` 的内部流程：
+
+```text
+CLI
+  -> POST /control/v1/jobs
+  -> ChatTea control service validates auth / allowlist / confirmation headers
+  -> server-side local backend executes the same operation
+  -> job writes logs, manifest, result JSON
+  -> CLI polls /control/v1/jobs/<id>
+  -> CLI renders the same final output shape as local backend
+```
+
+这样可以把 backup 和其它本地能力统一起来：backup 不再是特殊的一套服务，而是 local capability service 的一个 job type。
+
+### 建议优先服务化的 local jobs
+
+| Job type | 对应 CLI | 说明 |
+| --- | --- | --- |
+| `backup.create` | `chattea backup create` / 当前 `server backup dump` | 完整实例备份、DB-only 导出、manifest、checksum |
+| `backup.list/status/logs/download` | `chattea backup ...` | 读取 manifest 和 job 结果，适合 Web UI / Bot 展示 |
+| `pages.publish` | `chattea pages publish` | Actions 或远端 CLI 把构建产物交给服务器发布 |
+| `server.status/logs` | `chattea server status/logs --backend service` | 远程看服务状态和日志摘要 |
+| `server.restart` | `chattea server restart --backend service` | 需要显式确认和审计 |
+| `bot.create/token` | `chattea bot create/token ... --backend service` | 远程创建 native bot user 和 scoped token，token 只显示一次 |
+| `runner.local.status/logs` | `chattea runner local status/logs --backend service` | 查看部署机上的 runner 状态 |
+
+### 第一版不建议直接开放的 service jobs
+
+| Job type | 原因 |
+| --- | --- |
+| `restore.apply` | 恢复会覆盖数据，必须维护窗口、本地确认、完整性校验 |
+| 任意 `server config set` | 容易远程写坏 `app.ini`，应先限制到 allowlist key |
+| 任意 shell command | 不可审计、权限边界过大 |
+| 删除 runner root / backup purge | 需要二次确认和保留期策略 |
+
+原则：service backend 只能暴露 allowlist job，不提供通用远程 shell。
+
 ## 原始 API
 
 ```text
