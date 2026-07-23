@@ -152,7 +152,35 @@ jobs:
 
 如果 runner 环境可以稳定使用 checkout action，也可以把 `Clone repository` 换成 `uses: actions/checkout@v4`。内网或离线环境建议显式从本机 Gitea loopback clone，避免依赖外部 marketplace。
 
-### 2. Gitea 如何找到并执行这个 Action
+### 2. PR preview 与合并后的正式 Pages
+
+要模拟 GitHub 的 Preview Docs 行为，建议把 workflow 拆成两个 channel：
+
+```text
+pull_request -> build -> publish --channel dev/pr-<number> -> bot comment preview URL
+push main    -> build -> publish --channel stable           -> update formal URL
+```
+
+对应 URL：
+
+```text
+Preview: https://<entry-host>/pages/<owner>/<repo>/dev/pr-<number>/
+Stable:  https://<entry-host>/pages/<owner>/<repo>/
+```
+
+Preview workflow 的关键步骤是：
+
+1. 从 `GITHUB_EVENT_PATH` 读取 PR number；
+2. 构建站点到 `site/`；
+3. 调用 `chattea pages publish --channel dev/pr-<number>`；
+4. 用 bot token 调用 Gitea issue comment API，把 preview URL 写回 PR；
+5. 如果已有 `<!-- chattea-pages-preview -->` 标记的评论，就更新同一条评论，而不是重复刷屏。
+
+Bot token 应放在 Gitea Actions secret 中，例如 `CHATTEA_BOT_TOKEN`。构建步骤不要暴露这个 token；评论步骤使用内联脚本调用 API，不执行仓库代码。这样可以降低 PR 代码窃取评论 token 的风险。
+
+Stable workflow 在 main 更新时调用 `chattea pages publish --channel stable`。实现上应保证 stable 发布不会删除 `dev/pr-*` preview 目录，否则 PR preview 链接会在 main 部署后失效。
+
+### 3. Gitea 如何找到并执行这个 Action
 
 当 `pages.yml` 被 push 到默认分支后：
 
@@ -185,7 +213,7 @@ chattea job logs --repo <owner>/<repo> <job-id>
 
 ![Gitea Actions run 成功执行页面](assets/pages/chattea-actions-run.png)
 
-### 3. Pages 部署到哪里
+### 4. Pages 部署到哪里
 
 `chattea pages publish` 不负责构建，只负责把已构建好的静态目录发布到 Pages service 的 root 下：
 
@@ -203,7 +231,11 @@ source site/
 ├── index.html
 ├── assets/
 ├── en/
-└── .chattea-pages.json
+├── .chattea-pages.json
+└── dev/
+    └── pr-<number>/
+        ├── index.html
+        └── .chattea-pages.json
 ```
 
 `.chattea-pages.json` 记录最后一次发布来源：
@@ -213,6 +245,7 @@ source site/
   "repo": "<owner>/<repo>",
   "commit": "<commit-sha>",
   "run_id": "<actions-run-id>",
+  "channel": "stable",
   "published_at": "<timestamp>",
   "source": "gitea-actions"
 }
@@ -220,7 +253,7 @@ source site/
 
 Pages service 长驻运行，只 serve `<chattea-home>/pages/sites`。因此 publish 完不需要重启服务，站点路径会立即生效。
 
-### 4. 怎么访问发布后的站点
+### 5. 怎么访问发布后的站点
 
 默认访问路径：
 
@@ -270,6 +303,7 @@ curl https://<pages-domain>/<owner>/<repo>/ | grep -i '<title>'
   "repo": "<owner>/<repo>",
   "commit": "<commit-sha>",
   "run_id": "<actions-run-id>",
+  "channel": "stable",
   "published_at": "<timestamp>",
   "source": "gitea-actions"
 }

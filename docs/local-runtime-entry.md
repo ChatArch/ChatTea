@@ -178,6 +178,28 @@ control API
 
 第一版不要开放无确认的 restore API。恢复流程应保留 CLI 或本地显式确认门槛。
 
+## Backup CLI 分层
+
+备份相关命令要区分“本机 backend”和“服务化 control API”，避免把 Gitea 官方 dump、ChatTea 本地备份和远程管理入口混在一起：
+
+```text
+chattea backup local create
+  -> 在当前机器执行
+  -> 可调用 gitea dump、数据库 dump、文件归档、checksum
+  -> 适合 cron、SSH、维护窗口、restore 前置检查
+
+chattea backup service create --base-url <entry-url>
+  -> 通过 /control/backups 发起任务
+  -> 适合从外部控制台、Bot 或 Web UI 管理
+  -> 实际重活仍由服务器本地 job 执行
+
+chattea backup gitea dump
+  -> 显式暴露 Gitea 官方 dump 能力
+  -> 作为底层原语或诊断命令，不代表完整 ChatTea runtime 备份
+```
+
+服务化备份走网络，因此第一版必须有确认头、身份校验和只读查询默认值。本机 backup 可以执行更强的机器侧操作，但需要本地权限和维护窗口。两者共享同一份 manifest schema，方便 UI、Bot 和 CLI 展示一致的备份状态。
+
 ## 当前机器实践结果
 
 当前机器已经完成最小实践：
