@@ -173,10 +173,28 @@ Preview workflow 的关键步骤是：
 1. 从 `GITHUB_EVENT_PATH` 读取 PR number；
 2. 构建站点到 `site/`；
 3. 调用 `chattea pages publish --channel dev/pr-<number>`；
-4. 用 bot token 调用 Gitea issue comment API，把 preview URL 写回 PR；
+4. 用 Gitea 原生 bot 用户的 token 调用 Gitea issue comment API，把 preview URL 写回 PR；
 5. 如果已有 `<!-- chattea-pages-preview -->` 标记的评论，就更新同一条评论，而不是重复刷屏。
 
-Bot token 应放在 Gitea Actions secret 中，例如 `CHATTEA_BOT_TOKEN`。构建步骤不要暴露这个 token；评论步骤使用内联脚本调用 API，不执行仓库代码。这样可以降低 PR 代码窃取评论 token 的风险。
+Gitea 自托管实例可以直接创建原生 bot 用户，不需要先实现一个常驻 bot 服务。推荐做法是由管理员创建一个专用账号，例如 `chattea-pages-bot`：
+
+```bash
+gitea admin user create \
+  --username chattea-pages-bot \
+  --email chattea-pages-bot@example.invalid \
+  --user-type bot \
+  --fullname "ChatTea Pages Bot"
+
+gitea admin user generate-access-token \
+  --username chattea-pages-bot \
+  --token-name chattea-pages-preview \
+  --scopes write:issue,read:repository \
+  --raw
+```
+
+把生成的 token 写入 Gitea Actions secret，例如 `CHATTEA_BOT_TOKEN`。workflow 评论步骤使用这个 secret 调 API，最终 PR 评论作者会显示为 Gitea 的 `chattea-pages-bot`，这对应 GitHub 里的 `github-actions[bot]` / bot identity 体验。
+
+构建步骤不要暴露这个 token；评论步骤使用内联脚本调用 API，不执行仓库代码。这样可以降低 PR 代码窃取评论 token 的风险。
 
 Stable workflow 在 main 更新时调用 `chattea pages publish --channel stable`。实现上应保证 stable 发布不会删除 `dev/pr-*` preview 目录，否则 PR preview 链接会在 main 部署后失效。
 
