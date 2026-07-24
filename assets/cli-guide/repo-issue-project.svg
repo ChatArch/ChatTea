@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="570" viewBox="0 0 1180 570">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f172a"/><stop offset="1" stop-color="#1e293b"/></linearGradient></defs>
+<rect width="1180" height="570" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">Repo, Issue, and Project board flow</text>
+<text x="26" y="64" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea repo create --owner gitea_admin --name docs-cli-smoke --description &quot;Docs CLI guide smoke&quot; -I</text>
+<text x="26" y="88" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: gitea_admin/docs-cli-smoke (private)</text>
+<text x="26" y="112" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">http://127.0.0.1:3000/gitea_admin/docs-cli-smoke</text>
+<text x="26" y="136" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea label create --repo gitea_admin/docs-cli-smoke --name docs --color 00aaee --description &quot;Docs work&quot;</text>
+<text x="26" y="160" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: 2 docs</text>
+<text x="26" y="184" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea milestone create --repo gitea_admin/docs-cli-smoke --title v1.0 --description &quot;First CLI guide milestone&quot;</text>
+<text x="26" y="208" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: 1 v1.0</text>
+<text x="26" y="232" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue create --repo gitea_admin/docs-cli-smoke --title &quot;Document ChatTea CLI&quot; --label 1 --milestone 1 --assignee gitea_admin</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: #1 Document ChatTea CLI</text>
+<text x="26" y="280" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue view --repo gitea_admin/docs-cli-smoke 1</text>
+<text x="26" y="304" fill="#fbbf24" font-family="Menlo, Consolas, monospace" font-size="15"># issue database id: 4</text>
+<text x="26" y="328" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea project create --repo gitea_admin/docs-cli-smoke --title &quot;CLI Guide Board&quot; --description &quot;Docs validation board&quot;</text>
+<text x="26" y="352" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">project: 1 CLI Guide Board</text>
+<text x="26" y="376" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">state: open</text>
+<text x="26" y="400" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea project column create --repo gitea_admin/docs-cli-smoke 1 --title Todo</text>
+<text x="26" y="424" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">column: 1 Todo</text>
+<text x="26" y="448" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea project card add --repo gitea_admin/docs-cli-smoke 1 1 4</text>
+<text x="26" y="472" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">added: issue 4 to column 1</text>
+<text x="26" y="496" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea project card list --repo gitea_admin/docs-cli-smoke 1 1</text>
+<text x="26" y="520" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">4   1   Document ChatTea CLI   open</text>
+</svg>

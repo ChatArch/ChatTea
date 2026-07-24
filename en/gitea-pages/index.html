@@ -1,0 +1,2398 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatTea/en/gitea-pages/">
+      
+      
+        <link rel="prev" href="../runtime-filesystem-layout/">
+      
+      
+        <link rel="next" href="../gitea-pages-branch-deploy/">
+      
+      
+        
+          <link rel="alternate" href="../../gitea-pages/" hreflang="zh">
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Pages and Static Site Publishing - ChatTea Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#gitea-pages" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../" title="ChatTea Documentation" class="md-header__button md-logo" aria-label="ChatTea Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatTea Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pages and Static Site Publishing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../gitea-pages/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatTea" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../from-scratch-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../gitea-service-operations/" class="md-tabs__link">
+          
+  
+  
+  Gitea Service
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../repo-collaboration-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Repository Collaboration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../bot-service-account-plan/" class="md-tabs__link">
+          
+  
+  
+  Bot / Service Accounts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../actions-flow-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Actions
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../runner-environment-and-registration/" class="md-tabs__link">
+          
+  
+  
+  Runner
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../cli-guide/" class="md-tabs__link">
+          
+  
+  
+  CLI / API
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="ChatTea Documentation" class="md-nav__button md-logo" aria-label="ChatTea Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatTea Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatTea" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../from-scratch-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Scratch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea End-to-End
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea Service
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Gitea Service
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-service-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Service Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local-runtime-entry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Runtime Entry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtime-filesystem-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Filesystem and Service Boundaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pages and Static Site Publishing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pages and Static Site Publishing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前需求
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一句话模型
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        服务和文件边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        URL 约定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actions-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions 到 Pages 的发布流
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-local-publish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-local publish 验证流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Host-local publish 验证流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-workflow-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 在仓库里添加 workflow YAML
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pr-preview-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. PR preview 与合并后的正式 Pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 内网验收截图
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-gitea-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Gitea 如何找到并执行这个 Action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Pages 部署到哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 怎么访问发布后的站点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pages-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pages service 目录
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow 模板
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pages-service_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pages service 部署模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考验证
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-pages-branch-deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git-backed Pages Branch Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-mysql-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL Backend Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account-organization-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts, Organizations, and Visibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-permissions-and-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Permissions and Visibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Collaboration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Repository Collaboration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repo-collaboration-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Collaboration Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bot / Service Accounts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bot / Service Accounts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot-service-account-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bot and Service Accounts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../org-task-account-practice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Organization Task Account Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Actions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../actions-flow-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions / Flow Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-environment-and-registration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner Environment and Multi-Instance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-multi-instance-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner Multi-Instance Plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI / API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CLI / API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chattea-cli-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Capability Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tea-cli-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Official tea CLI Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Tree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Alignment Plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前需求
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一句话模型
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        服务和文件边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        URL 约定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actions-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions 到 Pages 的发布流
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-local-publish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-local publish 验证流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Host-local publish 验证流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-workflow-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 在仓库里添加 workflow YAML
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pr-preview-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. PR preview 与合并后的正式 Pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 内网验收截图
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-gitea-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Gitea 如何找到并执行这个 Action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Pages 部署到哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 怎么访问发布后的站点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pages-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pages service 目录
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow 模板
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pages-service_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pages service 部署模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考验证
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/ChatArch/ChatTea/edit/main/docs/gitea-pages.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="gitea-pages">Gitea Pages 机制与静态站点发布</h1>
+<p>这篇文档定义 ChatTea Pages v0.1 的默认实现认识：Gitea 主站继续作为 Git 代码服务，Pages 作为独立静态站点服务，Actions 负责把仓库内容构建并发布到 Pages。文档使用占位符，不写真实域名、机器路径、账号、令牌或证书路径。</p>
+<h2 id="_1">当前需求</h2>
+<p>我们要把 Pages 当成和 Git 并列的第二个 Web 服务，而不是把用户站点塞进 Gitea 主站进程或主站同源路径里。</p>
+<p>核心需求：</p>
+<ol>
+<li>ChatTea 托管两个对外 Web 服务：Git service 和 Pages service。</li>
+<li>Gitea Actions / Runner 由 ChatTea 管理，但它是执行面 worker，不是第三个对外网站。</li>
+<li>Actions 要能直接发布 Pages：构建完成后调用发布命令，Pages service 已经在 serve，发布完即可访问。</li>
+<li>Pages URL 使用 path 模式：<code>https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/</code>，不默认分配三级域名。</li>
+<li>域名、TLS、redirect、主站入口、custom domain 和 resolver 属于 Nginx/Caddy 或后续 resolver 层，不绑进 v0.1 核心。</li>
+<li>第一版不 fork Gitea，不做私有 Pages 鉴权，不做自定义域名，不把 Pages 正文放在 Gitea 主站同源下。</li>
+</ol>
+<h2 id="_2">一句话模型</h2>
+<pre><code class="language-text">Git service:
+  Gitea 主站、Git 仓库、API、Actions 调度、runner registry。
+
+Actions worker:
+  runner daemon 执行 workflow job，构建静态目录，调用 Pages publish。
+
+Pages service:
+  直接 serve 已发布静态文件。
+</code></pre>
+<p>从对外服务看，第一版只有两个 Web 服务：</p>
+<pre><code class="language-text">https://&lt;gitea-domain&gt;/              # Git service
+https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/ # Pages service，owner/repo 放在 URI path 中
+</code></pre>
+<p>Nginx/Caddy 可以把这两个服务统一挂到同一台机器、同一套证书或同一个公网入口下，但那是入口整合问题，不改变 ChatTea 的服务边界。</p>
+<h2 id="_3">服务和文件边界</h2>
+<p>ChatTea 的 user-level 目标是让服务状态落在普通 Unix 用户可控的文件树里。详细文件系统说明见 <a href="../runtime-filesystem-layout/">ChatTea 运行时文件系统与服务边界</a>。这里给出 Pages 相关的最小关系：</p>
+<pre><code class="language-text">&lt;chattea-home&gt;/gitea/                      # Git service 状态
+&lt;chattea-home&gt;/runners/&lt;runner-name&gt;/      # Actions worker 状态
+&lt;chattea-home&gt;/pages/                      # Pages service 状态
+&lt;chattea-home&gt;/pages/sites/&lt;owner&gt;/&lt;repo&gt;/ # 已发布站点
+</code></pre>
+<p>对应 user-level unit 形态：</p>
+<pre><code class="language-text">chattea-gitea.service                  # Git service
+chattea-runner@&lt;runner-name&gt;.service   # Actions worker，不是 Web service
+chattea-pages.service                  # Pages service
+</code></pre>
+<h2 id="url">URL 约定</h2>
+<p>Pages v0.1 使用 path-based URL，不默认分配三级域名：</p>
+<pre><code class="language-text">Gitea 仓库：  https://&lt;gitea-domain&gt;/&lt;owner&gt;/&lt;repo&gt;
+Pages 正文：  https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+仓库链接：    repo.website = https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>可选主站入口可以后续由 Nginx/Caddy 或 Gitea UI 提供：</p>
+<pre><code class="language-text">https://&lt;gitea-domain&gt;/pages/&lt;owner&gt;/&lt;repo&gt;/  -&gt; 302 到 https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>这个入口只做跳转或状态展示，不直接返回用户提交的 HTML。原因是浏览器同源只看 scheme、host 和 port，不看 path；如果把任意用户 Pages 正文放到 Gitea 主站同源路径下，用户 JS 会处在 Gitea 主站 origin 里，安全边界会变复杂。</p>
+<h2 id="actions-pages">Actions 到 Pages 的发布流</h2>
+<p>推荐主路径是 Git-backed branch deploy，完整说明见 <a href="../gitea-pages-branch-deploy/">Git-backed Pages 分支部署</a>：</p>
+<pre><code class="language-text">1. 用户 push main 或更新 PR
+2. Gitea 读取 .gitea/workflows/*.yml，创建 workflow run / job
+3. runner daemon 按 scope + runs-on label 领取 job
+4. workflow 在 runner node 上 checkout 代码并构建 site/ 或 public/
+5. workflow 把静态产物 commit/push 到配置好的 Pages 分支，例如 gh-pages
+6. Pages Host syncer 从 Gitea fetch/checkout 该 Pages 分支
+7. syncer 把静态目录写入 staging，并原子替换 pages/sites/&lt;owner&gt;/&lt;repo&gt;/&lt;channel&gt;
+8. Pages service 正在 serve，URL 立即可访问
+</code></pre>
+<p>这个模型不要求 runner 和 Pages Host 在同一台机器上，也不要求 runner 挂载或写入 Host 的 <code>&lt;chattea-home&gt;/pages/sites</code>。runner 只需要访问 Gitea，并拥有写 Pages 分支的权限；Pages Host 只需要读取配置好的 Pages 分支。</p>
+<p>Host-local publish 仍可作为内网 smoke test 或兼容模式：workflow 直接调用 <code>chattea pages publish --source site</code> 写入本机 Pages root。但这不应作为 heavy docs、Lean/mathlib docs 或生产部署的默认模型。</p>
+<h2 id="host-local-publish">Host-local publish 验证流程</h2>
+<p>这一节保留的是早期内网 smoke test 方式：runner 直接调用本机 publisher，把已构建目录写到 Pages Host 的 <code>pages/sites</code>。它适合验证 Gitea Actions、bot comment、channel metadata 等链路，但不是 heavy docs 的推荐生产路径。推荐生产路径请看 <a href="../gitea-pages-branch-deploy/">Git-backed Pages 分支部署</a>。</p>
+<h3 id="1-workflow-yaml">1. 在仓库里添加 workflow YAML</h3>
+<p>仓库只要在默认分支提交 <code>.gitea/workflows/pages.yml</code>，Gitea push 后就会把它识别为 Actions workflow。下面是 Host-local 验证链路使用的结构：</p>
+<pre><code class="language-yaml">name: ChatTea Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show action context
+        run: |
+          echo &quot;repo=$GITHUB_REPOSITORY&quot;
+          echo &quot;sha=$GITHUB_SHA&quot;
+          echo &quot;run=$GITHUB_RUN_ID&quot;
+          pwd
+
+      - name: Clone repository
+        run: |
+          rm -rf source site
+          git clone &quot;&lt;gitea-loopback-url&gt;/$GITHUB_REPOSITORY.git&quot; source
+          cd source
+          git checkout &quot;$GITHUB_SHA&quot;
+
+      - name: Build MkDocs site
+        run: |
+          mkdocs build \
+            --clean \
+            -f source/mkdocs.yml \
+            --site-dir &quot;$PWD/site&quot;
+
+      - name: Publish Pages
+        run: |
+          chattea pages publish \
+            --repo &quot;$GITHUB_REPOSITORY&quot; \
+            --source &quot;$PWD/site&quot; \
+            --commit &quot;$GITHUB_SHA&quot; \
+            --run-id &quot;$GITHUB_RUN_ID&quot;
+</code></pre>
+<p>关键点：</p>
+<ul>
+<li><code>on.push.branches</code> 决定什么分支触发 Pages 构建；</li>
+<li><code>runs-on: ubuntu-latest</code> 必须能匹配一个在线 runner 的 label；</li>
+<li><code>GITHUB_REPOSITORY</code> 是 Gitea runner 注入的 <code>owner/repo</code>；</li>
+<li><code>GITHUB_SHA</code> 是触发本次 run 的 commit；</li>
+<li><code>GITHUB_RUN_ID</code> 用于写入 Pages 发布元数据；</li>
+<li>Gitea Actions 为兼容 GitHub Actions 生态，沿用 <code>GITHUB_*</code> 环境变量名；这里的值仍然来自当前 Gitea 实例，不表示任务跑在 GitHub 上；</li>
+<li>正式 CLI 落地前，验证环境可以把 <code>chattea pages publish</code> 替换成受管 Pages publisher 脚本；接口参数保持一致。</li>
+</ul>
+<p>如果 runner 环境可以稳定使用 checkout action，也可以把 <code>Clone repository</code> 换成 <code>uses: actions/checkout@v4</code>。内网或离线环境建议显式从本机 Gitea loopback clone，避免依赖外部 marketplace。</p>
+<h3 id="2-pr-preview-pages">2. PR preview 与合并后的正式 Pages</h3>
+<p>要模拟 GitHub 的 Preview Docs 行为，建议把 workflow 拆成两个 channel：</p>
+<pre><code class="language-text">pull_request -&gt; build -&gt; publish --channel dev/pr-&lt;number&gt; -&gt; bot comment preview URL
+push main    -&gt; build -&gt; publish --channel stable           -&gt; update formal URL
+</code></pre>
+<p>对应 URL：</p>
+<pre><code class="language-text">Preview: https://&lt;entry-host&gt;/pages/&lt;owner&gt;/&lt;repo&gt;/dev/pr-&lt;number&gt;/
+Stable:  https://&lt;entry-host&gt;/pages/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>Preview workflow 的关键步骤是：</p>
+<ol>
+<li>从 <code>GITHUB_EVENT_PATH</code> 读取 PR number；</li>
+<li>构建站点到 <code>site/</code>；</li>
+<li>调用 <code>chattea pages publish --channel dev/pr-&lt;number&gt;</code>；</li>
+<li>用 Gitea 原生 bot 用户的 token 调用 Gitea issue comment API，把 preview URL 写回 PR；</li>
+<li>如果已有 <code>&lt;!-- chattea-pages-preview --&gt;</code> 标记的评论，就更新同一条评论，而不是重复刷屏。</li>
+</ol>
+<p>Gitea 自托管实例可以直接创建原生 bot 用户，不需要先实现一个常驻 bot 服务。推荐做法是由管理员创建一个专用账号，例如 <code>chattea-pages-bot</code>：</p>
+<pre><code class="language-bash">gitea admin user create \
+  --username chattea-pages-bot \
+  --email chattea-pages-bot@example.invalid \
+  --user-type bot \
+  --fullname &quot;ChatTea Pages Bot&quot;
+
+gitea admin user generate-access-token \
+  --username chattea-pages-bot \
+  --token-name chattea-pages-preview \
+  --scopes write:issue,read:repository \
+  --raw
+</code></pre>
+<p>把生成的 token 写入 Gitea Actions secret，例如 <code>CHATTEA_BOT_TOKEN</code>。workflow 评论步骤使用这个 secret 调 API，最终 PR 评论作者会显示为 Gitea 的 <code>chattea-pages-bot</code>，这对应 GitHub 里的 <code>github-actions[bot]</code> / bot identity 体验。</p>
+<p>构建步骤不要暴露这个 token；评论步骤使用内联脚本调用 API，不执行仓库代码。这样可以降低 PR 代码窃取评论 token 的风险。</p>
+<p>Stable workflow 在 main 更新时调用 <code>chattea pages publish --channel stable</code>。实现上应保证 stable 发布不会删除 <code>dev/pr-*</code> preview 目录，否则 PR preview 链接会在 main 部署后失效。</p>
+<h3 id="3">3. 内网验收截图</h3>
+<p>下面的截图来自一个保持 open 的内网验收 PR，用来确认 Gitea 可以完成 GitHub-like preview flow：</p>
+<pre><code class="language-text">PR opened
+  -&gt; pull_request workflow
+  -&gt; runner build
+  -&gt; publish dev/pr-N
+  -&gt; Gitea native bot comment
+</code></pre>
+<p>Workflow 文件本身说明这不是人工触发，而是 Gitea <code>pull_request</code> 事件触发 preview job：</p>
+<p><img alt="Gitea workflow pull_request 触发配置" src="../../assets/pages/gitea-pr-preview-workflow-trigger.png" /></p>
+<p>Actions run 页面显示本次任务由 <code>pull_request</code> 触发，runner 完成 preview job：</p>
+<p><img alt="Gitea pull_request preview workflow run" src="../../assets/pages/gitea-pr-preview-action-run.png" /></p>
+<p>Job 日志展示关键产物和 comment 创建结果：先发布 preview channel，再通过 Gitea API 创建 PR 评论：</p>
+<p><img alt="Gitea preview job 日志与评论创建结果" src="../../assets/pages/gitea-pr-preview-job-log-comment.png" /></p>
+<p>PR timeline 中的 preview 评论由 Gitea 原生 bot 用户发出，评论里包含 <code>dev/pr-N</code> 链接：</p>
+<p><img alt="Gitea 原生 bot 用户评论 preview 链接" src="../../assets/pages/gitea-pr-preview-bot-comment.png" /></p>
+<h3 id="4-gitea-action">4. Gitea 如何找到并执行这个 Action</h3>
+<p>当 <code>pages.yml</code> 被 push 到默认分支后：</p>
+<pre><code class="language-text">Git push
+  -&gt; Gitea 收到 refs/heads/main 更新
+  -&gt; Gitea 读取 .gitea/workflows/pages.yml
+  -&gt; 创建 workflow run 和 job
+  -&gt; 查找 scope 覆盖该仓库、label 匹配 runs-on 的 runner
+  -&gt; runner 领取 pages job 并执行 steps
+</code></pre>
+<p>可以用 Web UI 看：</p>
+<pre><code class="language-text">&lt;gitea-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/actions
+&lt;gitea-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/actions/runs/&lt;run-id&gt;
+</code></pre>
+<p>也可以用 CLI 查：</p>
+<pre><code class="language-bash">chattea runner registry list --scope repo --repo &lt;owner&gt;/&lt;repo&gt; --json-output
+chattea run list --repo &lt;owner&gt;/&lt;repo&gt; --json-output
+chattea run jobs --repo &lt;owner&gt;/&lt;repo&gt; &lt;run-id&gt; --json-output
+chattea job logs --repo &lt;owner&gt;/&lt;repo&gt; &lt;job-id&gt;
+</code></pre>
+<p>当前验证中的 Actions run 页面如下：</p>
+<p><img alt="Gitea Actions run 成功执行页面" src="../../assets/pages/chattea-actions-run.png" /></p>
+<h3 id="5-pages">5. Pages 部署到哪里</h3>
+<p><code>chattea pages publish</code> 不负责构建，只负责把已构建好的静态目录发布到 Pages service 的 root 下：</p>
+<pre><code class="language-text">source site/
+  -&gt; &lt;chattea-home&gt;/pages/staging/&lt;tmp&gt;/
+  -&gt; atomic replace
+  -&gt; &lt;chattea-home&gt;/pages/sites/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>发布后的目录形态：</p>
+<pre><code class="language-text">&lt;chattea-home&gt;/pages/sites/&lt;owner&gt;/&lt;repo&gt;/
+├── index.html
+├── assets/
+├── en/
+├── .chattea-pages.json
+└── dev/
+    └── pr-&lt;number&gt;/
+        ├── index.html
+        └── .chattea-pages.json
+</code></pre>
+<p><code>.chattea-pages.json</code> 记录最后一次发布来源：</p>
+<pre><code class="language-json">{
+  &quot;repo&quot;: &quot;&lt;owner&gt;/&lt;repo&gt;&quot;,
+  &quot;commit&quot;: &quot;&lt;commit-sha&gt;&quot;,
+  &quot;run_id&quot;: &quot;&lt;actions-run-id&gt;&quot;,
+  &quot;channel&quot;: &quot;stable&quot;,
+  &quot;published_at&quot;: &quot;&lt;timestamp&gt;&quot;,
+  &quot;source&quot;: &quot;gitea-actions&quot;
+}
+</code></pre>
+<p>Pages service 长驻运行，只 serve <code>&lt;chattea-home&gt;/pages/sites</code>。因此 publish 完不需要重启服务，站点路径会立即生效。</p>
+<h3 id="6">6. 怎么访问发布后的站点</h3>
+<p>默认访问路径：</p>
+<pre><code class="language-text">https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>仓库 metadata 的 website 字段也应指向同一个地址：</p>
+<pre><code class="language-bash">chattea repo edit &lt;owner&gt;/&lt;repo&gt; \
+  --website https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>验证命令：</p>
+<pre><code class="language-bash">curl -I https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+curl https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/ | grep -i '&lt;title&gt;'
+</code></pre>
+<p>Pages 是否可访问用 HTTP 状态、HTML title 或 metadata 校验即可，不需要在教程里放最终站点截图。</p>
+<h2 id="pages-service">Pages service 目录</h2>
+<p>建议默认目录：</p>
+<pre><code class="language-text">&lt;chattea-home&gt;/pages/
+├── config.yaml
+├── sites/
+│   └── &lt;owner&gt;/
+│       └── &lt;repo&gt;/
+│           ├── index.html
+│           ├── assets/
+│           └── .chattea-pages.json
+├── staging/
+└── log/
+</code></pre>
+<p>发布元数据示例：</p>
+<pre><code class="language-json">{
+  &quot;repo&quot;: &quot;&lt;owner&gt;/&lt;repo&gt;&quot;,
+  &quot;commit&quot;: &quot;&lt;commit-sha&gt;&quot;,
+  &quot;run_id&quot;: &quot;&lt;actions-run-id&gt;&quot;,
+  &quot;channel&quot;: &quot;stable&quot;,
+  &quot;published_at&quot;: &quot;&lt;timestamp&gt;&quot;,
+  &quot;source&quot;: &quot;gitea-actions&quot;
+}
+</code></pre>
+<p><code>publish</code> 命令只做文件操作：检查 source、写元数据、复制到 staging、设置权限、原子替换目标站点目录。构建本身在 Actions job 中完成。</p>
+<h2 id="workflow">Workflow 模板</h2>
+<p>推荐的生产模板是 branch deploy：runner build 后 push 到 <code>gh-pages</code> 或配置好的 Pages 分支，Pages Host 再 sync 该分支。完整模板见 <a href="../gitea-pages-branch-deploy/">Git-backed Pages 分支部署</a>。</p>
+<p>下面保留 Host-local publish 模板作为 smoke test / 兼容模式。</p>
+<p>MkDocs 项目示例：</p>
+<pre><code class="language-yaml">name: Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build site
+        run: |
+          python -m pip install -e '.[docs]'
+          mkdocs build --site-dir site
+
+      - name: Publish Pages
+        run: |
+          chattea pages publish \
+            --repo &quot;$GITHUB_REPOSITORY&quot; \
+            --source site \
+            --commit &quot;$GITHUB_SHA&quot; \
+            --run-id &quot;$GITHUB_RUN_ID&quot;
+</code></pre>
+<p>前端项目示例：</p>
+<pre><code class="language-yaml">      - name: Build site
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish Pages
+        run: |
+          chattea pages publish \
+            --repo &quot;$GITHUB_REPOSITORY&quot; \
+            --source dist \
+            --commit &quot;$GITHUB_SHA&quot; \
+            --run-id &quot;$GITHUB_RUN_ID&quot;
+</code></pre>
+<p>Branch deploy 模式下，runner 只需要能访问 Gitea 并拥有写 Pages 分支的权限；它不需要访问 <code>&lt;chattea-home&gt;/pages/</code>。Host-local publish 模式才要求 runner 能访问 <code>chattea</code> 命令和 Pages Host 的 <code>&lt;chattea-home&gt;/pages/</code>。因此 heavy docs、Lean/mathlib docs 或需要特殊工具链的构建，应使用外部 runner node + Git-backed branch deploy。</p>
+<h2 id="pages-service_1">Pages service 部署模式</h2>
+<p>第一版建议让 Pages service 自己监听 loopback，Nginx/Caddy 只做代理：</p>
+<pre><code class="language-text">chattea-pages.service
+  listen: 127.0.0.1:&lt;pages-port&gt;
+  root:   &lt;chattea-home&gt;/pages/sites
+</code></pre>
+<p>Nginx/Caddy 入口示例：</p>
+<pre><code class="language-nginx">server {
+    listen 443 ssl;
+    server_name &lt;pages-domain&gt;;
+
+    location / {
+        proxy_pass http://127.0.0.1:&lt;pages-port&gt;;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+</code></pre>
+<p>这保持了三层职责：</p>
+<ul>
+<li>ChatTea 负责 Git service、runner worker、Pages service 和文件状态；</li>
+<li>Pages service 负责 path 到 <code>sites/&lt;owner&gt;/&lt;repo&gt;/</code> 的静态 serve；</li>
+<li>Nginx/Caddy 负责 TLS、域名、redirect 和公网/内网入口整合。</li>
+</ul>
+<h2 id="cli">CLI 目标</h2>
+<p>Pages v0.1 需要新增的是本地 backend 命令，不是 Gitea REST API 命令：</p>
+<pre><code class="language-text">chattea pages service bootstrap  # 初始化 &lt;chattea-home&gt;/pages、写 config、安装 user service
+chattea pages service start      # 启动 chattea-pages.service
+chattea pages service stop       # 停止 Pages service
+chattea pages service status     # 查看 service 状态和监听地址
+chattea pages service logs       # 查看 Pages service 日志
+
+chattea pages config set         # 配置 repo 的 Git Pages source repo/branch/path/channel
+chattea pages sync               # 从配置好的 Git branch checkout/sync 到 sites/&lt;owner&gt;/&lt;repo&gt;/
+chattea pages status             # 检查 source branch、最后同步 metadata、HTTP 访问
+chattea pages workflow template  # 输出 branch deploy / Host-local publish workflow 模板
+
+chattea pages publish            # 兼容模式：从本地静态目录直接发布到 sites/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p>已有命令仍然负责通用 Git service 能力：</p>
+<pre><code class="language-bash">chattea repo create ...
+chattea repo edit &lt;owner&gt;/&lt;repo&gt; --website https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+chattea runner local register/start/status ...
+chattea run list/view/jobs/logs ...
+</code></pre>
+<h2 id="_4">非目标</h2>
+<p>v0.1 不做这些事情：</p>
+<ul>
+<li>不 fork Gitea 源码；</li>
+<li>不把用户 Pages 正文放在 Gitea 主站同源路径；</li>
+<li>不默认生成 <code>&lt;repo&gt;.&lt;owner&gt;.&lt;pages-domain&gt;</code> 这类三级域名；</li>
+<li>不做 custom domain resolver；</li>
+<li>不做私有 Pages 鉴权；</li>
+<li>不把构建逻辑塞进 Pages service；</li>
+<li>不把 Nginx/Caddy 入口整合视为 Pages 核心状态。</li>
+</ul>
+<h2 id="_5">参考验证</h2>
+<pre><code class="language-bash">chattea pages service status
+chattea pages publish --repo &lt;owner&gt;/&lt;repo&gt; --source &lt;site-build-dir&gt;
+chattea pages status --repo &lt;owner&gt;/&lt;repo&gt;
+curl --noproxy '*' -sS -I https://&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/
+</code></pre>
+<p><code>chattea pages ...</code> 是目标命令，进入实现前可用手工文件同步和 <code>curl</code> 替代验证。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

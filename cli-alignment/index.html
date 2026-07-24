@@ -1,0 +1,2017 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatTea/cli-alignment/">
+      
+      
+        <link rel="prev" href="../interface-tree/">
+      
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../en/cli-alignment/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>CLI 对齐计划 - ChatTea 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chattea-cli" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="ChatTea 文档" class="md-header__button md-logo" aria-label="ChatTea 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatTea 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI 对齐计划
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/cli-alignment/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatTea" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../from-scratch-quickstart/" class="md-tabs__link">
+          
+  
+  
+  入门
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gitea-service-operations/" class="md-tabs__link">
+          
+  
+  
+  Gitea 服务
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../repo-collaboration-quickstart/" class="md-tabs__link">
+          
+  
+  
+  仓库协作
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../bot-service-account-plan/" class="md-tabs__link">
+          
+  
+  
+  Bot / 服务账号
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../actions-flow-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Actions
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../runner-environment-and-registration/" class="md-tabs__link">
+          
+  
+  
+  Runner
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../cli-guide/" class="md-tabs__link">
+          
+  
+  
+  CLI / 接口
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChatTea 文档" class="md-nav__button md-logo" aria-label="ChatTea 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatTea 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatTea" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    入门
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    入门
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../from-scratch-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    从零开始快速开始
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea 端到端快速开始
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea 服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Gitea 服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-service-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    服务运维
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local-runtime-entry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地运行时统一入口
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtime-filesystem-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    运行时文件系统与服务边界
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pages 机制与静态站点发布
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-pages-branch-deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git-backed Pages 分支部署
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-mysql-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL 后端迁移
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account-organization-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    账号、组织与可见性模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-permissions-and-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    权限与可见性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    仓库协作
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    仓库协作
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repo-collaboration-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    仓库协作快速开始
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bot / 服务账号
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bot / 服务账号
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot-service-account-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    机器人账号与服务账号
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../org-task-account-practice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    组织任务账号协作闭环
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Actions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../actions-flow-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions / Flow（动作 / 流程）快速开始
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-environment-and-registration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner 运行环境与多实例
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-multi-instance-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner 多实例第一版方案
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI / 接口
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CLI / 接口
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI 实战指南
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chattea-cli-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI 能力地图
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tea-cli-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    官方 tea CLI 对比
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口树
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI 对齐计划
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI 对齐计划
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        证据策略
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实现合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        令牌和凭据合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chattea-cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已确认的当前 ChatTea CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已确认可完整实现的 API 领域
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        引导流程方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        测试和持续集成合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        证据策略
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实现合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        令牌和凭据合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chattea-cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已确认的当前 ChatTea CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已确认可完整实现的 API 领域
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        引导流程方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        测试和持续集成合约
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/ChatArch/ChatTea/edit/main/docs/cli-alignment.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="chattea-cli">ChatTea CLI 对齐计划</h1>
+<p>这篇文档定义 ChatTea 面向 ChatArch Gitea 的、以证据为边界的 CLI 方向。</p>
+<p>目标不是复制 GitHub CLI。ChatTea 是 Gitea CLI，也是本地 Gitea 运维工具。命令名可以沿用熟悉的 GitHub/Gitea 资源概念，但前提是它们确实对应 Gitea 的真实 API；每个命令都必须由真实 Gitea REST 路由 支撑，或由明确设计的 ChatTea 本地能力支撑。</p>
+<h2 id="_1">证据策略</h2>
+<p>一个命令只有满足下面任一条件，才可以进入正式 CLI 树：</p>
+<ol>
+<li>在 <code>core/gitea/routers/api/v1/**</code> 的 Swagger annotation 中存在 Gitea REST 路由。</li>
+<li>该命令是 ChatTea 本地能力，并且有明确实现合约，例如 <code>set-token</code>、<code>server</code> 或 <code>repo clone</code>。</li>
+</ol>
+<p>不要添加占位命令。不要因为 GitHub CLI 有某个命令就添加它。如果 Gitea 不支持对应能力，应先留在树外，直到存在真实本地设计或真实 Gitea 路由。</p>
+<h2 id="_2">实现合约</h2>
+<p>每个 CLI 命令都必须是可导入 Python 代码之上的薄 适配层。</p>
+<p>每个公开命令都应包含：</p>
+<ol>
+<li>可复用 Python 函数或 method，不需要调用 CLI 也能使用；</li>
+<li>CLI 包装层，只负责解析参数、解析交互输入、调用 Python 函数并渲染输出；</li>
+<li>可复用 Python 函数或 API method 的测试；</li>
+<li>CLI 行为测试，覆盖命令注册、参数解析、输出和失败模式；</li>
+<li>文档，把命令映射到 Gitea REST 路由 或 ChatTea 本地函数。</li>
+</ol>
+<p>CLI 不能是唯一稳定集成面。Python 集成、MCP 工具和未来 网关适配层 应直接调用 Python 函数，而不是 通过 shell 调用 到 <code>chattea ...</code>。</p>
+<p>推荐结构：</p>
+<pre><code class="language-text">src/chattea/
+├── api.py or api/&lt;domain&gt;.py          # Gitea REST client methods；不做 Click 渲染
+├── credentials.py                     # set-token、token resolution、repo-local git credential helper
+├── server.py                          # 本地 Gitea install/service/config primitives
+└── commands/
+    ├── token.py                       # Click command group + token 函数薄 wrapper
+    ├── bot.py                         # Click command group + 本机 bot/service-account backend
+    ├── repo.py                        # Click command group + repo 函数薄 wrapper
+    ├── issue.py                       # Click command group + issue 函数薄 wrapper
+    ├── pr.py                          # Click command group + pull request 函数薄 wrapper
+    ├── project.py                     # Click command group + project/card 函数薄 wrapper
+    └── ...
+</code></pre>
+<p>实际可行时，代码结构应跟 CLI 树保持一致。如果共享底层 class 或 辅助函数 更清晰，也可以保持灵活；但 domain logic 必须可导入，并与 Click 解耦。</p>
+<h2 id="_3">令牌和凭据合约</h2>
+<p><code>set-token</code> 不是简单复制 <code>auth login</code>，也不只是 dotenv 写入器。</p>
+<p><code>set-token</code> 是 ChatTea 的凭据基础：</p>
+<ul>
+<li>为当前 仓库/Gitea 远端 配置 令牌访问，让 git transport 可以 pull/push，不需要反复询问 令牌；</li>
+<li>在合适时保存或更新 ChatTea/ChatEnv 令牌配置档；</li>
+<li>为 <code>repo</code>、<code>issue</code>、<code>pr</code>、<code>project</code>、<code>release</code> 和 Actions 命令提供 API 令牌来源；</li>
+<li>正常命令输出不打印 raw 令牌。</li>
+</ul>
+<p>API 命令的 令牌 resolution 需要集中且一致：</p>
+<ol>
+<li>显式 CLI 令牌 参数；</li>
+<li>从当前 Gitea 远端 推导出的 仓库本地 git credential/config；</li>
+<li>ChatTea ChatEnv 配置档 令牌；</li>
+<li>如果命令需要鉴权但没有 令牌，则干净失败。</li>
+</ol>
+<p>令牌创建和令牌配置是两件事：</p>
+<ul>
+<li><code>token create</code> 使用 Gitea BasicAuth 调用 <code>POST /users/{username}/tokens</code> 创建 访问令牌；</li>
+<li><code>token bootstrap</code> 创建 访问令牌，然后立即调用与 <code>set-token</code> 相同的凭据配置路径；</li>
+<li><code>set-token</code> 把已经创建好的 令牌 配置给 ChatTea 和 git transport。</li>
+</ul>
+<h2 id="chattea-cli_1">已确认的当前 ChatTea CLI</h2>
+<p>这是当前 working branch 已实现的能力面，不是完整目标。</p>
+<pre><code class="language-text">chattea
+├── set-token                         # `chattea.commands.auth.configure_token` -&gt; ChatEnv + repo-local git extraHeader credential
+├── api                               # 通过 `chattea.commands.api.call_api` 做原始 Gitea API passthrough
+├── auth                              # 辅助 status/login namespace；复用 set-token 的 credential backend
+│   ├── login                         # 配置 Gitea API + repo-local git credentials
+│   ├── status                        # 显示已配置 base URL 和 masked token 状态
+│   └── token                         # 显示 masked configured token
+├── token                             # 通过 BasicAuth 管理 Gitea access token 生命周期
+│   ├── create                        # POST /users/{username}/tokens -&gt; `create_access_token`
+│   ├── list                          # GET /users/{username}/tokens -&gt; `list_access_tokens`
+│   ├── delete                        # DELETE /users/{username}/tokens/{token} -&gt; `delete_access_token`
+│   └── bootstrap                     # create token + configure ChatTea/Git credentials
+├── bot                               # 本机 Gitea bot / service-account local backend
+│   ├── plan                          # 检查 Gitea admin CLI bot/token/delete 能力
+│   ├── create                        # `create_bot_user_local` -&gt; gitea admin user create --user-type bot
+│   ├── delete                        # `delete_bot_user_local` -&gt; gitea admin user delete
+│   └── token
+│       └── create                    # `create_bot_token_local` -&gt; gitea admin user generate-access-token
+├── server                            # 本地 / 内部 Gitea 生命周期管理
+│   ├── install                       # `chattea.commands.server.install_gitea` -&gt; `chattea.server.install_binary`
+│   ├── init                          # `chattea.commands.server.init_gitea_server`
+│   ├── bootstrap                     # 通过 `bootstrap_gitea_server` 串起本地 install/init/admin/token/credential
+│   ├── serve                         # `chattea.commands.server.serve_gitea`
+│   ├── start                         # `chattea.commands.server.start_gitea_service`
+│   ├── stop                          # `chattea.commands.server.stop_gitea_service`
+│   ├── restart                       # `chattea.commands.server.restart_gitea_service`
+│   ├── status                        # `chattea.commands.server.status_gitea_service`
+│   ├── logs                          # `chattea.commands.server.logs_gitea_service`
+│   ├── version                       # `chattea.commands.server.gitea_version`
+│   ├── health                        # `chattea.commands.server.check_gitea_health`
+│   └── config                        # 本地 app.ini helper
+│       ├── path                      # `resolve_gitea_config_path`
+│       ├── show                      # `read_gitea_config`
+│       ├── get                       # `get_gitea_config_value`
+│       └── set                       # `set_gitea_config_value`
+├── repo                              # 仓库操作
+│   ├── list                          # Gitea API-backed `list_repositories`
+│   ├── view                          # Gitea API-backed `view_repository`
+│   ├── create                        # Gitea API-backed `create_repository`
+│   ├── clone                         # 本地 git helper `clone_repository`
+│   └── migrate                       # Gitea API-backed `migrate_repository`
+├── issue                             # 仓库 issue 操作；基于 /repos/{owner}/{repo}/issues
+│   ├── list                          # GET /repos/{owner}/{repo}/issues
+│   ├── view                          # GET /repos/{owner}/{repo}/issues/{index}
+│   ├── create                        # POST /repos/{owner}/{repo}/issues
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/issues/{index}
+│   ├── close                         # PATCH issue state=closed
+│   ├── reopen                        # PATCH issue state=open
+│   ├── delete                        # DELETE /repos/{owner}/{repo}/issues/{index}
+│   ├── comment                       # issue comment API
+│   ├── label                         # issue label assignment API
+│   └── assign                        # issue assignee API
+├── label                             # 仓库 label
+│   ├── list                          # GET /repos/{owner}/{repo}/labels
+│   ├── view                          # GET /repos/{owner}/{repo}/labels/{id}
+│   ├── create                        # POST /repos/{owner}/{repo}/labels
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/labels/{id}
+│   └── delete                        # DELETE /repos/{owner}/{repo}/labels/{id}
+├── milestone                         # 仓库 milestone
+│   ├── list                          # GET /repos/{owner}/{repo}/milestones
+│   ├── view                          # GET /repos/{owner}/{repo}/milestones/{id}
+│   ├── create                        # POST /repos/{owner}/{repo}/milestones
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/milestones/{id}
+│   ├── close                         # PATCH milestone state=closed
+│   └── delete                        # DELETE /repos/{owner}/{repo}/milestones/{id}
+├── pr                                # Pull request 操作；当前树不提供本地 checkout helper
+│   ├── list                          # GET /repos/{owner}/{repo}/pulls
+│   ├── view                          # GET /repos/{owner}/{repo}/pulls/{index}
+│   ├── create                        # POST /repos/{owner}/{repo}/pulls
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/pulls/{index}
+│   ├── close                         # PATCH PR state=closed
+│   ├── reopen                        # PATCH PR state=open
+│   ├── merge                         # POST /repos/{owner}/{repo}/pulls/{index}/merge
+│   ├── diff                          # GET /repos/{owner}/{repo}/pulls/{index}.diff
+│   ├── patch                         # GET /repos/{owner}/{repo}/pulls/{index}.patch
+│   ├── commits                       # GET /repos/{owner}/{repo}/pulls/{index}/commits
+│   ├── files                         # GET /repos/{owner}/{repo}/pulls/{index}/files
+│   ├── comment                       # 通过 issue comment routes 实现 PR issue-comment helper
+│   └── review                        # PR review list/create/submit routes
+├── release                           # 仓库 release
+│   ├── list                          # GET /repos/{owner}/{repo}/releases
+│   ├── view                          # GET /repos/{owner}/{repo}/releases/{id}
+│   ├── latest                        # GET /repos/{owner}/{repo}/releases/latest
+│   ├── by-tag                        # GET /repos/{owner}/{repo}/releases/tags/{tag}
+│   ├── create                        # POST /repos/{owner}/{repo}/releases
+│   ├── edit                          # PATCH /repos/{owner}/{repo}/releases/{id}
+│   ├── delete                        # DELETE /repos/{owner}/{repo}/releases/{id}
+│   └── asset                         # Release asset list/delete；upload 等 multipart client 支持后再补
+└── project                           # Repo-scoped Gitea Project board，不是 GitHub Projects v2
+    ├── list                          # GET /repos/{owner}/{repo}/projects
+    ├── view                          # GET /repos/{owner}/{repo}/projects/{id}
+    ├── create                        # POST /repos/{owner}/{repo}/projects
+    ├── edit                          # PATCH /repos/{owner}/{repo}/projects/{id}
+    ├── delete                        # DELETE /repos/{owner}/{repo}/projects/{id}
+    ├── column                        # Repository Project column API
+    │   ├── list                      # GET /repos/{owner}/{repo}/projects/{id}/columns
+    │   ├── create                    # POST /repos/{owner}/{repo}/projects/{id}/columns
+    │   ├── edit                      # PATCH /repos/{owner}/{repo}/projects/{id}/columns/{column_id}
+    │   └── delete                    # DELETE /repos/{owner}/{repo}/projects/{id}/columns/{column_id}
+    └── card                          # Project card API；REST path 里称为 `issues`
+        ├── list                      # GET /repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues
+        ├── add                       # POST /repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}
+        ├── remove                    # DELETE /repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}
+        └── move                      # POST /repos/{owner}/{repo}/projects/{id}/issues/{issue_id}/move
+</code></pre>
+<p><code>project issue</code> 这类兼容别名可以在过渡期存在，但不是正式目标能力面。新文档和新自动化应使用 <code>project card</code>。</p>
+<h2 id="api">已确认可完整实现的 API 领域</h2>
+<p>下面这些领域已从 <code>core/gitea/routers/api/v1/**</code> 的 Gitea Swagger annotation 中确认，可以作为真实命令实现。每个新增命令仍必须遵守上面的实现合约。</p>
+<ul>
+<li><code>user</code>：<code>/admin/users</code> 下的普通 admin user 创建、编辑、删除 路由；用于托管本地 引导。注意 Gitea 稳定 REST API 目前没有完整暴露 <code>UserTypeBot</code> 创建、查询和 token 管理；ChatTea 当前通过 <code>bot</code> local backend 走本机 Gitea admin CLI。</li>
+<li><code>token</code>：<code>/users/{username}/tokens</code> list/create/delete；create 需要 BasicAuth 或反向代理 auth。</li>
+<li><code>issue</code>：<code>/repos/{owner}/{repo}/issues</code>、评论、标签、reactions、pin/lock、dependencies、attachments、time tracking。</li>
+<li><code>label</code>：<code>/repos/{owner}/{repo}/labels</code>，以及可选的 org 标签 路由。</li>
+<li><code>milestone</code>：<code>/repos/{owner}/{repo}/milestones</code>。</li>
+<li><code>pr</code>：<code>/repos/{owner}/{repo}/pulls</code>、diff/patch、files、commits、merge、update、reviews、requested reviewers。</li>
+<li><code>release</code>：<code>/repos/{owner}/{repo}/releases</code> 和 发布版本 附件。</li>
+<li><code>runner</code> / <code>run</code> / <code>job</code> / <code>artifact</code>：Gitea Actions MVP 能力面，用于 运行器注册和生命周期，以及 PR 触发的 run/job/log/产物 查看。API 支撑的命令映射到 <code>/repos/{owner}/{repo}/actions/...</code>；本机 runner 管理集中在 <code>runner local</code>，多实例批量操作集中在 <code>runner pool</code>。</li>
+<li><code>project</code>：只覆盖 仓库级 <code>/repos/{owner}/{repo}/projects</code>；不是 GitHub Projects v2。</li>
+<li><code>workflow</code>：<code>/repos/{owner}/{repo}/actions/workflows</code>。</li>
+<li><code>run</code>：<code>/repos/{owner}/{repo}/actions/runs</code>。</li>
+<li><code>job</code>：<code>/repos/{owner}/{repo}/actions/jobs</code>。</li>
+<li><code>artifact</code>：<code>/repos/{owner}/{repo}/actions/artifacts</code>。</li>
+<li><code>runner</code>：仓库/org/user/admin scoped <code>/actions/runners</code> 路由。</li>
+<li><code>secret</code>：仓库/org/user scoped <code>/actions/secrets</code> 路由；注意观察到的 annotation 中 user scope 缺少 list 路由。</li>
+<li><code>variable</code>：仓库/org/user scoped <code>/actions/variables</code> 路由。</li>
+<li><code>status</code>：<code>/repos/{owner}/{repo}/statuses/{sha}</code> 和 combined status 路由。</li>
+</ul>
+<p>当前未把 Pages 列入 API-backed 领域：当前 Gitea 实例没有官方 Pages REST 路由。Pages 应作为 ChatTea local backend 设计：管理 <code>chattea-pages.service</code>、发布目录、发布元数据和 Actions workflow 模板，默认 URL 为 <code>&lt;pages-domain&gt;/&lt;owner&gt;/&lt;repo&gt;/</code>。</p>
+<h2 id="_4">引导流程方向</h2>
+<p>初始配置应实现为真实工作流组合，不应只是 占位命令。</p>
+<ul>
+<li><code>server bootstrap</code> 或 顶层 <code>bootstrap</code> 是本地托管 Gitea 流程：install、init、start、创建默认用户、生成 / 创建 令牌、运行 set-token，并验证 <code>/user</code>。</li>
+<li><code>token bootstrap</code> 是远程 / 已有 Gitea 流程：BasicAuth 创建 令牌、运行 set-token，并验证 <code>/user</code>。</li>
+<li>密码应从 prompt、<code>--password-env</code> 或敏感 ChatEnv 引导字段读取；这些字段只服务一次性 bootstrap，不应作为长期业务凭据输出、提交或写入公开文档。</li>
+<li>生成的 访问令牌应通过 credential path 保存，并在正常输出中脱敏。</li>
+</ul>
+<h2 id="_5">非目标</h2>
+<ul>
+<li>不声称完整兼容 GitHub API 或 GitHub CLI。</li>
+<li>不把 Gitea 仓库 Project boards 建模成 GitHub Projects v2。</li>
+<li>不把 <code>checkout</code> 加入正式 REST-backed tree。如果之后需要，应明确设计为本地 git 辅助函数，并提供证据和测试。</li>
+<li>不添加空的 <code>pages</code> 占位命令。<code>chattea pages</code> 可以进入正式树，但必须作为真实 local backend 实现，至少覆盖 Pages service 文件根、user-level service、<code>publish</code> 原子发布、<code>status</code> 验证和 workflow 模板。</li>
+<li>不添加 <code>runner install/start/stop/logs</code> 这类 运行器生命周期 命令，除非已有真实本地 运行器生命周期 设计。</li>
+<li>不把业务逻辑只放在 Click command body 里。</li>
+<li>不把 仓库/project/问题/运行器 ID 作为 ChatEnv 字段；它们是请求参数。</li>
+</ul>
+<h2 id="_6">测试和持续集成合约</h2>
+<p>每个已实现领域都应有下面这些 gate：</p>
+<ol>
+<li>覆盖 API path、method、payload、令牌 resolution 和错误处理的单元测试；</li>
+<li>覆盖非平凡命令行为的直接 Python function 测试；</li>
+<li>覆盖 help、成功路径和预期失败的 CLI 行为测试；</li>
+<li>可行时，在本地 ChatArch Gitea 实例上运行 真实集成实践，使用任务本地状态和临时 仓库/project/问题；</li>
+<li>PR ready 前运行 <code>pytest</code>、package build、<code>twine check</code>、<code>mkdocs build --strict</code> 和 <code>git diff --check</code>。</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

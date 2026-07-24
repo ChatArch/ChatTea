@@ -1,0 +1,2160 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatTea/en/interface-tree/">
+      
+      
+        <link rel="prev" href="../tea-cli-comparison/">
+      
+      
+        <link rel="next" href="../cli-alignment/">
+      
+      
+        
+          <link rel="alternate" href="../../interface-tree/" hreflang="zh">
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Interface Tree - ChatTea Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chattea" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../" title="ChatTea Documentation" class="md-header__button md-logo" aria-label="ChatTea Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatTea Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Interface Tree
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../interface-tree/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatTea" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../from-scratch-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gitea-service-operations/" class="md-tabs__link">
+          
+  
+  
+  Gitea Service
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../repo-collaboration-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Repository Collaboration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../bot-service-account-plan/" class="md-tabs__link">
+          
+  
+  
+  Bot / Service Accounts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../actions-flow-quickstart/" class="md-tabs__link">
+          
+  
+  
+  Actions
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../runner-environment-and-registration/" class="md-tabs__link">
+          
+  
+  
+  Runner
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../cli-guide/" class="md-tabs__link">
+          
+  
+  
+  CLI / API
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="ChatTea Documentation" class="md-nav__button md-logo" aria-label="ChatTea Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatTea Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatTea" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatTea
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../from-scratch-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Scratch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea End-to-End
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gitea Service
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Gitea Service
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-service-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Service Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local-runtime-entry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Runtime Entry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runtime-filesystem-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Filesystem and Service Boundaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pages and Static Site Publishing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-pages-branch-deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git-backed Pages Branch Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-mysql-migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL Backend Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account-organization-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts, Organizations, and Visibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitea-permissions-and-visibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Permissions and Visibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Collaboration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Repository Collaboration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repo-collaboration-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Collaboration Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bot / Service Accounts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bot / Service Accounts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot-service-account-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bot and Service Accounts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../org-task-account-practice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Organization Task Account Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Actions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../actions-flow-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions / Flow Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-environment-and-registration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner Environment and Multi-Instance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runner-multi-instance-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runner Multi-Instance Plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI / API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CLI / API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../chattea-cli-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Capability Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tea-cli-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Official tea CLI Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Tree
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Tree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前 CLI 能力面
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目标 CLI 方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        职责边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 到 Python 函数映射
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chatenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatEnv 边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交互边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Alignment Plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前 CLI 能力面
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        目标 CLI 方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        职责边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 到 Python 函数映射
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chatenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatEnv 边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交互边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/ChatArch/ChatTea/edit/main/docs/interface-tree.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="chattea">ChatTea 接口树</h1>
+<p>ChatTea 面向 Gitea API 采用接近 GitHub 的资源模型，同时保留 ChatTea 自有命令，用于自托管 / 内部 Gitea 服务管理。</p>
+<h2 id="cli">当前 CLI 能力面</h2>
+<pre><code class="language-text">chattea
+├── set-token
+├── api
+├── auth
+│   ├── login
+│   ├── status
+│   └── token
+├── token
+│   ├── create
+│   ├── list
+│   ├── delete
+│   └── bootstrap
+├── server
+│   ├── backup
+│   │   └── dump
+│   ├── install
+│   ├── init
+│   ├── bootstrap
+│   ├── serve
+│   ├── start
+│   ├── stop
+│   ├── restart
+│   ├── status
+│   ├── logs
+│   ├── migrate
+│   │   └── mysql
+│   ├── version
+│   ├── health
+│   └── config
+│       ├── path
+│       ├── show
+│       ├── get
+│       └── set
+├── repo
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── generate
+│   ├── clone
+│   └── migrate
+├── issue
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   ├── reopen
+│   ├── delete
+│   ├── comment
+│   │   ├── list
+│   │   ├── create
+│   │   ├── edit
+│   │   └── delete
+│   ├── label
+│   │   ├── add
+│   │   └── remove
+│   └── assign
+│       ├── add
+│       └── remove
+├── label
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   └── delete
+├── milestone
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   └── delete
+├── pr
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── close
+│   ├── reopen
+│   ├── merge
+│   ├── diff
+│   ├── patch
+│   ├── commits
+│   ├── files
+│   ├── comment
+│   │   ├── list
+│   │   └── create
+│   └── review
+│       ├── list
+│       ├── create
+│       └── submit
+├── release
+│   ├── list
+│   ├── view
+│   ├── latest
+│   ├── by-tag
+│   ├── create
+│   ├── edit
+│   ├── delete
+│   └── asset
+│       ├── list
+│       └── delete
+├── project
+│   ├── list
+│   ├── view
+│   ├── create
+│   ├── edit
+│   ├── delete
+│   ├── column
+│   │   ├── list
+│   │   ├── create
+│   │   ├── edit
+│   │   └── delete
+│   ├── card
+│   │   ├── list
+│   │   ├── add
+│   │   ├── remove
+│   │   └── move
+│   └── issue
+│       ├── list
+│       ├── add
+│       ├── remove
+│       └── move
+├── runner
+│   ├── registry
+│   │   ├── token
+│   │   ├── list
+│   │   ├── view
+│   │   ├── enable
+│   │   ├── disable
+│   │   └── delete
+│   ├── local
+│   │   ├── install
+│   │   ├── create
+│   │   ├── register
+│   │   ├── list
+│   │   ├── view
+│   │   ├── start
+│   │   ├── stop
+│   │   ├── restart
+│   │   ├── status
+│   │   ├── logs
+│   │   ├── doctor
+│   │   ├── config
+│   │   └── remove
+│   ├── pool
+│   │   ├── create
+│   │   ├── start
+│   │   ├── stop
+│   │   ├── status
+│   │   └── remove
+│   └── workflow
+│       ├── labels
+│       ├── example
+│       └── check
+├── run
+│   ├── list
+│   ├── view
+│   ├── jobs
+│   ├── logs
+│   ├── rerun
+│   ├── rerun-failed
+│   └── delete
+├── job
+│   ├── view
+│   ├── logs
+│   └── rerun
+└── artifact
+    ├── list
+    ├── view
+    ├── download
+    └── delete
+</code></pre>
+<p><code>project issue</code> 是 <code>project card</code> 的兼容别名。新文档和新自动化应使用 <code>project card</code>。</p>
+<h2 id="cli_1">目标 CLI 方向</h2>
+<p>带注释的目标树见 <a href="../cli-alignment/">CLI 对齐计划</a>。当前实现已经覆盖核心 Gitea 资源组：</p>
+<ul>
+<li><code>repo</code></li>
+<li><code>issue</code></li>
+<li><code>label</code></li>
+<li><code>milestone</code></li>
+<li><code>pr</code></li>
+<li><code>release</code></li>
+<li><code>project</code></li>
+<li><code>runner</code></li>
+<li><code>run</code></li>
+<li><code>job</code></li>
+<li><code>artifact</code></li>
+</ul>
+<p>未来 API 能力只应在存在真实 Gitea 路由 或明确本地实现合约时扩展。候选资源组包括：</p>
+<ul>
+<li><code>workflow</code></li>
+<li><code>secret</code></li>
+<li><code>variable</code></li>
+<li><code>status</code></li>
+</ul>
+<p>ChatTea 自有命令保留为：</p>
+<ul>
+<li><code>set-token</code>：把已有 Gitea 令牌 配置到 ChatEnv 和 仓库本地 git config；</li>
+<li><code>server</code>：管理内部 / 自托管 Gitea 的安装、<code>app.ini</code>、进程和健康检查。</li>
+</ul>
+<h2 id="_1">职责边界</h2>
+<ul>
+<li><code>set-token</code>：把默认 Gitea base URL 和 API 令牌 存入 ChatEnv 的 <code>ChatTea</code> active 配置档。</li>
+<li><code>token create/list/delete/bootstrap</code>：通过 BasicAuth 创建、列出、删除 Gitea 访问令牌；引导 会创建或轮换托管 令牌，然后配置 ChatTea/Git 凭据。</li>
+<li><code>auth login/status/token</code>：同一套凭据状态上的辅助命名空间。</li>
+<li><code>api</code>：对尚未一等封装的 路由 提供原始 Gitea API passthrough。</li>
+<li><code>server backup dump</code>：封装 Gitea <code>dump</code>，支持完整备份和 <code>--database mysql --db-only</code> 迁移 SQL 导出。</li>
+<li><code>server migrate mysql</code>：通过 ChatData-managed MySQL 把当前 SQLite Gitea backend 迁移到 MySQL，并备份/更新 <code>app.ini</code>。</li>
+<li><code>server install</code>：默认安装最新 ChatArch 内部 Gitea；<code>--version</code> 可固定 发布版本。</li>
+<li><code>server init</code>：为本地 SQLite 支撑的 Gitea 实例创建最小 <code>app.ini</code>；监听地址 和 HTTP port 是 CLI init 参数，不是 Env 字段。</li>
+<li><code>server serve</code>：前台运行 Gitea，用于调试或一次性会话。</li>
+<li><code>server start/stop/restart/status/logs</code>：管理固定的 用户级 systemd 服务 <code>chattea-gitea.service</code>。</li>
+<li><code>server version/health</code>：检查本地 二进制文件 或已配置的 Gitea HTTP 端点。</li>
+<li><code>server config path/show/get/set</code>：查看或更新托管 Gitea <code>app.ini</code>，与 ChatEnv 独立。</li>
+<li><code>repo list/view/create/edit/generate</code>：覆盖基础仓库列表、详情、创建、编辑和从模板生成；<code>repo create --template</code> 可创建模板仓库。</li>
+<li><code>repo clone</code>：从已配置 Gitea 实例 clone 仓库，不额外配置 Git 鉴权 header。</li>
+<li><code>repo migrate</code>：从已有 Git clone URL 创建 Gitea 迁移。</li>
+<li><code>issue list/view/create/edit/close/reopen/delete</code>：通过 <code>/repos/{owner}/{repo}/issues</code> 路由 管理仓库 问题。</li>
+<li><code>issue comment list/create/edit/delete</code>：通过 问题 评论 路由 管理评论；PR 评论复用 Gitea 问题-评论 模型。</li>
+<li><code>issue label add/remove</code> 和 <code>issue assign add/remove</code>：通过 仓库级 问题 路由 管理 标签 和 负责人。</li>
+<li><code>label list/view/create/edit/delete</code>：通过 <code>/repos/{owner}/{repo}/labels</code> 管理仓库 标签。</li>
+<li><code>milestone list/view/create/edit/close/delete</code>：通过 <code>/repos/{owner}/{repo}/milestones</code> 管理仓库 里程碑。</li>
+<li><code>pr list/view/create/edit/close/reopen/merge/diff/patch/commits/files</code>：通过 <code>/repos/{owner}/{repo}/pulls</code> 路由 管理 PR。<code>pr checkout</code> 不属于当前能力面。</li>
+<li><code>pr review list/create/submit</code>：通过 <code>/repos/{owner}/{repo}/pulls/{index}/reviews</code> 路由 管理 PR review。</li>
+<li><code>release list/view/latest/by-tag/create/edit/delete</code>：通过 <code>/repos/{owner}/{repo}/releases</code> 路由 管理 发布版本。</li>
+<li><code>release asset list/delete</code>：查看和删除 发布版本 附件。Multipart 附件 上传 等 HTTP client 支持 上传 后再补。</li>
+<li><code>project list/view/create/edit/delete</code>：管理 仓库级 Gitea Projects。</li>
+<li><code>project column list/create/edit/delete</code>：管理 仓库 项目看板 中的 column。</li>
+<li><code>project card list/add/remove/move</code>：管理 项目列 中的 问题/PR card。</li>
+<li><code>runner registry token/list/view/enable/disable/delete</code>：通过 仓库/org/user/admin 运行器 API 管理 Gitea Actions 服务器侧 runner 记录。</li>
+<li><code>runner local install/create/register/list/view/start/stop/restart/status/logs/doctor/config/remove</code>：安装并运行本机 <code>gitea-runner</code> 实例，用于开发和自托管 运行器。</li>
+<li><code>runner pool create/start/stop/status/remove</code>：批量管理同机多个本机 runner 实例。</li>
+<li><code>runner workflow labels/example/check</code>：辅助校验 workflow <code>runs-on</code> 和 runner label。</li>
+<li><code>run list/view/jobs/logs/rerun/rerun-failed/delete</code>：查看并控制 Gitea Actions 工作流 run。</li>
+<li><code>job view/logs/rerun</code>：查看 job 元数据、获取日志并通过 parent run 重跑 job。</li>
+<li><code>artifact list/view/download/delete</code>：查看、下载和删除 Actions 产物。</li>
+</ul>
+<h2 id="cli-python">CLI 到 Python 函数映射</h2>
+<p>每个 CLI 命令背后都有可导入 Python 函数，集成方不需要 shell out。</p>
+<pre><code class="language-text">chattea set-token             -&gt; chattea.commands.auth.configure_token
+chattea auth login            -&gt; chattea.commands.auth.configure_token
+chattea auth status           -&gt; chattea.config.load_config
+chattea auth token            -&gt; chattea.config.load_config
+chattea api                   -&gt; chattea.commands.api.call_api
+chattea token create          -&gt; chattea.commands.token.create_access_token
+chattea token list            -&gt; chattea.commands.token.list_access_tokens
+chattea token delete          -&gt; chattea.commands.token.delete_access_token
+chattea token bootstrap       -&gt; chattea.commands.token.bootstrap_access_token
+chattea server backup dump    -&gt; chattea.commands.server.dump_gitea_backup
+chattea server migrate mysql  -&gt; chattea.commands.server.migrate_sqlite_to_mysql
+chattea server install        -&gt; chattea.commands.server.install_gitea
+chattea server bootstrap      -&gt; chattea.commands.server.bootstrap_gitea_server
+chattea server init           -&gt; chattea.commands.server.init_gitea_server
+chattea server serve          -&gt; chattea.commands.server.serve_gitea
+chattea server start          -&gt; chattea.commands.server.start_gitea_service
+chattea server stop           -&gt; chattea.commands.server.stop_gitea_service
+chattea server restart        -&gt; chattea.commands.server.restart_gitea_service
+chattea server status         -&gt; chattea.commands.server.status_gitea_service
+chattea server logs           -&gt; chattea.commands.server.logs_gitea_service
+chattea server version        -&gt; chattea.commands.server.gitea_version
+chattea server health         -&gt; chattea.commands.server.check_gitea_health
+chattea server config path    -&gt; chattea.commands.server.resolve_gitea_config_path
+chattea server config show    -&gt; chattea.commands.server.read_gitea_config
+chattea server config get     -&gt; chattea.commands.server.get_gitea_config_value
+chattea server config set     -&gt; chattea.commands.server.set_gitea_config_value
+chattea repo list             -&gt; chattea.commands.repo.list_repositories
+chattea repo view             -&gt; chattea.commands.repo.view_repository
+chattea repo create           -&gt; chattea.commands.repo.create_repository
+chattea repo edit             -&gt; chattea.commands.repo.edit_repository
+chattea repo generate         -&gt; chattea.commands.repo.generate_repository
+chattea repo clone            -&gt; chattea.commands.repo.clone_repository
+chattea repo migrate          -&gt; chattea.commands.repo.migrate_repository
+chattea issue list            -&gt; chattea.commands.issue.list_issues
+chattea issue view            -&gt; chattea.commands.issue.view_issue
+chattea issue create          -&gt; chattea.commands.issue.create_issue
+chattea issue edit            -&gt; chattea.commands.issue.edit_issue
+chattea issue close           -&gt; chattea.commands.issue.close_issue
+chattea issue reopen          -&gt; chattea.commands.issue.reopen_issue
+chattea issue delete          -&gt; chattea.commands.issue.delete_issue
+chattea issue comment list    -&gt; chattea.commands.issue.list_comments
+chattea issue comment create  -&gt; chattea.commands.issue.create_comment
+chattea issue comment edit    -&gt; chattea.commands.issue.edit_comment
+chattea issue comment delete  -&gt; chattea.commands.issue.delete_comment
+chattea issue label add       -&gt; chattea.commands.issue.add_labels
+chattea issue label remove    -&gt; chattea.commands.issue.remove_label
+chattea issue assign add      -&gt; chattea.commands.issue.add_assignees
+chattea issue assign remove   -&gt; chattea.commands.issue.remove_assignees
+chattea label list            -&gt; chattea.commands.label.list_labels
+chattea label view            -&gt; chattea.commands.label.view_label
+chattea label create          -&gt; chattea.commands.label.create_label
+chattea label edit            -&gt; chattea.commands.label.edit_label
+chattea label delete          -&gt; chattea.commands.label.delete_label
+chattea milestone list        -&gt; chattea.commands.milestone.list_milestones
+chattea milestone view        -&gt; chattea.commands.milestone.view_milestone
+chattea milestone create      -&gt; chattea.commands.milestone.create_milestone
+chattea milestone edit        -&gt; chattea.commands.milestone.edit_milestone
+chattea milestone close       -&gt; chattea.commands.milestone.close_milestone
+chattea milestone delete      -&gt; chattea.commands.milestone.delete_milestone
+chattea pr list               -&gt; chattea.commands.pr.list_prs
+chattea pr view               -&gt; chattea.commands.pr.view_pr
+chattea pr create             -&gt; chattea.commands.pr.create_pr
+chattea pr edit               -&gt; chattea.commands.pr.edit_pr
+chattea pr close              -&gt; chattea.commands.pr.close_pr
+chattea pr reopen             -&gt; chattea.commands.pr.reopen_pr
+chattea pr merge              -&gt; chattea.commands.pr.merge_pr
+chattea pr diff               -&gt; chattea.commands.pr.diff_pr
+chattea pr patch              -&gt; chattea.commands.pr.diff_pr
+chattea pr commits            -&gt; chattea.commands.pr.list_commits
+chattea pr files              -&gt; chattea.commands.pr.list_files
+chattea pr review list        -&gt; chattea.commands.pr.list_reviews
+chattea pr review create      -&gt; chattea.commands.pr.create_review
+chattea pr review submit      -&gt; chattea.commands.pr.submit_review
+chattea release list          -&gt; chattea.commands.release.list_releases
+chattea release view          -&gt; chattea.commands.release.view_release
+chattea release latest        -&gt; chattea.commands.release.latest_release
+chattea release by-tag        -&gt; chattea.commands.release.release_by_tag
+chattea release create        -&gt; chattea.commands.release.create_release
+chattea release edit          -&gt; chattea.commands.release.edit_release
+chattea release delete        -&gt; chattea.commands.release.delete_release
+chattea release asset list    -&gt; chattea.commands.release.list_assets
+chattea release asset delete  -&gt; chattea.commands.release.delete_asset
+chattea runner registry token  -&gt; chattea.commands.runner.create_runner_token
+chattea runner registry list   -&gt; chattea.commands.runner.list_registered_runners
+chattea runner registry view   -&gt; chattea.commands.runner.view_registered_runner
+chattea runner registry enable -&gt; chattea.commands.runner.edit_registered_runner
+chattea runner registry disable -&gt; chattea.commands.runner.edit_registered_runner
+chattea runner registry delete -&gt; chattea.commands.runner.delete_registered_runner
+chattea runner local install   -&gt; chattea.commands.runner.install_runner
+chattea runner local create    -&gt; chattea.commands.runner.create_local_runner
+chattea runner local register  -&gt; chattea.commands.runner.register_local_runner
+chattea runner local list      -&gt; chattea.commands.runner.iter_local_runners
+chattea runner local view      -&gt; chattea.commands.runner.local_runner_summary
+chattea runner local start     -&gt; chattea.commands.runner.start_runner_service
+chattea runner local stop      -&gt; chattea.commands.runner.stop_runner_service
+chattea runner local restart   -&gt; chattea.commands.runner.restart_runner_service
+chattea runner local status    -&gt; chattea.commands.runner.runner_service_status
+chattea runner local logs      -&gt; chattea.commands.runner.runner_service_logs
+chattea runner local doctor    -&gt; chattea.commands.runner.local_runner_summary checks
+chattea runner local remove    -&gt; chattea.commands.runner.remove_local_runner
+chattea runner pool create     -&gt; chattea.commands.runner.create_local_runner / register_local_runner
+chattea runner pool status     -&gt; chattea.commands.runner.pool_runners
+chattea runner workflow labels -&gt; chattea.commands.runner.extract_runner_labels
+chattea runner workflow check  -&gt; chattea.commands.runner.parse_workflow_runs_on
+chattea run list              -&gt; chattea.commands.run.list_runs
+chattea run view              -&gt; chattea.commands.run.view_run
+chattea run jobs              -&gt; chattea.commands.run.list_run_jobs
+chattea run logs              -&gt; chattea.commands.run.run_logs
+chattea run rerun             -&gt; chattea.commands.run.rerun_run
+chattea run rerun-failed      -&gt; chattea.commands.run.rerun_run
+chattea run delete            -&gt; chattea.commands.run.delete_run
+chattea job view              -&gt; chattea.commands.job.view_job
+chattea job logs              -&gt; chattea.commands.job.job_logs
+chattea job rerun             -&gt; chattea.commands.job.rerun_job
+chattea artifact list         -&gt; chattea.commands.artifact.list_artifacts
+chattea artifact view         -&gt; chattea.commands.artifact.view_artifact
+chattea artifact download     -&gt; chattea.commands.artifact.download_artifact
+chattea artifact delete       -&gt; chattea.commands.artifact.delete_artifact
+chattea project list          -&gt; chattea.commands.project.list_projects
+chattea project view          -&gt; chattea.commands.project.view_project
+chattea project create        -&gt; chattea.commands.project.create_project
+chattea project edit          -&gt; chattea.commands.project.edit_project
+chattea project delete        -&gt; chattea.commands.project.delete_project
+chattea project column list   -&gt; chattea.commands.project.list_columns
+chattea project column create -&gt; chattea.commands.project.create_column
+chattea project column edit   -&gt; chattea.commands.project.edit_column
+chattea project column delete -&gt; chattea.commands.project.delete_column
+chattea project card list     -&gt; chattea.commands.project.list_cards
+chattea project card add      -&gt; chattea.commands.project.add_card
+chattea project card remove   -&gt; chattea.commands.project.remove_card
+chattea project card move     -&gt; chattea.commands.project.move_card
+</code></pre>
+<p>底层可复用模块也保持可用：</p>
+<pre><code class="language-text">chattea.config  -&gt; ChatTeaEnvConfig, load_config, save_config, set_token
+chattea.api     -&gt; GiteaClient, repo_clone_url, repository Project API methods, Actions run/job/artifact/runner API methods
+chattea.server  -&gt; install_binary, init_instance, run_gitea, write_user_service
+chattea.commands.runner -&gt; runner binary install, registration, user service helpers
+</code></pre>
+<p>CLI command module 只应解析参数、调用这些函数 / 类，并渲染结果。</p>
+<h2 id="chatenv">ChatEnv 边界</h2>
+<p>正式 ChatEnv 字段为：</p>
+<pre><code class="language-text">CHATTEA_BASE_URL
+CHATTEA_TOKEN
+CHATTEA_HOME
+CHATTEA_BINARY
+CHATTEA_WORK_PATH
+CHATTEA_CONFIG
+</code></pre>
+<p><code>CHATTEA_URL</code> 和旧的 <code>CHATTEA_GITEA_*</code> 名称只是 legacy read-only 回退项。Listen address、HTTP port、domain、service name、install version、仓库 name、project ID、问题 ID 和 运行器 ID 都不应成为正式 Env 字段。</p>
+<h2 id="_2">交互边界</h2>
+<p>缺少可恢复输入时，命令使用 ChatStyle 的 <code>CommandSchema</code>、<code>CommandField</code>、<code>add_interactive_option()</code> 和 <code>resolve_command_inputs()</code>。</p>
+<ul>
+<li><code>-i</code> / <code>--interactive</code>：强制交互；</li>
+<li><code>-I</code> / <code>--no-interactive</code>：禁用交互并快速失败；</li>
+<li>默认 <code>interactive=None</code>：只有缺少可恢复输入时才自动 prompt。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
