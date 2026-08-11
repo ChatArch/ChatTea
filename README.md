@@ -38,6 +38,7 @@ ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包，聚焦内部 Gitea 的安装
 ```bash
 pip install -e ".[dev,docs]"
 chattea --help
+chattea --tree
 python -m pytest -q
 ```
 
@@ -50,6 +51,7 @@ python -m pytest -q
 ```bash
 python -m pip install -U ChatTea
 chattea --version
+chattea --tree
 ```
 
 源码开发：

@@ -44,6 +44,7 @@ ChatTea 是 ChatArch 的 Gitea 管理 CLI/API 包。它负责下载安装到启�
 
 ```bash
 chattea --help
+chattea --tree
 chattea server --help
 chattea server config --help
 chattea repo --help
@@ -51,10 +52,13 @@ chattea repo --help
 
 命令树：
 
-完整对齐目标见 `cli-alignment.md`。
+`chattea --tree` 会从已注册 Click 命令树直接生成当前命令树，包含 `--help`、`--version`、`--tree` 和各级命令用途。完整对齐目标见 `cli-alignment.md`。
 
 ```text
 chattea
+├── --help
+├── --version
+├── --tree
 ├── set-token
 ├── api
 ├── auth

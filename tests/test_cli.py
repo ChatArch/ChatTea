@@ -26,7 +26,31 @@ def test_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.3.2" in result.output
+    assert "0.3.3" in result.output
+
+
+def test_help_lists_tree_option():
+    result = CliRunner().invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "--tree" in result.output
+
+
+def test_tree_option_renders_registered_command_surface():
+    result = CliRunner().invoke(main, ["--tree"])
+
+    assert result.exit_code == 0
+    output = result.output
+    assert output.startswith("chattea  #")
+    for option in ["--help", "--version", "--tree"]:
+        assert option in output
+    for command_name, command in main.commands.items():
+        if command.hidden:
+            continue
+        assert command_name in output
+    for representative_leaf in ["install", "generate", "registry", "card", "create", "list"]:
+        assert representative_leaf in output
+    assert "hello" not in output.lower()
 
 
 def test_server_help_lists_lifecycle_commands():
