@@ -37,6 +37,7 @@ Choose a guide by scenario:
 python -m pip install -U ChatTea
 chattea --version
 chattea --help
+chattea --tree
 ```
 
 For source development:

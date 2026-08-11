@@ -6,8 +6,13 @@
 
 ## 顶层命令
 
+`chattea --tree` 会从已注册 Click 命令树直接生成当前命令树，适合发布验收和自动化回读；本页保留人工整理的能力地图与封装边界说明。
+
 ```text
 chattea
+├── --help              # 显示帮助
+├── --version           # 显示已安装版本
+├── --tree              # 打印真实注册命令树
 ├── api                 # 调用尚未被一等封装的原始 Gitea API
 ├── artifact            # 查看、下载、删除 Gitea Actions 产物
 ├── auth                # 配置和检查 ChatTea base URL / token

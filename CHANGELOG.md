@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.3
+
+- Added top-level `chattea --tree`, rendered from the registered Click command tree with root options, command signatures, nested groups, and one-line command purposes.
+- Added regression tests for `--help` exposing `--tree`, `--tree` exit/readback, registered command coverage, representative nested commands, and absence of template `hello` leakage.
+- Documented `chattea --tree` in README and MkDocs CLI pages for release acceptance/readback.
+- Tightened docs optional dependency bounds to keep `mkdocs build --strict` on the current warning-free Material/MkDocs window.
+
 ## 0.3.2
 
 - Added install-time database backend selection: `server install/init/bootstrap --database-backend sqlite3|mysql`, with ChatData-managed MySQL runtime preparation for new Gitea instances.
