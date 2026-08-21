@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+- Replaced the package-local CLI tree renderer with ChatStyle `add_tree_option()` and added top-level `chattea --tree-brief`.
+- Aligned runtime dependencies to `chatstyle>=0.2.0,<0.3.0` and `chatenv>=0.2.10,<0.3.0`.
+- Replaced missing leaf descriptions with concrete purpose, output, side-effect, and sensitive-value boundaries so every visible command has a useful one-line comment.
+- Expanded release CI to verify installed and built-wheel `--version`, `--tree`, and `--tree-brief` surfaces, package checks, and default-branch tag ancestry.
+
 ## 0.3.3
 
 - Added top-level `chattea --tree`, rendered from the registered Click command tree with root options, command signatures, nested groups, and one-line command purposes.

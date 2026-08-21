@@ -38,6 +38,7 @@ python -m pip install -U ChatTea
 chattea --version
 chattea --help
 chattea --tree
+chattea --tree-brief
 ```
 
 For source development:

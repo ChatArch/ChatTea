@@ -6,13 +6,19 @@
 
 ## 顶层命令
 
-`chattea --tree` 会从已注册 Click 命令树直接生成当前命令树，适合发布验收和自动化回读；本页保留人工整理的能力地图与封装边界说明。
+ChatStyle 会从已注册 Click 命令树直接生成两个视图：
+
+- `chattea --tree` 显示完整参数/选项签名，适合接口审查和发布验收；
+- `chattea --tree-brief` 保留相同节点和用途说明，但省略参数/选项签名，适合摘要和自动化回读。
+
+运行时树中的每个可见 group/leaf 都带有一行用途说明，并在相关命令上明确读写副作用、输出形式或敏感值边界；本页继续保留人工整理的能力地图与封装边界说明。
 
 ```text
 chattea
 ├── --help              # 显示帮助
 ├── --version           # 显示已安装版本
 ├── --tree              # 打印真实注册命令树
+├── --tree-brief        # 打印省略参数签名的同一注册命令树
 ├── api                 # 调用尚未被一等封装的原始 Gitea API
 ├── artifact            # 查看、下载、删除 Gitea Actions 产物
 ├── auth                # 配置和检查 ChatTea base URL / token

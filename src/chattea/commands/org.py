@@ -75,6 +75,7 @@ def org_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def org_list(limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List organizations; read-only API request with text or JSON output."""
     items = client(url, token).list_orgs(limit=limit)
     render_json(items) if json_output else render_items(items, "id", "username", "full_name", "visibility")
 
@@ -84,6 +85,7 @@ def org_list(limit: int, url: str | None, token: str | None, json_output: bool) 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def org_view(org: str, url: str | None, token: str | None) -> None:
+    """Show one organization; read-only API request with JSON output."""
     render_json(client(url, token).get_org(org))
 
 
@@ -134,6 +136,7 @@ def team_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def team_list(org: str, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List organization teams; read-only API request with text or JSON output."""
     items = client(url, token).list_org_teams(org, limit=limit)
     render_json(items) if json_output else render_items(items, "id", "name", "permission", "includes_all_repositories")
 
@@ -190,6 +193,7 @@ def team_member_group() -> None:
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def team_member_add(team_id: int, username: str, url: str | None, token: str | None) -> None:
+    """Add a user to a team; writes remote membership state."""
     client(url, token).add_team_member(team_id, username)
     click.echo(f"added: {username} -> team {team_id}")
 
@@ -200,5 +204,6 @@ def team_member_add(team_id: int, username: str, url: str | None, token: str | N
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def team_member_remove(team_id: int, username: str, url: str | None, token: str | None) -> None:
+    """Remove a user from a team; writes remote membership state."""
     client(url, token).remove_team_member(team_id, username)
     click.echo(f"removed: {username} -> team {team_id}")

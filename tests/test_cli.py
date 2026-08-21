@@ -1,5 +1,7 @@
-from click.testing import CliRunner
 import subprocess
+
+from chatstyle import render_click_tree
+from click.testing import CliRunner
 
 from chattea.api import GiteaAPIError
 from chattea.cli import main
@@ -26,31 +28,45 @@ def test_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.3.3" in result.output
+    assert "0.3.4" in result.output
 
 
-def test_help_lists_tree_option():
+def test_help_lists_full_and_brief_tree_options():
     result = CliRunner().invoke(main, ["--help"])
 
     assert result.exit_code == 0
     assert "--tree" in result.output
+    assert "--tree-brief" in result.output
 
 
-def test_tree_option_renders_registered_command_surface():
-    result = CliRunner().invoke(main, ["--tree"])
+def test_tree_options_render_registered_command_surface():
+    full = CliRunner().invoke(main, ["--tree"])
+    brief = CliRunner().invoke(main, ["--tree-brief"])
 
-    assert result.exit_code == 0
-    output = result.output
-    assert output.startswith("chattea  #")
-    for option in ["--help", "--version", "--tree"]:
-        assert option in output
+    assert full.exit_code == brief.exit_code == 0
+    assert full.output == render_click_tree(main, root_name="chattea") + "\n"
+    assert brief.output == render_click_tree(main, root_name="chattea", brief=True) + "\n"
+    assert full.output.splitlines().count("chattea") == 1
+    assert brief.output.splitlines().count("chattea") == 1
+    for option in ["--help", "--version", "--tree", "--tree-brief"]:
+        assert option in full.output
+        assert option in brief.output
     for command_name, command in main.commands.items():
         if command.hidden:
             continue
-        assert command_name in output
+        assert command_name in full.output
+        assert command_name in brief.output
     for representative_leaf in ["install", "generate", "registry", "card", "create", "list"]:
-        assert representative_leaf in output
-    assert "hello" not in output.lower()
+        assert representative_leaf in full.output
+        assert representative_leaf in brief.output
+    assert "api <PATH>" in full.output
+    assert "api  # Call a raw Gitea API path" in brief.output
+    assert "<PATH>" not in brief.output
+    assert "[--method" not in brief.output
+    assert "No description." not in full.output
+    assert "No description." not in brief.output
+    assert "hello" not in full.output.lower()
+    assert "hello" not in brief.output.lower()
 
 
 def test_server_help_lists_lifecycle_commands():

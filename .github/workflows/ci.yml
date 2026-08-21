@@ -7,9 +7,16 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - name: Configure Git Credentials
@@ -18,11 +25,21 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev,docs]"
       - run: python -m pytest -q
+      - run: python -m pip check
+      - name: Verify installed CLI and ChatEnv contracts
+        env:
+          CHATARCH_HOME: ${{ runner.temp }}/chatarch-contract
+        run: |
+          chattea --version
+          chattea --tree
+          chattea --tree-brief
+          python -m chatenv.cli test -t chattea -I
       - name: Download ChatArch Gitea 1.0.0
+        if: matrix.python-version == '3.10'
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/chattea-gitea"
@@ -34,6 +51,7 @@ jobs:
           chmod +x gitea
           ./gitea --version
       - name: Run real Gitea Project API integration smoke
+        if: matrix.python-version == '3.10'
         env:
           CHATARCH_HOME: ${{ runner.temp }}/chatarch
           CHATTEA_TEST_BASE_URL: http://127.0.0.1:13001
@@ -77,4 +95,15 @@ jobs:
           curl -fsS "$CHATTEA_TEST_BASE_URL/api/v1/version" >/dev/null
           CHATTEA_INTEGRATION=1 python -m pytest -q tests/test_project_integration.py
       - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Verify built wheel CLI contract
+        run: |
+          python -m venv "$RUNNER_TEMP/chattea-wheel"
+          "$RUNNER_TEMP/chattea-wheel/bin/python" -m pip install dist/*.whl
+          (
+            cd "$RUNNER_TEMP"
+            "$RUNNER_TEMP/chattea-wheel/bin/chattea" --version
+            "$RUNNER_TEMP/chattea-wheel/bin/chattea" --tree
+            "$RUNNER_TEMP/chattea-wheel/bin/chattea" --tree-brief
+          )
       - run: mkdocs build --strict

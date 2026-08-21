@@ -29,6 +29,7 @@ def job_group() -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("job_id", type=int)
 def view_command(repo: str, job_id: int) -> None:
+    """Show one Actions job; read-only API request with JSON output."""
     render_json(view_job(repo, job_id))
 
 
@@ -36,6 +37,7 @@ def view_command(repo: str, job_id: int) -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("job_id", type=int)
 def logs_command(repo: str, job_id: int) -> None:
+    """Print one Actions job log; read-only API request with text output."""
     click.echo(job_logs(repo, job_id))
 
 
@@ -44,5 +46,6 @@ def logs_command(repo: str, job_id: int) -> None:
 @click.option("--run-id", required=True, type=int, help="Parent workflow run ID.")
 @click.argument("job_id", type=int)
 def rerun_command(repo: str, run_id: int, job_id: int) -> None:
+    """Rerun an Actions job; starts remote Actions work."""
     rerun_job(repo, run_id, job_id)
     click.echo(f"rerun_job: {job_id}")

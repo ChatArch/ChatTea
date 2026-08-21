@@ -50,6 +50,7 @@ def milestone_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def milestone_list(repo_name: str, state: str, name: str | None, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List repository milestones; read-only API request with text or JSON output."""
     items = list_milestones(repo_name, state=state, name=name, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "state", "title", "due_on")
 
@@ -60,6 +61,7 @@ def milestone_list(repo_name: str, state: str, name: str | None, limit: int, url
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def milestone_view(repo_name: str, milestone_id: str, url: str | None, token: str | None) -> None:
+    """Show one repository milestone; read-only API request with JSON output."""
     render_json(view_milestone(repo_name, milestone_id, url=url, token=token))
 
 
@@ -72,6 +74,7 @@ def milestone_view(repo_name: str, milestone_id: str, url: str | None, token: st
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def milestone_create(repo_name: str, title: str, description: str | None, deadline: str | None, state: str | None, url: str | None, token: str | None) -> None:
+    """Create a repository milestone; writes remote milestone state."""
     payload = create_milestone(repo_name, title, description=description, deadline=deadline, state=state, url=url, token=token)
     click.echo(f"created: {payload.get('id', '')} {payload.get('title', title)}")
 
@@ -86,6 +89,7 @@ def milestone_create(repo_name: str, title: str, description: str | None, deadli
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def milestone_edit(repo_name: str, milestone_id: str, title: str | None, description: str | None, deadline: str | None, state: str | None, url: str | None, token: str | None) -> None:
+    """Edit a repository milestone; writes remote milestone state."""
     payload = edit_milestone(repo_name, milestone_id, title=title, description=description, deadline=deadline, state=state, url=url, token=token)
     click.echo(f"updated: {payload.get('id', milestone_id)}")
 
@@ -96,6 +100,7 @@ def milestone_edit(repo_name: str, milestone_id: str, title: str | None, descrip
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def milestone_close(repo_name: str, milestone_id: str, url: str | None, token: str | None) -> None:
+    """Close a repository milestone; writes remote milestone state."""
     close_milestone(repo_name, milestone_id, url=url, token=token)
     click.echo(f"closed: {milestone_id}")
 
@@ -107,6 +112,7 @@ def milestone_close(repo_name: str, milestone_id: str, url: str | None, token: s
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def milestone_delete(repo_name: str, milestone_id: str, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete a repository milestone after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_milestone(repo_name, milestone_id, url=url, token=token)

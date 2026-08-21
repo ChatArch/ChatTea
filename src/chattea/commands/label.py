@@ -44,6 +44,7 @@ def label_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def label_list(repo_name: str, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List repository labels; read-only API request with text or JSON output."""
     items = list_labels(repo_name, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "name", "color", "description")
 
@@ -54,6 +55,7 @@ def label_list(repo_name: str, limit: int, url: str | None, token: str | None, j
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def label_view(repo_name: str, label_id: int, url: str | None, token: str | None) -> None:
+    """Show one repository label; read-only API request with JSON output."""
     render_json(view_label(repo_name, label_id, url=url, token=token))
 
 
@@ -66,6 +68,7 @@ def label_view(repo_name: str, label_id: int, url: str | None, token: str | None
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def label_create(repo_name: str, name: str, color: str, description: str | None, exclusive: bool | None, url: str | None, token: str | None) -> None:
+    """Create a repository label; writes remote label state."""
     payload = create_label(repo_name, name, color, description=description, exclusive=exclusive, url=url, token=token)
     click.echo(f"created: {payload.get('id', '')} {payload.get('name', name)}")
 
@@ -80,6 +83,7 @@ def label_create(repo_name: str, name: str, color: str, description: str | None,
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def label_edit(repo_name: str, label_id: int, name: str | None, color: str | None, description: str | None, exclusive: bool | None, url: str | None, token: str | None) -> None:
+    """Edit a repository label; writes remote label state."""
     payload = edit_label(repo_name, label_id, name=name, color=color, description=description, exclusive=exclusive, url=url, token=token)
     click.echo(f"updated: {payload.get('id', label_id)}")
 
@@ -91,6 +95,7 @@ def label_edit(repo_name: str, label_id: int, name: str | None, color: str | Non
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def label_delete(repo_name: str, label_id: int, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete a repository label after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_label(repo_name, label_id, url=url, token=token)

@@ -95,6 +95,7 @@ def issue_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def issue_list(repo_name: str, state: str, labels: str | None, milestones: str | None, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List repository issues; read-only API request with text or JSON output."""
     items = list_issues(repo_name, state=state, labels=labels, milestones=milestones, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "number", "state", "title", "user")
 
@@ -105,6 +106,7 @@ def issue_list(repo_name: str, state: str, labels: str | None, milestones: str |
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_view(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Show one repository issue; read-only API request with JSON output."""
     render_json(view_issue(repo_name, index, url=url, token=token))
 
 
@@ -119,6 +121,7 @@ def issue_view(repo_name: str, index: int, url: str | None, token: str | None) -
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_create(repo_name: str, title: str, body: str | None, labels: str | None, milestone: int | None, assignees: str | None, closed: bool, url: str | None, token: str | None) -> None:
+    """Create a repository issue; writes remote issue state."""
     payload = create_issue(repo_name, title, body=body, labels=csv_int_list(labels), milestone=milestone, assignees=csv_str_list(assignees), closed=closed or None, url=url, token=token)
     click.echo(f"created: #{payload.get('number', payload.get('id', ''))} {payload.get('title', title)}")
 
@@ -135,6 +138,7 @@ def issue_create(repo_name: str, title: str, body: str | None, labels: str | Non
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_edit(repo_name: str, index: int, title: str | None, body: str | None, state: str | None, labels: str | None, milestone: int | None, assignees: str | None, url: str | None, token: str | None) -> None:
+    """Edit a repository issue; writes remote issue state."""
     payload = edit_issue(repo_name, index, title=title, body=body, state=state, labels=csv_int_list(labels), milestone=milestone, assignees=csv_str_list(assignees), url=url, token=token)
     click.echo(f"updated: #{payload.get('number', index)}")
 
@@ -145,6 +149,7 @@ def issue_edit(repo_name: str, index: int, title: str | None, body: str | None, 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_close(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Close a repository issue; writes remote issue state."""
     close_issue(repo_name, index, url=url, token=token)
     click.echo(f"closed: #{index}")
 
@@ -155,6 +160,7 @@ def issue_close(repo_name: str, index: int, url: str | None, token: str | None) 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_reopen(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Reopen a repository issue; writes remote issue state."""
     reopen_issue(repo_name, index, url=url, token=token)
     click.echo(f"reopened: #{index}")
 
@@ -166,6 +172,7 @@ def issue_reopen(repo_name: str, index: int, url: str | None, token: str | None)
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_delete(repo_name: str, index: int, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete a repository issue after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_issue(repo_name, index, url=url, token=token)
@@ -185,6 +192,7 @@ def comment_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def comment_list(repo_name: str, index: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List issue comments; read-only API request with text or JSON output."""
     items = list_comments(repo_name, index, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "body", "user")
 
@@ -196,6 +204,7 @@ def comment_list(repo_name: str, index: int, limit: int, url: str | None, token:
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def comment_create(repo_name: str, index: int, body: str, url: str | None, token: str | None) -> None:
+    """Create an issue comment; writes remote issue state."""
     payload = create_comment(repo_name, index, body, url=url, token=token)
     click.echo(f"created: {payload.get('id', '')}")
 
@@ -208,6 +217,7 @@ def comment_create(repo_name: str, index: int, body: str, url: str | None, token
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def comment_edit(repo_name: str, comment_id: int, index: int | None, body: str, url: str | None, token: str | None) -> None:
+    """Edit an issue comment; writes remote issue state."""
     edit_comment(repo_name, comment_id, body, index=index, url=url, token=token)
     click.echo(f"updated: {comment_id}")
 
@@ -220,6 +230,7 @@ def comment_edit(repo_name: str, comment_id: int, index: int | None, body: str, 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def comment_delete(repo_name: str, comment_id: int, index: int | None, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete an issue comment after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_comment(repo_name, comment_id, index=index, url=url, token=token)
@@ -238,6 +249,7 @@ def issue_label_group() -> None:
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_label_add(repo_name: str, index: int, label_ids: str, url: str | None, token: str | None) -> None:
+    """Add labels to an issue; writes remote issue state."""
     add_labels(repo_name, index, csv_int_list(label_ids) or [], url=url, token=token)
     click.echo(f"labels-added: #{index}")
 
@@ -249,6 +261,7 @@ def issue_label_add(repo_name: str, index: int, label_ids: str, url: str | None,
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def issue_label_remove(repo_name: str, index: int, label_id: int, url: str | None, token: str | None) -> None:
+    """Remove a label from an issue; writes remote issue state."""
     remove_label(repo_name, index, label_id, url=url, token=token)
     click.echo(f"label-removed: #{index}")
 
@@ -265,6 +278,7 @@ def assign_group() -> None:
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def assign_add(repo_name: str, index: int, assignees: str, url: str | None, token: str | None) -> None:
+    """Add issue assignees; writes remote issue state."""
     add_assignees(repo_name, index, csv_str_list(assignees) or [], url=url, token=token)
     click.echo(f"assignees-added: #{index}")
 
@@ -276,5 +290,6 @@ def assign_add(repo_name: str, index: int, assignees: str, url: str | None, toke
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def assign_remove(repo_name: str, index: int, assignees: str, url: str | None, token: str | None) -> None:
+    """Remove issue assignees; writes remote issue state."""
     remove_assignees(repo_name, index, csv_str_list(assignees) or [], url=url, token=token)
     click.echo(f"assignees-removed: #{index}")

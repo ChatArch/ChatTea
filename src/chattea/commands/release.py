@@ -64,6 +64,7 @@ def release_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def release_list(repo_name: str, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List repository releases; read-only API request with text or JSON output."""
     items = list_releases(repo_name, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "tag_name", "name", "draft", "prerelease")
 
@@ -74,6 +75,7 @@ def release_list(repo_name: str, limit: int, url: str | None, token: str | None,
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_view(repo_name: str, release_id: int, url: str | None, token: str | None) -> None:
+    """Show one repository release; read-only API request with JSON output."""
     render_json(view_release(repo_name, release_id, url=url, token=token))
 
 
@@ -82,6 +84,7 @@ def release_view(repo_name: str, release_id: int, url: str | None, token: str | 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_latest(repo_name: str, url: str | None, token: str | None) -> None:
+    """Show the latest repository release; read-only API request with JSON output."""
     render_json(latest_release(repo_name, url=url, token=token))
 
 
@@ -91,6 +94,7 @@ def release_latest(repo_name: str, url: str | None, token: str | None) -> None:
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_by_tag_command(repo_name: str, tag: str, url: str | None, token: str | None) -> None:
+    """Show a release by tag; read-only API request with JSON output."""
     render_json(release_by_tag(repo_name, tag, url=url, token=token))
 
 
@@ -105,6 +109,7 @@ def release_by_tag_command(repo_name: str, tag: str, url: str | None, token: str
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_create(repo_name: str, tag: str, name: str | None, body: str | None, target: str | None, draft: bool | None, prerelease: bool | None, url: str | None, token: str | None) -> None:
+    """Create a repository release; publishes remote release metadata."""
     payload = create_release(repo_name, tag, name=name, body=body, target=target, draft=draft, prerelease=prerelease, url=url, token=token)
     click.echo(f"created: {payload.get('id', '')} {payload.get('tag_name', tag)}")
 
@@ -121,6 +126,7 @@ def release_create(repo_name: str, tag: str, name: str | None, body: str | None,
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_edit(repo_name: str, release_id: int, tag: str | None, name: str | None, body: str | None, target: str | None, draft: bool | None, prerelease: bool | None, url: str | None, token: str | None) -> None:
+    """Edit a repository release; writes remote release metadata."""
     edit_release(repo_name, release_id, tag=tag, name=name, body=body, target=target, draft=draft, prerelease=prerelease, url=url, token=token)
     click.echo(f"updated: {release_id}")
 
@@ -132,6 +138,7 @@ def release_edit(repo_name: str, release_id: int, tag: str | None, name: str | N
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def release_delete(repo_name: str, release_id: int, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete a repository release after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_release(repo_name, release_id, url=url, token=token)
@@ -151,6 +158,7 @@ def asset_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def asset_list(repo_name: str, release_id: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List release assets; read-only API request with text or JSON output."""
     items = list_assets(repo_name, release_id, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "name", "size", "browser_download_url")
 
@@ -163,6 +171,7 @@ def asset_list(repo_name: str, release_id: int, limit: int, url: str | None, tok
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def asset_delete(repo_name: str, release_id: int, asset_id: int, yes: bool, url: str | None, token: str | None) -> None:
+    """Delete a release asset after confirmation; destructive remote write."""
     if not yes:
         raise click.ClickException("Refusing to delete without --yes.")
     delete_asset(repo_name, release_id, asset_id, url=url, token=token)

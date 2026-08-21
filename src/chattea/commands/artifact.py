@@ -44,6 +44,7 @@ def artifact_group() -> None:
 @click.option("--page", default=None, type=int)
 @click.option("--json-output", is_flag=True)
 def list_command(repo: str, run_id: int | None, limit: int, page: int | None, json_output: bool) -> None:
+    """List Actions artifacts; read-only API request with text or JSON output."""
     payload = list_artifacts(repo, run_id=run_id, limit=limit, page=page)
     if json_output:
         render_json(payload)
@@ -55,6 +56,7 @@ def list_command(repo: str, run_id: int | None, limit: int, page: int | None, js
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("artifact_id", type=int)
 def view_command(repo: str, artifact_id: int) -> None:
+    """Show one Actions artifact; read-only API request with JSON output."""
     render_json(view_artifact(repo, artifact_id))
 
 
@@ -63,6 +65,7 @@ def view_command(repo: str, artifact_id: int) -> None:
 @click.argument("artifact_id", type=int)
 @click.option("--output", type=click.Path(dir_okay=False, path_type=Path), required=True, help="Output zip file.")
 def download_command(repo: str, artifact_id: int, output: Path) -> None:
+    """Download an Actions artifact; writes one local zip file."""
     path = download_artifact(repo, artifact_id, output)
     click.echo(f"downloaded: {path}")
 
@@ -71,5 +74,6 @@ def download_command(repo: str, artifact_id: int, output: Path) -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("artifact_id", type=int)
 def delete_command(repo: str, artifact_id: int) -> None:
+    """Delete an Actions artifact; destructive remote write."""
     delete_artifact(repo, artifact_id)
     click.echo(f"deleted: {artifact_id}")
