@@ -7,6 +7,7 @@ ChatTea is ChatArch's Gitea management CLI/API package. It covers local installa
 ```bash
 chattea --help
 chattea --tree
+chattea --tree-brief
 chattea server --help
 chattea server config --help
 chattea repo --help
@@ -14,13 +15,14 @@ chattea repo --help
 
 ## CLI Tree
 
-`chattea --tree` renders the current registered Click command tree, including `--help`, `--version`, `--tree`, and command purposes. See `cli-alignment.md` for the evidence-bound alignment target.
+ChatStyle renders both views from the registered Click command tree: `chattea --tree` includes parameter signatures, while `chattea --tree-brief` preserves the same nodes and purposes without signatures. Both expose `--help`, `--version`, `--tree`, and `--tree-brief`. See `cli-alignment.md` for the evidence-bound alignment target.
 
 ```text
 chattea
 ├── --help
 ├── --version
 ├── --tree
+├── --tree-brief
 ├── set-token
 ├── api
 ├── auth

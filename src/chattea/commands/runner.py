@@ -544,6 +544,7 @@ def registry_group() -> None:
 @registry_group.command(name="token")
 @_scope_options
 def registry_token(scope: str, repo: str | None, org: str | None) -> None:
+    """Request and print a runner registration token; sensitive JSON output."""
     render_json(create_runner_token(scope, repo=repo, org=org))
 
 
@@ -551,6 +552,7 @@ def registry_token(scope: str, repo: str | None, org: str | None) -> None:
 @_scope_options
 @click.option("--json-output", is_flag=True)
 def registry_list(scope: str, repo: str | None, org: str | None, json_output: bool) -> None:
+    """List registered runners; read-only API request with text or JSON output."""
     payload = list_registered_runners(scope, repo=repo, org=org)
     if json_output:
         render_json(payload)
@@ -562,6 +564,7 @@ def registry_list(scope: str, repo: str | None, org: str | None, json_output: bo
 @_scope_options
 @click.argument("runner_id", type=int)
 def registry_view(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
+    """Show one registered runner; read-only API request with JSON output."""
     render_json(view_registered_runner(runner_id, scope, repo=repo, org=org))
 
 
@@ -569,6 +572,7 @@ def registry_view(scope: str, repo: str | None, org: str | None, runner_id: int)
 @_scope_options
 @click.argument("runner_id", type=int)
 def registry_enable(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
+    """Enable a registered runner; writes remote runner state."""
     render_json(edit_registered_runner(runner_id, scope, repo=repo, org=org, disabled=False))
 
 
@@ -576,6 +580,7 @@ def registry_enable(scope: str, repo: str | None, org: str | None, runner_id: in
 @_scope_options
 @click.argument("runner_id", type=int)
 def registry_disable(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
+    """Disable a registered runner; writes remote runner state."""
     render_json(edit_registered_runner(runner_id, scope, repo=repo, org=org, disabled=True))
 
 
@@ -583,6 +588,7 @@ def registry_disable(scope: str, repo: str | None, org: str | None, runner_id: i
 @_scope_options
 @click.argument("runner_id", type=int)
 def registry_delete(scope: str, repo: str | None, org: str | None, runner_id: int) -> None:
+    """Delete a registered runner; destructive remote write."""
     delete_registered_runner(runner_id, scope, repo=repo, org=org)
     click.echo(f"deleted: {runner_id}")
 
@@ -598,6 +604,7 @@ def local_group() -> None:
 @_install_options
 @click.option("--force", is_flag=True)
 def local_install(name: str, root: Path | None, base: Path | None, version: str, binary_path: Path | None, force: bool) -> None:
+    """Install a runner binary; downloads or copies a local executable."""
     root_path = runner_instance_root(name, root=root, base=base)
     path = install_runner(root_path, version=version, force=force, binary_path=binary_path)
     click.echo(f"installed: {path}")
@@ -625,6 +632,7 @@ def local_create(
     force: bool,
     json_output: bool,
 ) -> None:
+    """Create local runner files without registration; writes local state."""
     payload = create_local_runner(name, root=root, base=base, labels=labels, backend=backend, capacity=capacity, workdir=workdir, force=force, install=install, version=version, binary_path=binary_path)
     if json_output:
         render_json(payload)
@@ -655,6 +663,7 @@ def local_register(
     binary_path: Path | None,
     json_output: bool,
 ) -> None:
+    """Create and register a local runner; writes local and remote state."""
     payload = register_local_runner(name, root=root, base=base, scope=scope, repo=repo, org=org, labels=labels, backend=backend, capacity=capacity, workdir=workdir, version=version, binary_path=binary_path)
     if json_output:
         render_json(payload)
@@ -667,6 +676,7 @@ def local_register(
 @click.option("--base", type=click.Path(file_okay=False, path_type=Path), default=None)
 @click.option("--json-output", is_flag=True)
 def local_list(base: Path | None, json_output: bool) -> None:
+    """List managed local runners; read-only filesystem inspection."""
     payload = iter_local_runners(base)
     if json_output:
         render_json(payload)
@@ -679,6 +689,7 @@ def local_list(base: Path | None, json_output: bool) -> None:
 @_local_root_options
 @click.option("--json-output", is_flag=True)
 def local_view(name: str, root: Path | None, base: Path | None, json_output: bool) -> None:
+    """Show one local runner summary; read-only filesystem inspection."""
     root_path = runner_instance_root(name, root=root, base=base)
     payload = local_runner_summary(validate_runner_name(name), root_path)
     if json_output:
@@ -691,6 +702,7 @@ def local_view(name: str, root: Path | None, base: Path | None, json_output: boo
 @click.argument("name")
 @_local_root_options
 def local_start(name: str, root: Path | None, base: Path | None) -> None:
+    """Install and start a local runner service; writes user systemd state."""
     root_path = runner_instance_root(name, root=root, base=base)
     service = start_runner_service(root_path, name=name)
     click.echo(f"started: {runner_service_name(name)}")
@@ -700,6 +712,7 @@ def local_start(name: str, root: Path | None, base: Path | None) -> None:
 @local_group.command(name="stop")
 @click.argument("name")
 def local_stop(name: str) -> None:
+    """Stop a local runner service; writes user systemd state."""
     stop_runner_service(name)
     click.echo(f"stopped: {runner_service_name(name)}")
 
@@ -708,6 +721,7 @@ def local_stop(name: str) -> None:
 @click.argument("name")
 @_local_root_options
 def local_restart(name: str, root: Path | None, base: Path | None) -> None:
+    """Restart a local runner service; writes user systemd state."""
     root_path = runner_instance_root(name, root=root, base=base)
     service = restart_runner_service(root_path, name=name)
     click.echo(f"restarted: {runner_service_name(name)}")
@@ -717,6 +731,7 @@ def local_restart(name: str, root: Path | None, base: Path | None) -> None:
 @local_group.command(name="status")
 @click.argument("name")
 def local_status(name: str) -> None:
+    """Show local runner service status; read-only systemd output."""
     result = runner_service_status(name)
     click.echo((result.stdout or result.stderr).rstrip())
     raise SystemExit(result.returncode)
@@ -726,6 +741,7 @@ def local_status(name: str) -> None:
 @click.argument("name")
 @click.option("--lines", default=100, show_default=True)
 def local_logs(name: str, lines: int) -> None:
+    """Show local runner service logs; read-only journal output."""
     result = runner_service_logs(lines=lines, name=name)
     click.echo((result.stdout or result.stderr).rstrip())
     raise SystemExit(result.returncode)
@@ -735,6 +751,7 @@ def local_logs(name: str, lines: int) -> None:
 @click.argument("name")
 @_local_root_options
 def local_doctor(name: str, root: Path | None, base: Path | None) -> None:
+    """Check local runner files and configuration; read-only JSON output."""
     root_path = runner_instance_root(name, root=root, base=base)
     payload = local_runner_summary(validate_runner_name(name), root_path)
     payload["checks"] = {
@@ -752,6 +769,7 @@ def local_doctor(name: str, root: Path | None, base: Path | None) -> None:
 @_local_root_options
 @click.option("--yes", is_flag=True, help="Do not prompt before removing local files.")
 def local_remove(name: str, root: Path | None, base: Path | None, yes: bool) -> None:
+    """Disable and remove local runner files after confirmation; destructive local write."""
     removed = remove_local_runner(name, root=root, base=base, yes=yes)
     click.echo(f"removed: {removed}")
 
@@ -765,6 +783,7 @@ def local_config_group() -> None:
 @click.argument("name")
 @_local_root_options
 def local_config_show(name: str, root: Path | None, base: Path | None) -> None:
+    """Show local runner configuration; read-only JSON output."""
     root_path = runner_instance_root(name, root=root, base=base)
     render_json(read_runner_config_summary(root_path))
 
@@ -775,6 +794,7 @@ def local_config_show(name: str, root: Path | None, base: Path | None) -> None:
 @click.option("--backend", type=click.Choice(["host", "docker"]), default=DEFAULT_RUNNER_BACKEND, show_default=True)
 @_local_root_options
 def local_config_set_labels(name: str, labels: str, backend: str, root: Path | None, base: Path | None) -> None:
+    """Update local runner labels; rewrites local configuration."""
     root_path = runner_instance_root(name, root=root, base=base)
     current = read_runner_config_summary(root_path)
     ensure_runner_config(root_path, force=True, labels=labels, backend=backend, capacity=current.get("capacity") or 1, workdir=Path(current["workdir"]) if current.get("workdir") else None)
@@ -786,6 +806,7 @@ def local_config_set_labels(name: str, labels: str, backend: str, root: Path | N
 @click.option("--capacity", required=True, type=click.IntRange(1))
 @_local_root_options
 def local_config_set_capacity(name: str, capacity: int, root: Path | None, base: Path | None) -> None:
+    """Update local runner capacity; rewrites local configuration."""
     root_path = runner_instance_root(name, root=root, base=base)
     current = read_runner_config_summary(root_path)
     labels = ",".join(current.get("labels") or [f"{DEFAULT_RUNNER_LABEL}:{DEFAULT_RUNNER_BACKEND}"])
@@ -798,6 +819,7 @@ def local_config_set_capacity(name: str, capacity: int, root: Path | None, base:
 @click.option("--workdir", required=True, type=click.Path(file_okay=False, path_type=Path))
 @_local_root_options
 def local_config_set_workdir(name: str, workdir: Path, root: Path | None, base: Path | None) -> None:
+    """Update a local runner work directory; rewrites local configuration."""
     root_path = runner_instance_root(name, root=root, base=base)
     current = read_runner_config_summary(root_path)
     labels = ",".join(current.get("labels") or [f"{DEFAULT_RUNNER_LABEL}:{DEFAULT_RUNNER_BACKEND}"])
@@ -810,6 +832,7 @@ def local_config_set_workdir(name: str, workdir: Path, root: Path | None, base: 
 @click.option("--backend", required=True, type=click.Choice(["host", "docker"]))
 @_local_root_options
 def local_config_set_backend(name: str, backend: str, root: Path | None, base: Path | None) -> None:
+    """Update a local runner backend; rewrites local configuration."""
     root_path = runner_instance_root(name, root=root, base=base)
     current = read_runner_config_summary(root_path)
     runs_on = current.get("runs_on") or labels_for_runs_on(current.get("labels") or [])
@@ -850,6 +873,7 @@ def pool_create(
     install: bool,
     json_output: bool,
 ) -> None:
+    """Create a local runner pool and optionally register it; writes local or remote state."""
     payload = []
     for index in range(1, count + 1):
         name = pool_runner_name(pool, index)
@@ -869,6 +893,7 @@ def pool_create(
 @click.argument("pool")
 @click.option("--base", type=click.Path(file_okay=False, path_type=Path), default=None)
 def pool_start(pool: str, base: Path | None) -> None:
+    """Start every runner in a local pool; writes user systemd state."""
     payload = pool_runners(pool, base=base)
     for runner in payload:
         start_runner_service(Path(runner["root"]), name=runner["name"])
@@ -879,6 +904,7 @@ def pool_start(pool: str, base: Path | None) -> None:
 @click.argument("pool")
 @click.option("--base", type=click.Path(file_okay=False, path_type=Path), default=None)
 def pool_stop(pool: str, base: Path | None) -> None:
+    """Stop every runner in a local pool; writes user systemd state."""
     payload = pool_runners(pool, base=base)
     for runner in payload:
         stop_runner_service(runner["name"])
@@ -890,6 +916,7 @@ def pool_stop(pool: str, base: Path | None) -> None:
 @click.option("--base", type=click.Path(file_okay=False, path_type=Path), default=None)
 @click.option("--json-output", is_flag=True)
 def pool_status(pool: str, base: Path | None, json_output: bool) -> None:
+    """Show a local runner pool summary; read-only filesystem inspection."""
     payload = pool_runners(pool, base=base)
     if json_output:
         render_json({"pool": pool, "runners": payload})
@@ -902,6 +929,7 @@ def pool_status(pool: str, base: Path | None, json_output: bool) -> None:
 @click.option("--base", type=click.Path(file_okay=False, path_type=Path), default=None)
 @click.option("--yes", is_flag=True)
 def pool_remove(pool: str, base: Path | None, yes: bool) -> None:
+    """Remove every runner in a pool after confirmation; destructive local write."""
     payload = pool_runners(pool, base=base)
     for runner in payload:
         remove_local_runner(runner["name"], base=base, yes=yes)
@@ -917,6 +945,7 @@ def workflow_group() -> None:
 @_scope_options
 @click.option("--json-output", is_flag=True)
 def workflow_labels(scope: str, repo: str | None, org: str | None, json_output: bool) -> None:
+    """List available runs-on labels; read-only API request with text or JSON output."""
     labels = extract_runner_labels(list_registered_runners(scope, repo=repo, org=org))
     if json_output:
         render_json({"labels": labels})
@@ -928,6 +957,7 @@ def workflow_labels(scope: str, repo: str | None, org: str | None, json_output: 
 @workflow_group.command(name="example")
 @click.option("--label", default=DEFAULT_RUNNER_LABEL, show_default=True)
 def workflow_example(label: str) -> None:
+    """Print a workflow runs-on example; no files or remote state are changed."""
     click.echo(
         f"""jobs:
   example:
@@ -944,6 +974,7 @@ def workflow_example(label: str) -> None:
 @click.option("--offline", is_flag=True, help="Only parse workflow runs-on values; do not query Gitea.")
 @click.option("--json-output", is_flag=True)
 def workflow_check(workflow: Path, scope: str, repo: str | None, org: str | None, offline: bool, json_output: bool) -> None:
+    """Check workflow labels against runners; reads one file and optionally Gitea."""
     runs_on = parse_workflow_runs_on(workflow)
     available: list[str] = [] if offline else extract_runner_labels(list_registered_runners(scope, repo=repo, org=org))
     missing = [] if offline else [label for label in runs_on if label not in available]

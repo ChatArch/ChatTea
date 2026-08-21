@@ -62,6 +62,7 @@ def run_group() -> None:
 @click.option("--page", default=None, type=int)
 @click.option("--json-output", is_flag=True)
 def list_command(repo: str, state: str | None, limit: int, page: int | None, json_output: bool) -> None:
+    """List workflow runs; read-only API request with text or JSON output."""
     payload = list_runs(repo, state=state, limit=limit, page=page)
     if json_output:
         render_json(payload)
@@ -73,6 +74,7 @@ def list_command(repo: str, state: str | None, limit: int, page: int | None, jso
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("run_id", type=int)
 def view_command(repo: str, run_id: int) -> None:
+    """Show one workflow run; read-only API request with JSON output."""
     render_json(view_run(repo, run_id))
 
 
@@ -81,6 +83,7 @@ def view_command(repo: str, run_id: int) -> None:
 @click.argument("run_id", type=int)
 @click.option("--json-output", is_flag=True)
 def jobs_command(repo: str, run_id: int, json_output: bool) -> None:
+    """List jobs for a workflow run; read-only API request with text or JSON output."""
     payload = list_run_jobs(repo, run_id)
     if json_output:
         render_json(payload)
@@ -93,6 +96,7 @@ def jobs_command(repo: str, run_id: int, json_output: bool) -> None:
 @click.argument("run_id", type=int)
 @click.option("--job-id", type=int, default=None, help="Fetch one job log instead of all jobs in the run.")
 def logs_command(repo: str, run_id: int, job_id: int | None) -> None:
+    """Print logs for one run or job; read-only API request with text output."""
     click.echo(run_logs(repo, run_id, job_id=job_id))
 
 
@@ -100,6 +104,7 @@ def logs_command(repo: str, run_id: int, job_id: int | None) -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("run_id", type=int)
 def rerun_command(repo: str, run_id: int) -> None:
+    """Rerun a workflow run; starts remote Actions work."""
     rerun_run(repo, run_id)
     click.echo(f"rerun: {run_id}")
 
@@ -108,6 +113,7 @@ def rerun_command(repo: str, run_id: int) -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("run_id", type=int)
 def rerun_failed_command(repo: str, run_id: int) -> None:
+    """Rerun failed jobs in a workflow run; starts remote Actions work."""
     rerun_run(repo, run_id, failed_only=True)
     click.echo(f"rerun_failed: {run_id}")
 
@@ -116,5 +122,6 @@ def rerun_failed_command(repo: str, run_id: int) -> None:
 @click.option("--repo", required=True, help="Repository in OWNER/NAME format.")
 @click.argument("run_id", type=int)
 def delete_command(repo: str, run_id: int) -> None:
+    """Delete a workflow run; destructive remote write."""
     delete_run(repo, run_id)
     click.echo(f"deleted: {run_id}")

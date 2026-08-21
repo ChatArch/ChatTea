@@ -83,6 +83,7 @@ def pr_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def pr_list(repo_name: str, state: str, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List repository pull requests; read-only API request with text or JSON output."""
     items = list_prs(repo_name, state=state, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "number", "state", "title", "user")
 
@@ -93,6 +94,7 @@ def pr_list(repo_name: str, state: str, limit: int, url: str | None, token: str 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_view(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Show one pull request; read-only API request with JSON output."""
     render_json(view_pr(repo_name, index, url=url, token=token))
 
 
@@ -108,6 +110,7 @@ def pr_view(repo_name: str, index: int, url: str | None, token: str | None) -> N
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_create(repo_name: str, title: str, head: str, base: str, body: str | None, labels: str | None, milestone: int | None, assignees: str | None, url: str | None, token: str | None) -> None:
+    """Create a pull request; writes remote collaboration state."""
     payload = create_pr(repo_name, title, head, base, body=body, labels=csv_int_list(labels), milestone=milestone, assignees=csv_str_list(assignees), url=url, token=token)
     click.echo(f"created: #{payload.get('number', payload.get('id', ''))} {payload.get('title', title)}")
 
@@ -122,6 +125,7 @@ def pr_create(repo_name: str, title: str, head: str, base: str, body: str | None
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_edit(repo_name: str, index: int, title: str | None, body: str | None, state: str | None, base: str | None, url: str | None, token: str | None) -> None:
+    """Edit a pull request; writes remote collaboration state."""
     edit_pr(repo_name, index, title=title, body=body, state=state, base=base, url=url, token=token)
     click.echo(f"updated: #{index}")
 
@@ -132,6 +136,7 @@ def pr_edit(repo_name: str, index: int, title: str | None, body: str | None, sta
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_close(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Close a pull request; writes remote collaboration state."""
     close_pr(repo_name, index, url=url, token=token)
     click.echo(f"closed: #{index}")
 
@@ -142,6 +147,7 @@ def pr_close(repo_name: str, index: int, url: str | None, token: str | None) -> 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_reopen(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Reopen a pull request; writes remote collaboration state."""
     reopen_pr(repo_name, index, url=url, token=token)
     click.echo(f"reopened: #{index}")
 
@@ -156,6 +162,7 @@ def pr_reopen(repo_name: str, index: int, url: str | None, token: str | None) ->
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_merge(repo_name: str, index: int, merge_style: str, title: str | None, message: str | None, delete_branch: bool, url: str | None, token: str | None) -> None:
+    """Merge a pull request and optionally delete its branch; destructive remote write."""
     merge_pr(repo_name, index, merge_style=merge_style, title=title, message=message, delete_branch=delete_branch or None, url=url, token=token)
     click.echo(f"merged: #{index}")
 
@@ -166,6 +173,7 @@ def pr_merge(repo_name: str, index: int, merge_style: str, title: str | None, me
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_diff(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Print a pull request diff; read-only API request with text output."""
     click.echo(diff_pr(repo_name, index, url=url, token=token))
 
 
@@ -175,6 +183,7 @@ def pr_diff(repo_name: str, index: int, url: str | None, token: str | None) -> N
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_patch(repo_name: str, index: int, url: str | None, token: str | None) -> None:
+    """Print a pull request patch; read-only API request with text output."""
     click.echo(diff_pr(repo_name, index, patch=True, url=url, token=token))
 
 
@@ -186,6 +195,7 @@ def pr_patch(repo_name: str, index: int, url: str | None, token: str | None) -> 
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def pr_commits(repo_name: str, index: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List pull request commits; read-only API request with text or JSON output."""
     items = list_commits(repo_name, index, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "sha", "message", "url")
 
@@ -198,6 +208,7 @@ def pr_commits(repo_name: str, index: int, limit: int, url: str | None, token: s
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def pr_files(repo_name: str, index: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List pull request files; read-only API request with text or JSON output."""
     items = list_files(repo_name, index, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "filename", "status", "additions", "deletions")
 
@@ -215,6 +226,7 @@ def pr_comment_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def pr_comment_list(repo_name: str, index: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List pull request comments; read-only API request with text or JSON output."""
     owner, name = repo_parts(repo_name)
     items = client(url, token).list_issue_comments(owner, name, index, limit=limit)
     render_json(items) if json_output else render_items(items, "id", "body", "user")
@@ -227,6 +239,7 @@ def pr_comment_list(repo_name: str, index: int, limit: int, url: str | None, tok
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def pr_comment_create(repo_name: str, index: int, body: str, url: str | None, token: str | None) -> None:
+    """Create a pull request comment; writes remote collaboration state."""
     owner, name = repo_parts(repo_name)
     payload = client(url, token).create_issue_comment(owner, name, index, body)
     click.echo(f"created: {payload.get('id', '')}")
@@ -245,6 +258,7 @@ def review_group() -> None:
 @click.option("--token", default=None)
 @click.option("--json-output", is_flag=True)
 def review_list(repo_name: str, index: int, limit: int, url: str | None, token: str | None, json_output: bool) -> None:
+    """List pull request reviews; read-only API request with text or JSON output."""
     items = list_reviews(repo_name, index, limit=limit, url=url, token=token)
     render_json(items) if json_output else render_items(items, "id", "state", "user", "body")
 
@@ -257,6 +271,7 @@ def review_list(repo_name: str, index: int, limit: int, url: str | None, token: 
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def review_create(repo_name: str, index: int, body: str | None, event: str | None, url: str | None, token: str | None) -> None:
+    """Create a pull request review; writes remote collaboration state."""
     payload = create_review(repo_name, index, body=body, event=event, url=url, token=token)
     click.echo(f"created: {payload.get('id', '')}")
 
@@ -270,5 +285,6 @@ def review_create(repo_name: str, index: int, body: str | None, event: str | Non
 @click.option("--url", default=None)
 @click.option("--token", default=None)
 def review_submit(repo_name: str, index: int, review_id: int, body: str | None, event: str | None, url: str | None, token: str | None) -> None:
+    """Submit a pending pull request review; writes remote collaboration state."""
     submit_review(repo_name, index, review_id, body=body, event=event, url=url, token=token)
     click.echo(f"submitted: {review_id}")

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import click
-from chatstyle import add_interactive_option
+from chatstyle import add_interactive_option, add_tree_option
 
 from chattea import __version__
 from chattea.commands.api import api_command
@@ -27,99 +27,11 @@ from chattea.commands.token import token_group
 from chattea.commands.user import user_group
 
 
-def _format_metavar(name: str) -> str:
-    return name.replace("_", "-").upper()
-
-
-def _format_argument(param: click.Argument) -> str:
-    metavar = _format_metavar(param.name or "arg")
-    if param.nargs == -1:
-        value = f"<{metavar}>..."
-    else:
-        value = f"<{metavar}>"
-    if not param.required:
-        return f"[{value}]"
-    return value
-
-
-def _format_option(param: click.Option) -> str:
-    primary = next((opt for opt in param.opts if opt.startswith("--")), param.opts[0] if param.opts else param.name)
-    if param.secondary_opts:
-        secondary = next((opt for opt in param.secondary_opts if opt.startswith("--")), param.secondary_opts[0])
-        return f"[{primary}/{secondary}]"
-    if param.is_flag or param.flag_value is not None:
-        return f"[{primary}]"
-    metavar = param.metavar or _format_metavar(param.name or "value")
-    return f"[{primary} <{metavar}>]"
-
-
-def _format_command_signature(command: click.Command) -> str:
-    arguments: list[str] = []
-    options: list[str] = []
-    for param in command.params:
-        if getattr(param, "hidden", False):
-            continue
-        if isinstance(param, click.Argument):
-            arguments.append(_format_argument(param))
-        elif isinstance(param, click.Option):
-            options.append(_format_option(param))
-    return " ".join(arguments + options)
-
-
-def _command_purpose(command: click.Command) -> str:
-    text = command.short_help or command.help or ""
-    first_line = next((line.strip() for line in text.splitlines() if line.strip()), "No description.")
-    return first_line.rstrip(".") + "."
-
-
-def _visible_children(command: click.Command) -> list[tuple[str, click.Command]]:
-    children = getattr(command, "commands", {})
-    return [(name, child) for name, child in children.items() if not getattr(child, "hidden", False)]
-
-
-def render_cli_tree(command: click.Command, root_name: str = "chattea") -> str:
-    """Render the registered Click command tree."""
-
-    lines = [f"{root_name}  # {_command_purpose(command)}"]
-    synthetic = [
-        ("--help", "Show this help message."),
-        ("--version", "Show the installed package version."),
-        ("--tree", "Print the registered command tree."),
-    ]
-    nodes: list[tuple[str, str | click.Command]] = [(name, purpose) for name, purpose in synthetic]
-    nodes.extend((name, child) for name, child in _visible_children(command))
-
-    def walk(items: list[tuple[str, str | click.Command]] | list[tuple[str, click.Command]], prefix: str = "") -> None:
-        for index, (name, value) in enumerate(items):
-            is_last = index == len(items) - 1
-            branch = "└── " if is_last else "├── "
-            child_prefix = prefix + ("    " if is_last else "│   ")
-            if isinstance(value, str):
-                lines.append(f"{prefix}{branch}{name}  # {value}")
-                continue
-            signature = _format_command_signature(value)
-            label = f"{name} {signature}".strip()
-            lines.append(f"{prefix}{branch}{label}  # {_command_purpose(value)}")
-            children = _visible_children(value)
-            if children:
-                walk(children, child_prefix)
-
-    walk(nodes)
-    return "\n".join(lines)
-
-
-def _print_tree(ctx: click.Context, _param: click.Option, value: bool) -> None:
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo(render_cli_tree(ctx.command))
-    ctx.exit()
-
-
 @click.group(name="chattea", context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(__version__, prog_name="chattea")
-@click.option("--tree", is_flag=True, is_eager=True, expose_value=False, callback=_print_tree, help="Print the registered command tree.")
+@add_tree_option(renderer_options={"root_name": "chattea"})
 def main() -> None:
-    """chattea command line interface."""
+    """Manage Gitea servers and repositories with explicit command boundaries."""
 
 
 @main.command(name="set-token")

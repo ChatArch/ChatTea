@@ -868,6 +868,18 @@ def test_runtime_dependency_bounds_are_release_reviewed():
     data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
     deps = set(data["project"]["dependencies"])
 
-    assert "chatenv>=0.2.2,<0.3.0" in deps
-    assert "chatstyle>=0.1.0,<0.2.0" in deps
+    assert "chatenv>=0.2.10,<0.3.0" in deps
+    assert "chatstyle>=0.2.0,<0.3.0" in deps
     assert "click>=8.4.2,<9.0" in deps
+
+
+def test_release_workflows_enforce_cli_and_tag_contracts():
+    ci = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
+    publish = Path(".github/workflows/publish.yml").read_text(encoding="utf-8")
+
+    assert 'python-version: ["3.10", "3.11", "3.12"]' in ci
+    for command in ["chattea --version", "chattea --tree", "chattea --tree-brief"]:
+        assert command in ci
+    assert "python -m twine check dist/*" in ci
+    assert "git merge-base --is-ancestor" in publish
+    assert "workflow_dispatch" not in publish
