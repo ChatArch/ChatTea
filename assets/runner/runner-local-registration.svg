@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="358" viewBox="0 0 1180 358">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10201a"/><stop offset="1" stop-color="#1f2a37"/></linearGradient></defs>
+<rect width="1180" height="358" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">Runner local registration and services</text>
+<text x="26" y="64" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner local register &lt;runner-a&gt; --scope repo --repo OWNER/REPO --label &lt;runner-a&gt; --backend host --capacity 1 --binary &lt;runner-binary&gt; --json-output</text>
+<text x="26" y="88" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">registered: &lt;runner-a&gt;; root=&lt;chattea-home&gt;/runners/&lt;runner-a&gt;; labels=[&lt;runner-a&gt;:host]; service=chattea-runner@&lt;runner-a&gt;.service</text>
+<text x="26" y="112" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner local register &lt;runner-b&gt; --scope repo --repo OWNER/REPO --label &lt;runner-b&gt; --backend host --capacity 1 --binary &lt;runner-binary&gt; --json-output</text>
+<text x="26" y="136" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">registered: &lt;runner-b&gt;; root=&lt;chattea-home&gt;/runners/&lt;runner-b&gt;; labels=[&lt;runner-b&gt;:host]; service=chattea-runner@&lt;runner-b&gt;.service</text>
+<text x="26" y="160" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner local start &lt;runner-a&gt; &amp;&amp; chattea runner local start &lt;runner-b&gt;</text>
+<text x="26" y="184" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">started: chattea-runner@&lt;runner-a&gt;.service</text>
+<text x="26" y="208" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">started: chattea-runner@&lt;runner-b&gt;.service</text>
+<text x="26" y="232" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner registry list --scope repo --repo OWNER/REPO --json-output</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">runners: &lt;runner-a&gt; online, &lt;runner-b&gt; online; labels=[&lt;runner-a&gt;], [&lt;runner-b&gt;]</text>
+<text x="26" y="280" fill="#86efac" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea runner workflow labels --scope repo --repo OWNER/REPO</text>
+<text x="26" y="304" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">&lt;runner-a&gt;</text>
+<text x="26" y="328" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">&lt;runner-b&gt;</text>
+</svg>

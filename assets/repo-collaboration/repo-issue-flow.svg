@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111827"/><stop offset="1" stop-color="#1f2937"/></linearGradient></defs>
+<rect width="1180" height="500" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">Repo collaboration CLI flow against local Gitea</text>
+<text x="26" y="64" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea repo create --owner smoke --name cli-demo --description &quot;ChatTea CLI smoke repository&quot; -I</text>
+<text x="26" y="88" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: smoke/cli-demo (private)</text>
+<text x="26" y="112" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">http://127.0.0.1:13017/smoke/cli-demo</text>
+<text x="26" y="136" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea label create --repo smoke/cli-demo --name docs --color 00aaee --description &quot;Documentation work&quot;</text>
+<text x="26" y="160" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: 1 docs</text>
+<text x="26" y="184" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea label list --repo smoke/cli-demo</text>
+<text x="26" y="208" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">1    docs    00aaee    Documentation work</text>
+<text x="26" y="232" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea milestone create --repo smoke/cli-demo --title v1.0 --description &quot;First documentation milestone&quot;</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: 1 v1.0</text>
+<text x="26" y="280" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue create --repo smoke/cli-demo --title &quot;Document ChatTea CLI flow&quot; --label 1 --milestone 1 --assignee smoke</text>
+<text x="26" y="304" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: #1 Document ChatTea CLI flow</text>
+<text x="26" y="328" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue comment create --repo smoke/cli-demo 1 --body &quot;Comment created through chattea issue comment create.&quot;</text>
+<text x="26" y="352" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">created: 4</text>
+<text x="26" y="376" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue close --repo smoke/cli-demo 1</text>
+<text x="26" y="400" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">closed: #1</text>
+<text x="26" y="424" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea issue list --repo smoke/cli-demo --state all</text>
+<text x="26" y="448" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">1    closed    Document ChatTea CLI flow    smoke</text>
+</svg>

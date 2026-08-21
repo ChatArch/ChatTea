@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="450" viewBox="0 0 1180 450">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f172a"/><stop offset="1" stop-color="#1e293b"/></linearGradient></defs>
+<rect width="1180" height="450" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">PR-triggered Actions run, job, and logs</text>
+<text x="26" y="64" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea pr list --repo gitea_admin/web-docs-smoke --state all</text>
+<text x="26" y="88" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">1   open   Trigger web docs Actions smoke   gitea_admin</text>
+<text x="26" y="112" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea run list --repo gitea_admin/web-docs-smoke</text>
+<text x="26" y="136" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">9   completed   success   pull_request   trigger web docs smoke</text>
+<text x="26" y="160" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">8   completed   success   push           trigger web docs smoke</text>
+<text x="26" y="184" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">7   completed   success   push           add web docs smoke workflow</text>
+<text x="26" y="208" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea run view --repo gitea_admin/web-docs-smoke 9</text>
+<text x="26" y="232" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">&quot;event&quot;: &quot;pull_request&quot;</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">&quot;conclusion&quot;: &quot;success&quot;</text>
+<text x="26" y="280" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea run jobs --repo gitea_admin/web-docs-smoke 9</text>
+<text x="26" y="304" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">9   completed   success   smoke</text>
+<text x="26" y="328" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea job logs --repo gitea_admin/web-docs-smoke 9 | grep &quot;chattea web screenshot smoke&quot;</text>
+<text x="26" y="352" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">Run echo &quot;chattea web screenshot smoke&quot;</text>
+<text x="26" y="376" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">echo &quot;chattea web screenshot smoke&quot;</text>
+<text x="26" y="400" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">chattea web screenshot smoke</text>
+</svg>

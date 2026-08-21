@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="380" viewBox="0 0 1180 380">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111827"/><stop offset="1" stop-color="#1f2937"/></linearGradient></defs>
+<rect width="1180" height="380" rx="18" fill="url(#bg)"/>
+<circle cx="28" cy="28" r="7" fill="#ef4444"/><circle cx="52" cy="28" r="7" fill="#f59e0b"/><circle cx="76" cy="28" r="7" fill="#10b981"/>
+<text x="104" y="34" fill="#d1d5db" font-family="Menlo, Consolas, monospace" font-size="15">ChatTea local bootstrap and health check</text>
+<text x="26" y="64" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ export CHATARCH_HOME=.../local-smoke/chatarch-home</text>
+<text x="26" y="88" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ export GITEA_ADMIN_PASSWORD=[REDACTED]</text>
+<text x="26" y="112" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea server bootstrap --binary ~/.local/bin/gitea --base-url http://127.0.0.1:13017 --http-port 13017 ...</text>
+<text x="26" y="136" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">binary: /Users/rexwzh/.local/bin/gitea</text>
+<text x="26" y="160" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">config: .../local-smoke/gitea-work/custom/conf/app.ini</text>
+<text x="26" y="184" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">work_path: .../local-smoke/gitea-work</text>
+<text x="26" y="208" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">admin: smoke</text>
+<text x="26" y="232" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">token: 3f08ec5...cba72</text>
+<text x="26" y="256" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">token_source: generated</text>
+<text x="26" y="280" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">chatenv: .../local-smoke/chatarch-home/envs/ChatTea/.env</text>
+<text x="26" y="304" fill="#93c5fd" font-family="Menlo, Consolas, monospace" font-size="15">$ chattea server health --url http://127.0.0.1:13017</text>
+<text x="26" y="328" fill="#e5e7eb" font-family="Menlo, Consolas, monospace" font-size="15">ok: http://127.0.0.1:13017 (1.0.0)</text>
+</svg>
